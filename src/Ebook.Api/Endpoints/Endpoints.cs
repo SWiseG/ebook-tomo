@@ -22,12 +22,16 @@ public static class Endpoints
 
         api.MapPost("/auth/login", async (LoginRequest request, IDispatcher dispatcher, CancellationToken ct) =>
             (await dispatcher.SendAsync(new LoginCommand(request.Username, request.Password), ct)).ToHttp())
-            .AllowAnonymous();
+            .AllowAnonymous()
+            .WithTags("Auth")
+            .WithSummary("Autentica o admin e emite JWT");
 
         var secured = api.MapGroup("").RequireAuthorization();
 
         secured.MapGet("/dashboard/summary", async (IDispatcher dispatcher, CancellationToken ct) =>
-            (await dispatcher.QueryAsync(new GetDashboardSummaryQuery(), ct)).ToHttp());
+            (await dispatcher.QueryAsync(new GetDashboardSummaryQuery(), ct)).ToHttp())
+            .WithTags("Dashboard")
+            .WithSummary("KPIs do painel: produtos, jobs e consumo de IA");
 
         secured.MapGet("/jobs", async (string? status, int page, int size, EbookDbContext db, CancellationToken ct) =>
         {
@@ -47,7 +51,9 @@ public static class Endpoints
                 .ToListAsync(ct);
 
             return Results.Ok(new { total, page = pageNumber, size = pageSize, items });
-        });
+        })
+        .WithTags("Jobs")
+        .WithSummary("Lista jobs com filtro por status e paginação");
 
         secured.MapPost("/jobs/{id:guid}/retry", async (Guid id, EbookDbContext db, CancellationToken ct) =>
         {
@@ -69,10 +75,14 @@ public static class Endpoints
             job.LastError = null;
             await db.SaveChangesAsync(ct);
             return Results.Ok(job);
-        });
+        })
+        .WithTags("Jobs")
+        .WithSummary("Reenfileira um job em dead-letter");
 
         secured.MapGet("/settings", async (ISettingsStore settings, CancellationToken ct) =>
-            Results.Ok(await settings.GetAllAsync(ct)));
+            Results.Ok(await settings.GetAllAsync(ct)))
+            .WithTags("Settings")
+            .WithSummary("Lista todas as configurações dinâmicas");
 
         secured.MapPut("/settings/{key}", async (string key, SetSettingRequest request, EbookDbContext db, CancellationToken ct) =>
         {
@@ -90,10 +100,14 @@ public static class Endpoints
 
             await db.SaveChangesAsync(ct);
             return Results.NoContent();
-        });
+        })
+        .WithTags("Settings")
+        .WithSummary("Grava/atualiza uma configuração (JSON cru)");
 
         // Critério de saída da Fase 0: valida AI Gateway ponta a ponta (cache → Claude CLI)
         secured.MapPost("/dev/ai-echo", async (AiEchoRequest request, IDispatcher dispatcher, CancellationToken ct) =>
-            (await dispatcher.SendAsync(new AiEchoCommand(request.Text), ct)).ToHttp());
+            (await dispatcher.SendAsync(new AiEchoCommand(request.Text), ct)).ToHttp())
+            .WithTags("Dev")
+            .WithSummary("Smoke test do AI Gateway (cache → Claude CLI via assinatura Pro)");
     }
 }

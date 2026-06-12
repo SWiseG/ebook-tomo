@@ -1,5 +1,6 @@
 using System.Text;
 using Ebook.Api.Endpoints;
+using Ebook.Api.OpenApi;
 using Ebook.Application;
 using Ebook.Infrastructure;
 using Ebook.Infrastructure.Observability;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
 using Serilog;
 
 // Utilitário operacional: gera hash PBKDF2 para AdminAuth (setup de dev e produção)
@@ -58,6 +60,8 @@ try
         .AddCheck<DiskSpaceHealthCheck>("disk", tags: ["ready"])
         .AddCheck<DeadJobsHealthCheck>("dead-jobs", tags: ["ready"]);
 
+    builder.Services.AddOpenApi(o => o.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
+
     var app = builder.Build();
 
     using (var scope = app.Services.CreateScope())
@@ -72,6 +76,13 @@ try
     app.UseAuthorization();
 
     app.MapApiEndpoints();
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.MapOpenApi(); // /openapi/v1.json
+        app.MapScalarApiReference(o => o.WithTitle("EBOOK API")); // /scalar/v1
+    }
+
     app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
     app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = c => c.Tags.Contains("ready") });
 

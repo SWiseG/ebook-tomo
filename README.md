@@ -13,6 +13,7 @@ Descoberta de nichos → geração de e-book/PDF → landing page → Kiwify →
 
 ```bash
 # API (http://localhost:5161 — login: admin / admin)
+# Docs interativas: http://localhost:5161/scalar/v1
 dotnet run --project src/Ebook.Api --launch-profile http
 
 # Painel (http://localhost:4200, proxy para a API)

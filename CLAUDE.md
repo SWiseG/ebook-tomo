@@ -8,6 +8,7 @@ Monolito modular ASP.NET Core (.NET 10) + Angular 21, SQLite + FileStore JSON, e
 dotnet build Ebook.slnx -warnaserror          # build (solution é .slnx, não .sln)
 dotnet test Ebook.slnx                        # 40+ testes; nenhum chama IA ou rede real
 dotnet run --project src/Ebook.Api --launch-profile http   # API em http://localhost:5161 (login dev: admin/admin)
+# Docs interativas (só Development): http://localhost:5161/scalar/v1 (OpenAPI em /openapi/v1.json)
 dotnet dotnet-ef migrations add <Nome> --project src/Ebook.Infrastructure --startup-project src/Ebook.Api --output-dir Persistence/Migrations
 dotnet run --project src/Ebook.Api -- hash-password <senha>  # gera hash PBKDF2 p/ AdminAuth
 cd src/Ebook.Admin && npm start               # painel com proxy para :5161
