@@ -1,0 +1,20 @@
+services:
+  api:
+    image: ghcr.io/OWNER/ebook-api:latest # ajustar OWNER após criar o repositório GitHub
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - /opt/ebook/data:/data
+      - /opt/ebook/claude:/home/app/.claude # sessão da assinatura Claude Pro (claude login)
+    mem_limit: 3g
+
+  litestream:
+    image: litestream/litestream:latest
+    restart: unless-stopped
+    command: replicate -config /etc/litestream.yml
+    env_file: .env
+    volumes:
+      - /opt/ebook/data/db:/data/db
+      - ./litestream.yml:/etc/litestream.yml:ro

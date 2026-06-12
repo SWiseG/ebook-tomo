@@ -1,0 +1,48 @@
+@use '../../../styles/tokens' as t;
+
+.login-page {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+}
+
+.login-card {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-2;
+  width: min(360px, 90vw);
+  padding: t.$space-5;
+  background: t.$surface;
+  border: 1px solid t.$border;
+  border-radius: t.$radius;
+
+  h1 {
+    margin: 0;
+    font-size: 1.6rem;
+
+    span {
+      color: t.$accent;
+    }
+  }
+
+  .subtitle {
+    margin: 0 0 t.$space-3;
+    color: t.$text-muted;
+    font-size: 0.85rem;
+  }
+
+  label {
+    font-size: 0.8rem;
+    color: t.$text-muted;
+  }
+
+  .error {
+    color: t.$danger;
+    font-size: 0.85rem;
+    margin: 0;
+  }
+
+  button {
+    margin-top: t.$space-3;
+  }
+}

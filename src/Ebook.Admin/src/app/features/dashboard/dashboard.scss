@@ -1,0 +1,39 @@
+@use '../../../styles/tokens' as t;
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: t.$space-3;
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-1;
+  padding: t.$space-4;
+  background: t.$surface;
+  border: 1px solid t.$border;
+  border-radius: t.$radius;
+
+  .label {
+    font-size: 0.8rem;
+    color: t.$text-muted;
+  }
+
+  .value {
+    font-size: 1.8rem;
+    font-weight: 600;
+  }
+
+  &.warn .value {
+    color: t.$danger;
+  }
+}
+
+.error {
+  color: t.$danger;
+}
+
+.muted {
+  color: t.$text-muted;
+}

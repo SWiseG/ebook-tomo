@@ -1,0 +1,28 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+TestResults/
+
+# Angular / Node
+node_modules/
+src/Ebook.Admin/dist/
+src/Ebook.Admin/.angular/
+
+# Runtime data (volumes em produção; local dev)
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Secrets
+.env
+deploy/.env
+
+# IDE
+.idea/
+*.swp
+
+# Claude Code local
+.claude/settings.local.json

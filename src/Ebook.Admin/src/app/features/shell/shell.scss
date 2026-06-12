@@ -1,0 +1,64 @@
+@use '../../../styles/tokens' as t;
+
+.shell {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-4;
+  padding: t.$space-4;
+  background: t.$surface;
+  border-right: 1px solid t.$border;
+
+  .brand {
+    margin: 0;
+    font-size: 1.2rem;
+
+    span {
+      color: t.$accent;
+    }
+  }
+
+  nav {
+    display: flex;
+    flex-direction: column;
+    gap: t.$space-1;
+    flex: 1;
+
+    a {
+      padding: t.$space-2 t.$space-3;
+      border-radius: t.$radius;
+      color: t.$text-muted;
+      text-decoration: none;
+
+      &:hover {
+        background: t.$surface-hover;
+        color: t.$text;
+      }
+
+      &.active {
+        background: t.$accent-soft;
+        color: t.$accent;
+      }
+    }
+  }
+
+  .logout {
+    background: transparent;
+    border: 1px solid t.$border;
+    color: t.$text-muted;
+
+    &:hover {
+      color: t.$danger;
+      border-color: t.$danger;
+    }
+  }
+}
+
+.content {
+  padding: t.$space-5;
+}

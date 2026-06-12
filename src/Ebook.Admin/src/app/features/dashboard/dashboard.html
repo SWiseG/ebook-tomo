@@ -1,0 +1,40 @@
+<h1>Dashboard</h1>
+
+@if (error(); as message) {
+  <p class="error">{{ message }}</p>
+}
+
+@if (summary(); as s) {
+  <div class="kpi-grid">
+    <div class="kpi">
+      <span class="label">Produtos ativos</span>
+      <span class="value">{{ s.productsActive | number }}</span>
+    </div>
+    <div class="kpi">
+      <span class="label">Em pipeline</span>
+      <span class="value">{{ s.productsInPipeline | number }}</span>
+    </div>
+    <div class="kpi">
+      <span class="label">Nichos candidatos</span>
+      <span class="value">{{ s.nichesCandidate | number }}</span>
+    </div>
+    <div class="kpi" [class.warn]="s.jobsFailed > 0">
+      <span class="label">Jobs em dead-letter</span>
+      <span class="value">{{ s.jobsFailed | number }}</span>
+    </div>
+    <div class="kpi">
+      <span class="label">Jobs pendentes</span>
+      <span class="value">{{ s.jobsPending | number }}</span>
+    </div>
+    <div class="kpi">
+      <span class="label">Chamadas IA hoje</span>
+      <span class="value">{{ s.aiCallsToday | number }}</span>
+    </div>
+    <div class="kpi">
+      <span class="label">Cache hit IA hoje</span>
+      <span class="value">{{ s.aiCacheHitRateToday | percent: '1.0-1' }}</span>
+    </div>
+  </div>
+} @else if (!error()) {
+  <p class="muted">Carregando…</p>
+}
