@@ -16,4 +16,7 @@ public static class SettingKeys
     public const string AiPipelineCallBudget = "ai.pipelineCallBudget";
     public const string PublishingRequiresApproval = "publishing.requiresApproval";
     public const string MinActiveProducts = "portfolio.minActiveProducts";
+    public const string DiscoveryCategories = "discovery.categories";
+    public const string DiscoveryTopN = "discovery.topN";
+    public const string DiscoveryScoreWeights = "discovery.scoreWeights";
 }

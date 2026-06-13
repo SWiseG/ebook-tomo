@@ -1,17 +1,59 @@
-// Design tokens do painel — tema escuro padrão
-$bg: #0f1115;
-$surface: #171a21;
-$surface-hover: #1f242e;
-$border: #2a2f3a;
-$text: #e6e9ef;
-$text-muted: #8b93a3;
-$accent: #4f8cff;
-$accent-soft: rgba(79, 140, 255, 0.14);
-$danger: #f87171;
+// Tomo — design tokens (tema escuro padrão · índigo + âmbar)
 
-$radius: 8px;
+// Superfícies
+$bg: #0e0f14;
+$surface: #16181f;
+$surface-2: #1e212b;
+$surface-3: #262a36;
+$border: #2a2e3a;
+$border-strong: #3a3f4e;
+
+// Texto
+$text: #e7e9f0;
+$text-muted: #9aa1b2;
+$text-faint: #6b7280;
+
+// Marca
+$primary: #6366f1;
+$primary-strong: #818cf8;
+$primary-soft: rgba(99, 102, 241, 0.16);
+$accent: #f5a623;
+$accent-strong: #fbbf24;
+$accent-soft: rgba(245, 166, 35, 0.16);
+
+// Semânticos
+$success: #34d399;
+$success-soft: rgba(52, 211, 153, 0.16);
+$warning: #fbbf24;
+$warning-soft: rgba(251, 191, 36, 0.16);
+$danger: #f87171;
+$danger-soft: rgba(248, 113, 113, 0.16);
+$info: #38bdf8;
+$info-soft: rgba(56, 189, 248, 0.16);
+
+// Raio
+$radius-sm: 6px;
+$radius: 10px;
+$radius-lg: 14px;
+$radius-pill: 999px;
+
+// Espaçamento
 $space-1: 4px;
 $space-2: 8px;
 $space-3: 12px;
 $space-4: 16px;
 $space-5: 24px;
+$space-6: 32px;
+$space-7: 48px;
+
+// Tipografia
+$font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+$font-mono: 'JetBrains Mono', 'Cascadia Code', ui-monospace, 'Consolas', monospace;
+
+// Sombra
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+$shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+$shadow-lg: 0 18px 50px rgba(0, 0, 0, 0.45);
+
+// Layout
+$sidebar-w: 248px;

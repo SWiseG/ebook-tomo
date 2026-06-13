@@ -1,3 +1,4 @@
+using Ebook.Domain.Knowledge;
 using Ebook.Domain.Niches;
 using Ebook.Domain.Products;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,10 @@ namespace Ebook.Infrastructure.Persistence;
 public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : DbContext(options)
 {
     public DbSet<Niche> Niches => Set<Niche>();
+    public DbSet<TrendSnapshot> TrendSnapshots => Set<TrendSnapshot>();
     public DbSet<Product> Products => Set<Product>();
+    public DbSet<KnowledgeAsset> KnowledgeAssets => Set<KnowledgeAsset>();
+    public DbSet<Artifact> Artifacts => Set<Artifact>();
     public DbSet<OutboxEventRecord> OutboxEvents => Set<OutboxEventRecord>();
     public DbSet<ProcessedEventRecord> ProcessedEvents => Set<ProcessedEventRecord>();
     public DbSet<JobRecord> Jobs => Set<JobRecord>();
@@ -45,6 +49,37 @@ public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : D
             e.Property(x => x.Price).HasConversion<double>();
             e.HasIndex(x => x.Status);
             e.Ignore(x => x.DomainEvents);
+        });
+
+        modelBuilder.Entity<TrendSnapshot>(e =>
+        {
+            e.ToTable("TrendSnapshot");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Source).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.PayloadPath).HasMaxLength(400);
+            e.HasIndex(x => new { x.NicheId, x.CollectedAtUtc });
+        });
+
+        modelBuilder.Entity<KnowledgeAsset>(e =>
+        {
+            e.ToTable("KnowledgeAsset");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Topic).HasMaxLength(200);
+            e.Property(x => x.KeywordsCsv).HasMaxLength(1000);
+            e.Property(x => x.Path).HasMaxLength(400);
+            e.Property(x => x.Hash).HasMaxLength(64);
+            e.HasIndex(x => new { x.NicheId, x.Type });
+        });
+
+        modelBuilder.Entity<Artifact>(e =>
+        {
+            e.ToTable("Artifact");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Path).HasMaxLength(400);
+            e.Property(x => x.Hash).HasMaxLength(64);
+            e.HasIndex(x => new { x.ProductId, x.Type, x.Version });
         });
 
         modelBuilder.Entity<OutboxEventRecord>(e =>

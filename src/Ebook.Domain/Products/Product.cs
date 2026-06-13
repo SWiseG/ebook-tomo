@@ -208,6 +208,9 @@ public sealed class Product : AggregateRoot
     }
 
     public void SetSalesCopy(string salesCopyJson) => SalesCopyJson = salesCopyJson;
+
+    /// <summary>Refina o título a partir do outline gerado (o título inicial é provisório).</summary>
+    public void SetTitle(string title) => Title = title;
 }
 
 public static class ProductErrors

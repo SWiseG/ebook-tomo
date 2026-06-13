@@ -19,7 +19,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates gnupg \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
+    && apt-get install -y --no-install-recommends nodejs fontconfig fonts-liberation \
     && npm install -g @anthropic-ai/claude-code \
     && apt-get purge -y gnupg \
     && rm -rf /var/lib/apt/lists/*

@@ -1,6 +1,7 @@
 using Ebook.Application.Common.Events;
 using Ebook.Application.Common.Jobs;
 using Ebook.Application.Common.Messaging;
+using Ebook.Application.Knowledge;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ebook.Application;
@@ -14,6 +15,7 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddScoped<IDispatcher, Dispatcher>();
+        services.AddScoped<IKnowledgeService, KnowledgeService>();
 
         var assembly = typeof(DependencyInjection).Assembly;
         Type[] handlerOpenTypes =

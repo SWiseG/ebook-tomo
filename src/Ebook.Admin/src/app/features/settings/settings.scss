@@ -1,0 +1,44 @@
+@use '../../../styles/tokens' as t;
+
+.notice {
+  margin: 0 0 t.$space-4;
+  padding: t.$space-3 t.$space-4;
+  border-radius: t.$radius;
+  background: t.$primary-soft;
+  color: t.$primary-strong;
+  font-size: 0.9rem;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-3;
+  margin-bottom: t.$space-5;
+}
+
+.setting {
+  display: flex;
+  align-items: flex-end;
+  gap: t.$space-4;
+
+  .field {
+    flex: 1;
+  }
+}
+
+.new__grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: t.$space-4;
+  margin-bottom: t.$space-4;
+}
+
+@media (max-width: 720px) {
+  .setting {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .new__grid {
+    grid-template-columns: 1fr;
+  }
+}

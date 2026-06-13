@@ -1,13 +1,23 @@
 <div class="shell">
   <aside class="sidebar">
-    <h2 class="brand">EBOOK<span>.admin</span></h2>
+    <a class="brand" routerLink="/dashboard">
+      <tomo-logo />
+    </a>
+
     <nav>
-      @for (item of menu; track item.path) {
-        <a [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
+      @for (group of groups; track group.title) {
+        <div class="group">
+          <span class="group__title">{{ group.title }}</span>
+          @for (item of group.items; track item.path) {
+            <a [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
+          }
+        </div>
       }
     </nav>
-    <button class="logout" (click)="auth.logout()">Sair</button>
+
+    <button class="btn btn--danger logout" (click)="auth.logout()">Sair</button>
   </aside>
+
   <main class="content">
     <router-outlet />
   </main>

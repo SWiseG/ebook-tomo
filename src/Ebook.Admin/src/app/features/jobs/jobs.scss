@@ -1,50 +1,12 @@
 @use '../../../styles/tokens' as t;
 
-.filters {
-  display: flex;
-  gap: t.$space-2;
+.seg {
   margin-bottom: t.$space-3;
-
-  button {
-    background: t.$surface;
-    border: 1px solid t.$border;
-    color: t.$text-muted;
-
-    &.active {
-      background: t.$accent-soft;
-      border-color: t.$accent;
-      color: t.$accent;
-    }
-  }
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-
-  th,
-  td {
-    padding: t.$space-2 t.$space-3;
-    text-align: left;
-    border-bottom: 1px solid t.$border;
-    font-size: 0.85rem;
-  }
-
-  th {
-    color: t.$text-muted;
-    font-weight: 500;
-  }
-}
-
-.badge {
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-
-  &.pending { background: t.$accent-soft; color: t.$accent; }
-  &.running { background: rgba(250, 204, 21, 0.15); color: #facc15; }
-  &.succeeded { background: rgba(74, 222, 128, 0.15); color: #4ade80; }
-  &.dead { background: rgba(248, 113, 113, 0.15); color: t.$danger; }
+.count {
+  margin: 0 0 t.$space-3;
+  font-size: 0.85rem;
 }
 
 .error-cell {
@@ -52,9 +14,5 @@ table {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: t.$text-muted;
-}
-
-.muted {
   color: t.$text-muted;
 }

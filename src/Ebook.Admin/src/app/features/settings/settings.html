@@ -1,0 +1,51 @@
+<div class="page-head">
+  <div>
+    <h1>Configurações</h1>
+    <div class="sub">Valores dinâmicos da plataforma (JSON cru). Tetos de IA, descoberta, publicação.</div>
+  </div>
+</div>
+
+@if (notice(); as message) {
+  <p class="notice">{{ message }}</p>
+}
+@if (error(); as message) {
+  <p class="error">{{ message }}</p>
+}
+
+@if (rows(); as list) {
+  <div class="list">
+    @for (row of list; track row.key) {
+      <div class="card setting">
+        <div class="field">
+          <label>{{ row.key }}</label>
+          <textarea rows="2" [(ngModel)]="row.value" [name]="row.key"></textarea>
+        </div>
+        <button class="btn btn--primary btn--sm" (click)="save(row)">Salvar</button>
+      </div>
+    } @empty {
+      <div class="empty">Nenhuma configuração gravada ainda.</div>
+    }
+  </div>
+
+  <div class="card new">
+    <div class="card__title">Nova configuração</div>
+    <div class="new__grid">
+      <div class="field">
+        <label>Chave</label>
+        <input list="known-keys" [(ngModel)]="newKey" name="newKey" placeholder="discovery.topN" />
+        <datalist id="known-keys">
+          @for (k of knownKeys; track k) {
+            <option [value]="k"></option>
+          }
+        </datalist>
+      </div>
+      <div class="field">
+        <label>Valor (JSON)</label>
+        <textarea rows="2" [(ngModel)]="newValue" name="newValue"></textarea>
+      </div>
+    </div>
+    <button class="btn btn--accent btn--sm" (click)="add()">Adicionar</button>
+  </div>
+} @else if (!error()) {
+  <p class="muted">Carregando…</p>
+}

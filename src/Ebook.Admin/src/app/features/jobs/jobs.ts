@@ -3,6 +3,13 @@ import { Component, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { JobItem, JobsPage } from '../../core/api.types';
 
+const CHIP: Record<JobItem['status'], string> = {
+  Pending: 'chip--info',
+  Running: 'chip--primary',
+  Succeeded: 'chip--success',
+  Dead: 'chip--danger',
+};
+
 @Component({
   selector: 'app-jobs',
   imports: [DatePipe],
@@ -14,9 +21,14 @@ export class Jobs {
 
   readonly page = signal<JobsPage | null>(null);
   readonly statusFilter = signal<string>('');
+  readonly statuses = ['', 'Pending', 'Running', 'Succeeded', 'Dead'];
 
   constructor() {
     this.load();
+  }
+
+  chip(status: JobItem['status']): string {
+    return CHIP[status];
   }
 
   load(): void {

@@ -1,0 +1,53 @@
+@use '../../../styles/tokens' as t;
+
+.back {
+  display: inline-block;
+  margin-bottom: t.$space-4;
+  color: t.$text-muted;
+  font-size: 0.88rem;
+}
+
+.chips {
+  display: flex;
+  gap: t.$space-2;
+  flex-wrap: wrap;
+  margin-bottom: t.$space-4;
+}
+
+.stepper {
+  margin-bottom: t.$space-5;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-4;
+}
+
+.cover {
+  width: 100%;
+  border-radius: t.$radius;
+  border: 1px solid t.$border;
+  display: block;
+}
+
+.headline {
+  margin: 0;
+  font-weight: 600;
+}
+
+.promise {
+  margin: 0 0 t.$space-3;
+  color: t.$text-muted;
+  font-size: 0.9rem;
+}
+
+.chapters {
+  margin: 0;
+  padding-left: t.$space-5;
+  color: t.$text;
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-1;
+}

@@ -1,39 +1,25 @@
 @use '../../../styles/tokens' as t;
 
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: t.$space-3;
+.block {
+  margin-bottom: t.$space-6;
 }
 
-.kpi {
-  display: flex;
-  flex-direction: column;
-  gap: t.$space-1;
-  padding: t.$space-4;
-  background: t.$surface;
-  border: 1px solid t.$border;
+.notice {
+  margin: 0 0 t.$space-4;
+  padding: t.$space-3 t.$space-4;
   border-radius: t.$radius;
-
-  .label {
-    font-size: 0.8rem;
-    color: t.$text-muted;
-  }
-
-  .value {
-    font-size: 1.8rem;
-    font-weight: 600;
-  }
-
-  &.warn .value {
-    color: t.$danger;
-  }
+  background: t.$primary-soft;
+  color: t.$primary-strong;
+  font-size: 0.9rem;
 }
 
-.error {
-  color: t.$danger;
-}
+a.kpi {
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.12s ease;
 
-.muted {
-  color: t.$text-muted;
+  &:hover {
+    border-color: t.$border-strong;
+    text-decoration: none;
+  }
 }

@@ -1,0 +1,78 @@
+<a class="back" routerLink="/products">← Produtos</a>
+
+@if (error(); as message) {
+  <p class="error">{{ message }}</p>
+}
+
+@if (detail(); as d) {
+  <div class="page-head">
+    <div>
+      <h1>{{ d.title }}</h1>
+      <div class="sub">
+        <span class="mono">{{ d.slug }}</span> · {{ d.qualityTier }}
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn--ghost" (click)="downloadPdf()">Baixar PDF</button>
+    </div>
+  </div>
+
+  <div class="chips">
+    <span class="chip chip--primary">{{ d.status }}</span>
+    <span class="chip">estágio: {{ d.stage }}</span>
+    @if (d.price > 0) {
+      <span class="chip chip--accent">{{ d.price | currency: d.currency }}</span>
+    }
+  </div>
+
+  <div class="stepper">
+    @for (step of steps; track step) {
+      <span class="step" [class]="'step ' + stepClass(step)">
+        <span class="dot"></span>{{ step }}
+      </span>
+    }
+  </div>
+
+  <div class="grid-2">
+    <section class="card">
+      <div class="card__title">Manuscrito</div>
+      @if (manuscriptHtml(); as html) {
+        <div class="prose" [innerHTML]="html"></div>
+      } @else {
+        <p class="muted">Manuscrito ainda não gerado.</p>
+      }
+    </section>
+
+    <aside class="side">
+      <section class="card">
+        <div class="card__title">Capa</div>
+        @if (coverUrl(); as url) {
+          <img class="cover" [src]="url" alt="Capa do e-book" />
+        } @else {
+          <p class="muted">Capa ainda não gerada.</p>
+        }
+      </section>
+
+      @if (salesHeadline(); as headline) {
+        <section class="card">
+          <div class="card__title">Copy de venda</div>
+          <p class="headline">{{ headline }}</p>
+        </section>
+      }
+
+      @if (outline(); as o) {
+        <section class="card">
+          <div class="card__title">Outline · {{ o.chapters.length }} capítulos</div>
+          <p class="promise">{{ o.promise }}</p>
+          <ol class="chapters">
+            @for (c of o.chapters; track c.n) {
+              <li>{{ c.title }}</li>
+            }
+          </ol>
+        </section>
+      }
+    </aside>
+  </div>
+} @else if (!error()) {
+  <p class="muted">Carregando…</p>
+}

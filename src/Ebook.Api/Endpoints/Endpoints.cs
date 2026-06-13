@@ -2,7 +2,10 @@ using Ebook.Application.Administration.Auth;
 using Ebook.Application.Administration.Dashboard;
 using Ebook.Application.Common.Messaging;
 using Ebook.Application.Common.Settings;
+using Ebook.Application.Content;
 using Ebook.Application.DevTools;
+using Ebook.Application.Discovery;
+using Ebook.Domain.Products;
 using Ebook.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +16,8 @@ public sealed record LoginRequest(string Username, string Password);
 public sealed record AiEchoRequest(string Text);
 
 public sealed record SetSettingRequest(string ValueJson);
+
+public sealed record GenerateProductRequest(Guid NicheId, string? Title, QualityTier? Tier);
 
 public static class Endpoints
 {
@@ -78,6 +83,77 @@ public static class Endpoints
         })
         .WithTags("Jobs")
         .WithSummary("Reenfileira um job em dead-letter");
+
+        secured.MapGet("/niches", async (string? status, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.QueryAsync(new GetNichesQuery(status), ct)).ToHttp())
+            .WithTags("Niches")
+            .WithSummary("Lista nichos descobertos (filtro opcional por status)");
+
+        secured.MapPost("/niches/discover", async (int? topN, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(new DiscoverNichesCommand(topN), ct)).ToHttp())
+            .WithTags("Niches")
+            .WithSummary("Dispara a descoberta de nichos manualmente (enfileira o job)");
+
+        secured.MapPost("/niches/{id:guid}/approve", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(new ApproveNicheCommand(id), ct)).ToHttp())
+            .WithTags("Niches")
+            .WithSummary("Aprova um nicho candidato (Selected)");
+
+        secured.MapPost("/niches/{id:guid}/discard", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(new DiscardNicheCommand(id), ct)).ToHttp())
+            .WithTags("Niches")
+            .WithSummary("Descarta um nicho");
+
+        secured.MapPost("/products", async (GenerateProductRequest request, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(
+                new GenerateProductCommand(request.NicheId, request.Title, request.Tier ?? QualityTier.Commercial), ct)).ToHttp())
+            .WithTags("Products")
+            .WithSummary("Inicia o pipeline de geração de um produto a partir de um nicho");
+
+        secured.MapGet("/products", async (string? status, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.QueryAsync(new GetProductsQuery(status), ct)).ToHttp())
+            .WithTags("Products")
+            .WithSummary("Lista produtos (filtro opcional por status)");
+
+        secured.MapGet("/products/{id:guid}", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.QueryAsync(new GetProductDetailQuery(id), ct)).ToHttp())
+            .WithTags("Products")
+            .WithSummary("Detalhe de um produto");
+
+        secured.MapGet("/products/{id:guid}/outline", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.QueryAsync(new GetOutlineQuery(id), ct)).ToHttp())
+            .WithTags("Products")
+            .WithSummary("Outline do manuscrito");
+
+        secured.MapGet("/products/{id:guid}/manuscript", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+        {
+            var result = await dispatcher.QueryAsync(new GetManuscriptQuery(id), ct);
+            return result.IsSuccess
+                ? Results.Text(result.Value, "text/markdown")
+                : result.ToHttp();
+        })
+            .WithTags("Products")
+            .WithSummary("Manuscrito montado (Markdown) para revisão no painel");
+
+        secured.MapGet("/products/{id:guid}/pdf", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+        {
+            var result = await dispatcher.QueryAsync(new GetProductPdfQuery(id), ct);
+            return result.IsSuccess
+                ? Results.File(result.Value, "application/pdf", $"ebook-{id}.pdf")
+                : result.ToHttp();
+        })
+            .WithTags("Products")
+            .WithSummary("Baixa o PDF gerado do produto");
+
+        secured.MapGet("/products/{id:guid}/cover", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+        {
+            var result = await dispatcher.QueryAsync(new GetProductCoverQuery(id), ct);
+            return result.IsSuccess
+                ? Results.File(result.Value, "image/png", $"cover-{id}.png")
+                : result.ToHttp();
+        })
+            .WithTags("Products")
+            .WithSummary("Baixa a capa gerada do produto");
 
         secured.MapGet("/settings", async (ISettingsStore settings, CancellationToken ct) =>
             Results.Ok(await settings.GetAllAsync(ct)))

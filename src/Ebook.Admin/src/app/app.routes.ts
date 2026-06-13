@@ -17,8 +17,25 @@ export const routes: Routes = [
         loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),
       },
       {
+        path: 'niches',
+        loadComponent: () => import('./features/niches/niches').then((m) => m.Niches),
+      },
+      {
+        path: 'products',
+        loadComponent: () => import('./features/products/products').then((m) => m.Products),
+      },
+      {
+        path: 'products/:id',
+        loadComponent: () =>
+          import('./features/products/product-detail').then((m) => m.ProductDetail),
+      },
+      {
         path: 'jobs',
         loadComponent: () => import('./features/jobs/jobs').then((m) => m.Jobs),
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('./features/settings/settings').then((m) => m.Settings),
       },
     ],
   },
