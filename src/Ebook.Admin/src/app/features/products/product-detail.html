@@ -11,8 +11,24 @@
       <div class="sub"><span class="mono">{{ d.slug }}</span> · {{ d.qualityTier }}</div>
     </div>
     <div class="actions">
+      @if (d.status === 'AwaitingApproval') {
+        <p-button
+          label="Aprovar publicação"
+          icon="pi pi-send"
+          [disabled]="busy()"
+          (onClick)="approve()"
+        />
+        <p-button
+          label="Rejeitar"
+          icon="pi pi-times"
+          severity="danger"
+          [outlined]="true"
+          [disabled]="busy()"
+          (onClick)="reject()"
+        />
+      }
       @if (d.lpUrl) {
-        <p-button label="Abrir LP" icon="pi pi-external-link" (onClick)="openLp()" />
+        <p-button label="Abrir LP" icon="pi pi-external-link" [outlined]="true" (onClick)="openLp()" />
       }
       <p-button label="Baixar PDF" icon="pi pi-download" [outlined]="true" (onClick)="downloadPdf()" />
     </div>
@@ -64,6 +80,35 @@
             size="small"
             [outlined]="true"
             (onClick)="openLp()" />
+        </p-card>
+      }
+
+      @if (d.status === 'Publishing') {
+        <p-card>
+          <ng-template #title>Concluir publicação</ng-template>
+          <p class="muted publish-hint">
+            Crie o produto na Kiwify e informe o id e a URL de checkout para colocá-lo no ar.
+          </p>
+          <div class="publish-form">
+            <input pInputText [(ngModel)]="kiwifyProductId" name="kiwifyId" placeholder="ID do produto Kiwify" fluid />
+            <input pInputText [(ngModel)]="checkoutUrl" name="checkoutUrl" placeholder="https://pay.kiwify.com.br/…" fluid />
+            <p-button
+              label="Marcar como publicado"
+              icon="pi pi-check"
+              size="small"
+              [disabled]="busy()"
+              (onClick)="completePublishing()" />
+          </div>
+        </p-card>
+      }
+
+      @if (d.status === 'Live' && d.checkoutUrl) {
+        <p-card>
+          <ng-template #title>Publicado · Kiwify</ng-template>
+          <a class="mono lp-link" [href]="d.checkoutUrl" target="_blank" rel="noopener">{{ d.checkoutUrl }}</a>
+          @if (d.kiwifyProductId) {
+            <div class="mono">id: {{ d.kiwifyProductId }}</div>
+          }
         </p-card>
       }
 

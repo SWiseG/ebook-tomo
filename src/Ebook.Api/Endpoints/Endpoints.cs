@@ -5,6 +5,7 @@ using Ebook.Application.Common.Settings;
 using Ebook.Application.Content;
 using Ebook.Application.DevTools;
 using Ebook.Application.Discovery;
+using Ebook.Application.Publishing;
 using Ebook.Domain.Products;
 using Ebook.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,10 @@ public sealed record AiEchoRequest(string Text);
 public sealed record SetSettingRequest(string ValueJson);
 
 public sealed record GenerateProductRequest(Guid NicheId, string? Title, QualityTier? Tier);
+
+public sealed record RejectProductRequest(string? Reason);
+
+public sealed record CompletePublishingRequest(string KiwifyProductId, string CheckoutUrl);
 
 public static class Endpoints
 {
@@ -154,6 +159,22 @@ public static class Endpoints
         })
             .WithTags("Products")
             .WithSummary("Baixa a capa gerada do produto");
+
+        secured.MapPost("/products/{id:guid}/approve", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(new ApproveProductCommand(id), ct)).ToHttp())
+            .WithTags("Products")
+            .WithSummary("Aprova a publicação do produto (AwaitingApproval → Publishing)");
+
+        secured.MapPost("/products/{id:guid}/reject", async (Guid id, RejectProductRequest request, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(new RejectProductCommand(id, request.Reason ?? string.Empty), ct)).ToHttp())
+            .WithTags("Products")
+            .WithSummary("Rejeita o produto e o devolve para retrabalho");
+
+        secured.MapPost("/products/{id:guid}/publish", async (Guid id, CompletePublishingRequest request, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(
+                new CompletePublishingCommand(id, request.KiwifyProductId, request.CheckoutUrl), ct)).ToHttp())
+            .WithTags("Products")
+            .WithSummary("Conclui a publicação manualmente (id Kiwify + URL de checkout → Live)");
 
         secured.MapGet("/settings", async (ISettingsStore settings, CancellationToken ct) =>
             Results.Ok(await settings.GetAllAsync(ct)))

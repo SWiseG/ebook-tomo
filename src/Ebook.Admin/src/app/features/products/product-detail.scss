@@ -81,6 +81,17 @@
   word-break: break-all;
 }
 
+.publish-hint {
+  font-size: 0.86rem;
+  margin: 0 0 t.$space-3;
+}
+
+.publish-form {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-2;
+}
+
 .promise {
   margin: 0 0 t.$space-3;
   color: var(--p-text-muted-color);

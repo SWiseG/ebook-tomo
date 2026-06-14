@@ -7,10 +7,12 @@ using Ebook.Application.Content;
 using Ebook.Application.Content.Images;
 using Ebook.Application.Content.Pdf;
 using Ebook.Application.Discovery;
+using Ebook.Application.Publishing;
 using Ebook.Domain.Abstractions;
 using Ebook.Domain.Knowledge;
 using Ebook.Domain.Niches;
 using Ebook.Domain.Products;
+using Ebook.Domain.Sales;
 using Ebook.Infrastructure.Administration;
 using Ebook.Infrastructure.Ai;
 using Ebook.Infrastructure.Content;
@@ -19,6 +21,7 @@ using Ebook.Infrastructure.Events;
 using Ebook.Infrastructure.FileStore;
 using Ebook.Infrastructure.Jobs;
 using Ebook.Infrastructure.Persistence;
+using Ebook.Infrastructure.Publishing;
 using Ebook.Infrastructure.Scheduling;
 using Ebook.Infrastructure.Security;
 using Ebook.Infrastructure.Settings;
@@ -38,6 +41,7 @@ public static class DependencyInjection
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<AdminAuthOptions>(configuration.GetSection(AdminAuthOptions.SectionName));
         services.Configure<PexelsOptions>(configuration.GetSection(PexelsOptions.SectionName));
+        services.Configure<KiwifyOptions>(configuration.GetSection(KiwifyOptions.SectionName));
 
         var dataRoot = configuration.GetSection(DataOptions.SectionName).Get<DataOptions>()?.RootPath ?? "./data";
         var dbDirectory = Path.Combine(dataRoot, "db");
@@ -69,7 +73,9 @@ public static class DependencyInjection
         services.AddScoped<IArtifactRepository, ArtifactRepository>();
         services.AddScoped<IKnowledgeRepository, KnowledgeRepository>();
         services.AddScoped<ITrendSnapshotRepository, TrendSnapshotRepository>();
+        services.AddScoped<ISaleRepository, SaleRepository>();
         services.AddScoped<INicheReader, NicheReader>();
+        services.AddSingleton<IKiwifyPublisher, KiwifyPublisher>();
 
         // fontes de tendência (E02): client nomeado compartilhado + múltiplas implementações de ITrendSource
         services.AddHttpClient("trends", c =>

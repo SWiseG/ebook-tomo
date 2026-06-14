@@ -1,6 +1,7 @@
 using Ebook.Domain.Knowledge;
 using Ebook.Domain.Niches;
 using Ebook.Domain.Products;
+using Ebook.Domain.Sales;
 using Microsoft.EntityFrameworkCore;
 
 namespace Ebook.Infrastructure.Persistence;
@@ -35,7 +36,18 @@ public sealed class ProductRepository(EbookDbContext db) : IProductRepository
     public Task<bool> SlugExistsAsync(string slug, CancellationToken ct = default) =>
         db.Products.AsNoTracking().AnyAsync(p => p.Slug == slug, ct);
 
+    public Task<Product?> GetByKiwifyProductIdAsync(string kiwifyProductId, CancellationToken ct = default) =>
+        db.Products.FirstOrDefaultAsync(p => p.KiwifyProductId == kiwifyProductId, ct);
+
     public void Add(Product product) => db.Products.Add(product);
+}
+
+public sealed class SaleRepository(EbookDbContext db) : ISaleRepository
+{
+    public Task<bool> ExistsByOrderIdAsync(string kiwifyOrderId, CancellationToken ct = default) =>
+        db.SaleEvents.AsNoTracking().AnyAsync(s => s.KiwifyOrderId == kiwifyOrderId, ct);
+
+    public void Add(SaleEvent sale) => db.SaleEvents.Add(sale);
 }
 
 public sealed class KnowledgeRepository(EbookDbContext db) : IKnowledgeRepository

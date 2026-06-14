@@ -1,7 +1,12 @@
+using Ebook.Application.Common.Messaging;
 using Ebook.Application.Content;
+using Ebook.Application.Publishing;
 using Ebook.Domain.Abstractions;
 using Ebook.Infrastructure.Persistence;
+using Ebook.Infrastructure.Publishing;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Ebook.Api.Endpoints;
 
@@ -70,6 +75,37 @@ public static class PublicEndpoints
             }
 
             return Results.Bytes(TransparentGif, "image/gif");
+        })
+        .AllowAnonymous()
+        .ExcludeFromDescription();
+
+        // Webhook de vendas da Kiwify (E07-02): validado por token; grava SaleEvent idempotente.
+        app.MapPost("/webhooks/kiwify", async (
+            HttpRequest http,
+            [FromQuery] string? token,
+            IOptions<KiwifyOptions> kiwify,
+            IDispatcher dispatcher,
+            CancellationToken ct) =>
+        {
+            var provided = token ?? http.Headers["X-Kiwify-Token"].ToString();
+            if (!KiwifyWebhook.IsValidToken(provided, kiwify.Value.WebhookToken))
+            {
+                logger.LogWarning("Webhook Kiwify rejeitado: token inválido");
+                return Results.Unauthorized();
+            }
+
+            using var reader = new StreamReader(http.Body);
+            var body = await reader.ReadToEndAsync(ct);
+
+            var mapped = KiwifyWebhookMapper.Map(body);
+            if (mapped.IsFailure)
+            {
+                logger.LogWarning("Webhook Kiwify inválido: {Error}", mapped.Error.Code);
+                return Results.BadRequest(new { error = mapped.Error.Code });
+            }
+
+            var result = await dispatcher.SendAsync(mapped.Value, ct);
+            return result.IsSuccess ? Results.Ok() : Results.Problem(result.Error.Message);
         })
         .AllowAnonymous()
         .ExcludeFromDescription();

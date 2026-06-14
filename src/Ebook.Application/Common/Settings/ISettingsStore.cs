@@ -22,4 +22,7 @@ public static class SettingKeys
 
     /// <summary>Base URL pública para links de checkout/pixel na LP. Vazio = caminhos relativos.</summary>
     public const string LpBaseUrl = "lp.baseUrl";
+
+    /// <summary>Publicar na Kiwify automaticamente ao iniciar a publicação (default false = manual-assistido).</summary>
+    public const string KiwifyAutoPublish = "kiwify.autoPublish";
 }

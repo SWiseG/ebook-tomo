@@ -6,6 +6,9 @@ public interface IProductRepository
 
     Task<bool> SlugExistsAsync(string slug, CancellationToken ct = default);
 
+    /// <summary>Resolve o produto a partir do id externo da Kiwify (mapeia webhooks de venda).</summary>
+    Task<Product?> GetByKiwifyProductIdAsync(string kiwifyProductId, CancellationToken ct = default);
+
     void Add(Product product);
 }
 

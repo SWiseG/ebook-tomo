@@ -1,6 +1,7 @@
 using Ebook.Domain.Knowledge;
 using Ebook.Domain.Niches;
 using Ebook.Domain.Products;
+using Ebook.Domain.Sales;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -13,6 +14,7 @@ public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : D
     public DbSet<Product> Products => Set<Product>();
     public DbSet<KnowledgeAsset> KnowledgeAssets => Set<KnowledgeAsset>();
     public DbSet<Artifact> Artifacts => Set<Artifact>();
+    public DbSet<SaleEvent> SaleEvents => Set<SaleEvent>();
     public DbSet<OutboxEventRecord> OutboxEvents => Set<OutboxEventRecord>();
     public DbSet<ProcessedEventRecord> ProcessedEvents => Set<ProcessedEventRecord>();
     public DbSet<JobRecord> Jobs => Set<JobRecord>();
@@ -47,7 +49,11 @@ public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : D
             e.Property(x => x.QualityTier).HasConversion<string>().HasMaxLength(20);
             e.Property(x => x.Currency).HasMaxLength(3);
             e.Property(x => x.Price).HasConversion<double>();
+            e.Property(x => x.KiwifyProductId).HasMaxLength(120);
+            e.Property(x => x.CheckoutUrl).HasMaxLength(500);
+            e.Property(x => x.LpUrl).HasMaxLength(500);
             e.HasIndex(x => x.Status);
+            e.HasIndex(x => x.KiwifyProductId);
             e.Ignore(x => x.DomainEvents);
         });
 
@@ -80,6 +86,22 @@ public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : D
             e.Property(x => x.Path).HasMaxLength(400);
             e.Property(x => x.Hash).HasMaxLength(64);
             e.HasIndex(x => new { x.ProductId, x.Type, x.Version });
+        });
+
+        modelBuilder.Entity<SaleEvent>(e =>
+        {
+            e.ToTable("SaleEvent");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.KiwifyOrderId).HasMaxLength(120);
+            e.HasIndex(x => x.KiwifyOrderId).IsUnique();
+            e.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Currency).HasMaxLength(3);
+            e.Property(x => x.GrossAmount).HasConversion<double>();
+            e.Property(x => x.NetAmount).HasConversion<double>();
+            e.Property(x => x.UtmSource).HasMaxLength(120);
+            e.Property(x => x.UtmCampaign).HasMaxLength(120);
+            e.Property(x => x.RawPayloadPath).HasMaxLength(400);
+            e.HasIndex(x => new { x.ProductId, x.OccurredAtUtc });
         });
 
         modelBuilder.Entity<OutboxEventRecord>(e =>

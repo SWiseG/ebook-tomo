@@ -6,6 +6,7 @@ using Ebook.Application.Common.Settings;
 using Ebook.Application.Content;
 using Ebook.Application.Content.Images;
 using Ebook.Application.Content.Pdf;
+using Ebook.Application.Publishing;
 using Ebook.Domain.Abstractions;
 using Ebook.Domain.Knowledge;
 using Ebook.Domain.Niches;
@@ -40,6 +41,7 @@ public class EbookGenerationTests
             s.AddSingleton<IPdfRenderer>(pdf);
             s.AddSingleton<IImageComposer>(img);
             s.AddSingleton<IPhotoProvider, NullPhotoProvider>();
+            s.AddSingleton<IKiwifyPublisher>(new FakeKiwifyPublisher());
             s.AddSingleton<IArtifactStore, FileArtifactStore>();
             s.AddScoped<IJobQueue, JobQueue>();
             s.AddScoped<ISettingsStore, SettingsStore>();
