@@ -1,13 +1,26 @@
 @use 'styles/tokens' as t;
+@use 'styles/motion';
 
-/* ── Tema: cor de fundo da aplicação por esquema (PrimeNG cuida dos componentes) ── */
+/* ─────────────────────────────────────────────────────────────
+   Tomo — camada de aplicação sobre o PrimeNG.
+   Cores vêm das vars --p-* (tomo-preset.ts). Aqui só semântica de
+   layout + raios/transições suaves + utilitários reutilizáveis.
+   ───────────────────────────────────────────────────────────── */
+
+/* ── Tokens semânticos por esquema (fundo do app + sombras quentes) ── */
 :root {
-  --app-ground: #faf3e3; // bege (claro)
-  --app-panel: #fffdf7; // creme (sidebar/cards próprios)
+  --app-ground: #f4ecdd; // bege pastel (claro)
+  --app-panel: #fffdf9; // off-white (sidebar/cards)
+  --tomo-shadow-sm: #{t.$shadow-sm};
+  --tomo-shadow: #{t.$shadow};
+  --tomo-shadow-lg: #{t.$shadow-lg};
 }
 :root.app-dark {
-  --app-ground: #0e0f14; // mantém o escuro atual
-  --app-panel: #16181f;
+  --app-ground: #100d0a; // preto-morno (escuro)
+  --app-panel: #1e1a15; // espresso (sidebar/cards)
+  --tomo-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --tomo-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --tomo-shadow-lg: 0 20px 56px rgba(0, 0, 0, 0.55);
 }
 
 /* ── Reset & base ─────────────────────────────────────────── */
@@ -20,11 +33,15 @@ body {
   margin: 0;
   min-height: 100vh;
   background: var(--app-ground);
-  color: var(--p-text-color, #e7e9f0);
+  color: var(--p-text-color, #2c251a);
   font-family: t.$font-sans;
   font-size: 15px;
-  line-height: 1.5;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition:
+    background-color t.$dur t.$ease-in-out,
+    color t.$dur t.$ease-in-out;
 }
 
 h1,
@@ -32,7 +49,12 @@ h2,
 h3 {
   margin: 0;
   font-weight: 650;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
+}
+
+a {
+  color: var(--p-primary-color);
+  transition: color t.$dur-fast t.$ease-out;
 }
 
 ::-webkit-scrollbar {
@@ -40,9 +62,87 @@ h3 {
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--p-surface-400);
+  background: var(--p-surface-300);
   border-radius: t.$radius-pill;
   border: 2px solid var(--app-ground);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--p-surface-400);
+}
+
+/* ── Componentes PrimeNG: raio suave + microtransições (camada não-layered vence) ── */
+.p-button {
+  border-radius: t.$radius;
+  transition:
+    background-color t.$dur-fast t.$ease-out,
+    border-color t.$dur-fast t.$ease-out,
+    color t.$dur-fast t.$ease-out,
+    box-shadow t.$dur t.$ease-out,
+    transform t.$dur-fast t.$ease-spring;
+}
+.p-button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: var(--tomo-shadow-sm);
+}
+.p-button:not(:disabled):active {
+  transform: translateY(0);
+}
+
+.p-card {
+  border-radius: t.$radius-lg;
+  border: 1px solid var(--p-content-border-color);
+  box-shadow: var(--tomo-shadow-sm);
+  transition:
+    box-shadow t.$dur t.$ease-out,
+    border-color t.$dur t.$ease-out,
+    transform t.$dur t.$ease-out;
+}
+
+.p-inputtext,
+.p-password,
+.p-select,
+.p-textarea {
+  border-radius: t.$radius;
+  transition:
+    border-color t.$dur-fast t.$ease-out,
+    box-shadow t.$dur-fast t.$ease-out;
+}
+
+.p-tag {
+  border-radius: t.$radius-pill;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.p-selectbutton {
+  border-radius: t.$radius-pill;
+}
+
+.p-datatable .p-datatable-tbody > tr {
+  transition: background-color t.$dur-fast t.$ease-out;
+}
+
+/* ── Barra de progresso de navegação (topo) ───────────────── */
+.tomo-loadbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: t.$z-loadbar;
+  overflow: hidden;
+  pointer-events: none;
+  background: transparent;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--p-primary-color), var(--p-amber-300, #fcd34d));
+    border-radius: t.$radius-pill;
+    animation: tomo-indeterminate 1.1s t.$ease-in-out infinite;
+  }
 }
 
 /* ── Page scaffolding ─────────────────────────────────────── */
@@ -80,7 +180,8 @@ h3 {
   text-align: center;
   color: var(--p-text-muted-color);
   border: 1px dashed var(--p-content-border-color);
-  border-radius: t.$radius;
+  border-radius: t.$radius-lg;
+  background: color-mix(in srgb, var(--p-content-background) 60%, transparent);
 }
 .mono {
   font-family: t.$font-mono;
@@ -88,7 +189,7 @@ h3 {
   color: var(--p-text-muted-color);
 }
 
-/* ── KPI cards (estilo SaaS: ícone + valor + label) ───────── */
+/* ── KPI cards (ícone + valor + label, com hover-lift) ─────── */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
@@ -102,12 +203,18 @@ h3 {
   background: var(--p-content-background);
   border: 1px solid var(--p-content-border-color);
   border-radius: t.$radius-lg;
+  box-shadow: var(--tomo-shadow-sm);
   color: inherit;
   text-decoration: none;
-  transition: border-color 0.12s ease;
+  transition:
+    border-color t.$dur t.$ease-out,
+    box-shadow t.$dur t.$ease-out,
+    transform t.$dur t.$ease-out;
 
   &:hover {
     border-color: var(--p-primary-color);
+    box-shadow: var(--tomo-shadow);
+    transform: translateY(-3px);
     text-decoration: none;
   }
   .pi {

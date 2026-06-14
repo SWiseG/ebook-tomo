@@ -1,0 +1,81 @@
+// Tomo — animações suaves (keyframes + utilitários). Centralizado e respeitando reduced-motion.
+@use 'tokens' as t;
+
+@keyframes tomo-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes tomo-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tomo-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes tomo-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes tomo-indeterminate {
+  0% {
+    left: -40%;
+    width: 40%;
+  }
+  50% {
+    width: 55%;
+  }
+  100% {
+    left: 100%;
+    width: 40%;
+  }
+}
+
+// Entrada de bloco/página
+.anim-in {
+  animation: tomo-fade-in-up t.$dur-slow t.$ease-out both;
+}
+.anim-fade {
+  animation: tomo-fade-in t.$dur t.$ease-out both;
+}
+
+// Stagger: aplica atraso incremental aos filhos diretos
+.anim-stagger > * {
+  animation: tomo-fade-in-up t.$dur-slow t.$ease-out both;
+}
+@for $i from 1 through 8 {
+  .anim-stagger > *:nth-child(#{$i}) {
+    animation-delay: #{($i - 1) * 50}ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

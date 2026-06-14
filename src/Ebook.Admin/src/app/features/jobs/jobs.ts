@@ -7,6 +7,8 @@ import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { JobItem, JobsPage } from '../../core/api.types';
+import { NotificationService } from '../../core/notification.service';
+import { Loading } from '../../shared/loading';
 
 type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' | undefined;
 
@@ -19,12 +21,13 @@ const SEVERITY: Record<JobItem['status'], Severity> = {
 
 @Component({
   selector: 'app-jobs',
-  imports: [DatePipe, FormsModule, TableModule, TagModule, ButtonModule, SelectButtonModule],
+  imports: [DatePipe, FormsModule, TableModule, TagModule, ButtonModule, SelectButtonModule, Loading],
   templateUrl: './jobs.html',
   styleUrl: './jobs.scss',
 })
 export class Jobs {
   private readonly http = inject(HttpClient);
+  private readonly notify = inject(NotificationService);
 
   readonly page = signal<JobsPage | null>(null);
 
@@ -53,6 +56,12 @@ export class Jobs {
   }
 
   retry(job: JobItem): void {
-    this.http.post(`/api/v1/jobs/${job.id}/retry`, {}).subscribe(() => this.load());
+    this.http.post(`/api/v1/jobs/${job.id}/retry`, {}).subscribe({
+      next: () => {
+        this.notify.success('Job reenfileirado', job.type);
+        this.load();
+      },
+      error: () => this.notify.error('Falha ao reprocessar o job.'),
+    });
   }
 }

@@ -1,4 +1,4 @@
-<div class="page-head">
+<div class="page-head anim-in">
   <div>
     <h1>Nichos</h1>
     <div class="sub">Descobertos pelo motor de tendências, pontuados e ranqueados.</div>
@@ -20,6 +20,7 @@
 
 @if (niches(); as list) {
   <p-table
+    class="anim-in"
     [value]="list"
     [paginator]="list.length > 12"
     [rows]="12"
@@ -86,5 +87,5 @@
     </ng-template>
   </p-table>
 } @else {
-  <p class="muted">Carregando…</p>
+  <app-loading variant="table" [rows]="6" />
 }

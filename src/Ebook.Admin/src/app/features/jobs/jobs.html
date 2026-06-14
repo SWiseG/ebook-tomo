@@ -1,4 +1,4 @@
-<div class="page-head">
+<div class="page-head anim-in">
   <div>
     <h1>Jobs</h1>
     <div class="sub">Fila persistida: retry exponencial e dead-letter.</div>
@@ -17,7 +17,7 @@
 
 @if (page(); as p) {
   <p class="muted count">{{ p.total }} job(s)</p>
-  <p-table [value]="p.items" [paginator]="p.items.length > 15" [rows]="15" [rowHover]="true" size="small">
+  <p-table class="anim-in" [value]="p.items" [paginator]="p.items.length > 15" [rows]="15" [rowHover]="true" size="small">
     <ng-template #header>
       <tr>
         <th>Tipo</th>
@@ -49,5 +49,5 @@
     </ng-template>
   </p-table>
 } @else {
-  <p class="muted">Carregando…</p>
+  <app-loading variant="table" [rows]="8" />
 }

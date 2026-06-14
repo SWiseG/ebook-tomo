@@ -2,13 +2,16 @@ import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
 
 /**
- * Tema "Tomo" sobre o preset Aura.
- * - Claro: primária âmbar + superfícies bege/creme.
- * - Escuro: primária índigo + superfícies escuras (mantém a identidade atual).
+ * Tema "Tomo" sobre o preset Aura — fonte ÚNICA de cor da aplicação.
+ * Marca unificada no ÂMBAR nos dois esquemas:
+ *  - Claro: pastéis quentes (off-white / bege) + primária âmbar + texto preto-morno.
+ *  - Escuro: preto/espresso (com leve calor) + primária âmbar + texto off-white.
  * O modo escuro é ativado pela classe `.app-dark` (ver ThemeService / providePrimeNG).
+ * Raio/movimento/espaçamento são primitivas NÃO-cor (ver styles/_tokens.scss).
  */
 export const TomoPreset = definePreset(Aura, {
   semantic: {
+    // ramp âmbar usado como primária em ambos os esquemas
     primary: {
       50: '{amber.50}',
       100: '{amber.100}',
@@ -21,6 +24,13 @@ export const TomoPreset = definePreset(Aura, {
       800: '{amber.800}',
       900: '{amber.900}',
       950: '{amber.950}',
+    },
+    // raio de foco coerente com a estética suave
+    focusRing: {
+      width: '2px',
+      style: 'solid',
+      color: '{primary.color}',
+      offset: '2px',
     },
     colorScheme: {
       light: {
@@ -36,49 +46,49 @@ export const TomoPreset = definePreset(Aura, {
           color: '{amber.800}',
           focusColor: '{amber.900}',
         },
-        // rampa bege/creme: 0 = papel claro, 950 = marrom escuro (texto)
+        // rampa pastel quente: 0 = off-white (papel), 950 = preto-morno (texto/títulos)
         surface: {
-          0: '#fffdf7',
-          50: '#faf3e3',
-          100: '#f3e9d3',
-          200: '#e9dcc2',
-          300: '#ddcba8',
-          400: '#cdb98f',
-          500: '#b7a275',
-          600: '#9a8961',
-          700: '#6f6149',
-          800: '#4a4031',
-          900: '#2b2117',
-          950: '#1a1410',
+          0: '#fffdf9',
+          50: '#faf5ea',
+          100: '#f3ebda',
+          200: '#e9dec8',
+          300: '#dccfb2',
+          400: '#c8b894',
+          500: '#ab9874',
+          600: '#897959',
+          700: '#655842',
+          800: '#463c2c',
+          900: '#2c251a',
+          950: '#1b160f',
         },
       },
       dark: {
         primary: {
-          color: '{indigo.400}',
-          contrastColor: '{indigo.950}',
-          hoverColor: '{indigo.300}',
-          activeColor: '{indigo.200}',
+          color: '{amber.400}',
+          contrastColor: '#1b160f',
+          hoverColor: '{amber.300}',
+          activeColor: '{amber.200}',
         },
         highlight: {
-          background: 'rgba(99, 102, 241, 0.16)',
-          focusBackground: 'rgba(99, 102, 241, 0.24)',
-          color: 'rgba(255, 255, 255, 0.87)',
-          focusColor: 'rgba(255, 255, 255, 0.87)',
+          background: 'rgba(245, 166, 35, 0.16)',
+          focusBackground: 'rgba(245, 166, 35, 0.24)',
+          color: 'rgba(255, 251, 242, 0.92)',
+          focusColor: 'rgba(255, 251, 242, 0.92)',
         },
-        // rampa azul-grafite: 0 = claro (texto), 950 = quase preto (fundo)
+        // rampa espresso quente: 0 = off-white (texto), 950 = preto-morno (fundo)
         surface: {
-          0: '#f4f5f8',
-          50: '#e7e9f0',
-          100: '#c7ccd6',
-          200: '#9aa1b2',
-          300: '#6b7280',
-          400: '#3a3f4e',
-          500: '#2a2e3a',
-          600: '#262a36',
-          700: '#1e212b',
-          800: '#16181f',
-          900: '#121419',
-          950: '#0e0f14',
+          0: '#f7f4ee',
+          50: '#ece7dd',
+          100: '#d8d0c2',
+          200: '#b3a995',
+          300: '#8a8170',
+          400: '#5f574a',
+          500: '#463f34',
+          600: '#342e26',
+          700: '#28231d',
+          800: '#1e1a15',
+          900: '#161310',
+          950: '#100d0a',
         },
       },
     },

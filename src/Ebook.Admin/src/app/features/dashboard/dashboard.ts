@@ -3,18 +3,19 @@ import { Component, inject, signal } from '@angular/core';
 import { DecimalPipe, PercentPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { MessageService } from 'primeng/api';
 import { DashboardSummary } from '../../core/api.types';
+import { NotificationService } from '../../core/notification.service';
+import { Loading } from '../../shared/loading';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [DecimalPipe, PercentPipe, RouterLink, ButtonModule],
+  imports: [DecimalPipe, PercentPipe, RouterLink, ButtonModule, Loading],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
 export class Dashboard {
   private readonly http = inject(HttpClient);
-  private readonly messages = inject(MessageService);
+  private readonly notify = inject(NotificationService);
 
   readonly summary = signal<DashboardSummary | null>(null);
   readonly error = signal<string | null>(null);
@@ -29,13 +30,8 @@ export class Dashboard {
   discover(): void {
     this.http.post('/api/v1/niches/discover', {}).subscribe({
       next: () =>
-        this.messages.add({
-          severity: 'success',
-          summary: 'Descoberta enfileirada',
-          detail: 'Os nichos aparecerão em instantes.',
-        }),
-      error: () =>
-        this.messages.add({ severity: 'error', summary: 'Falha ao disparar a descoberta.' }),
+        this.notify.success('Descoberta enfileirada', 'Os nichos aparecerão em instantes.'),
+      error: () => this.notify.error('Falha ao disparar a descoberta.'),
     });
   }
 }

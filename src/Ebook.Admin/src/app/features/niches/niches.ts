@@ -7,8 +7,10 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService } from 'primeng/api';
 import { NicheItem, NicheStatus } from '../../core/api.types';
+import { NotificationService } from '../../core/notification.service';
+import { Loading } from '../../shared/loading';
 
 type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' | undefined;
 
@@ -21,14 +23,24 @@ const SEVERITY: Record<NicheStatus, Severity> = {
 
 @Component({
   selector: 'app-niches',
-  imports: [DatePipe, DecimalPipe, FormsModule, TableModule, TagModule, ButtonModule, SelectButtonModule],
+  imports: [
+    DatePipe,
+    DecimalPipe,
+    FormsModule,
+    TableModule,
+    TagModule,
+    ButtonModule,
+    SelectButtonModule,
+    Loading,
+  ],
   templateUrl: './niches.html',
   styleUrl: './niches.scss',
 })
 export class Niches {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
-  private readonly messages = inject(MessageService);
+  private readonly notify = inject(NotificationService);
+  private readonly confirm = inject(ConfirmationService);
 
   readonly niches = signal<NicheItem[] | null>(null);
   readonly busy = signal<string | null>(null);
@@ -54,19 +66,14 @@ export class Niches {
     const query = this.status ? `?status=${this.status}` : '';
     this.http.get<NicheItem[]>(`/api/v1/niches${query}`).subscribe({
       next: (data) => this.niches.set(data),
-      error: () => this.messages.add({ severity: 'error', summary: 'Falha ao carregar nichos.' }),
+      error: () => this.notify.error('Falha ao carregar nichos.'),
     });
   }
 
   discover(): void {
     this.http.post('/api/v1/niches/discover', {}).subscribe({
-      next: () =>
-        this.messages.add({
-          severity: 'success',
-          summary: 'Descoberta enfileirada',
-          detail: 'Atualize em instantes.',
-        }),
-      error: () => this.messages.add({ severity: 'error', summary: 'Falha ao disparar a descoberta.' }),
+      next: () => this.notify.success('Descoberta enfileirada', 'Atualize em instantes.'),
+      error: () => this.notify.error('Falha ao disparar a descoberta.'),
     });
   }
 
@@ -75,7 +82,16 @@ export class Niches {
   }
 
   discard(n: NicheItem): void {
-    this.act(n.id, this.http.post(`/api/v1/niches/${n.id}/discard`, {}), 'Nicho descartado.');
+    this.confirm.confirm({
+      header: 'Descartar nicho',
+      message: `Descartar "${n.name}"? Ele sairá do ranking de descoberta.`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Descartar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () =>
+        this.act(n.id, this.http.post(`/api/v1/niches/${n.id}/discard`, {}), 'Nicho descartado.'),
+    });
   }
 
   generate(n: NicheItem): void {
@@ -85,7 +101,7 @@ export class Niches {
       .subscribe({
         next: (r) => void this.router.navigate(['/products', r.productId]),
         error: () => {
-          this.messages.add({ severity: 'error', summary: 'Falha ao gerar produto.' });
+          this.notify.error('Falha ao gerar produto.');
           this.busy.set(null);
         },
       });
@@ -96,12 +112,12 @@ export class Niches {
     request.subscribe({
       next: () => {
         this.busy.set(null);
-        this.messages.add({ severity: 'success', summary: ok });
+        this.notify.success(ok);
         this.load();
       },
       error: () => {
         this.busy.set(null);
-        this.messages.add({ severity: 'error', summary: 'Ação falhou (transição inválida?).' });
+        this.notify.error('Ação falhou', 'Transição inválida?');
       },
     });
   }

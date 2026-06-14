@@ -1,35 +1,51 @@
 @use '../../../styles/tokens' as t;
 
 .shell {
-  display: grid;
-  grid-template-columns: t.$sidebar-w 1fr;
+  --sw: #{t.$sidebar-w};
   min-height: 100vh;
+
+  &.is-collapsed {
+    --sw: #{t.$sidebar-w-collapsed};
+  }
 }
 
+/* ── Sidebar (fixa; largura anima entre expandida e rail) ── */
 .sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--sw);
+  z-index: t.$z-sidebar;
   display: flex;
   flex-direction: column;
-  gap: t.$space-5;
-  padding: t.$space-5 t.$space-4;
+  gap: t.$space-4;
+  padding: t.$space-4 t.$space-3;
   background: var(--app-panel);
   border-right: 1px solid var(--p-content-border-color);
-  position: sticky;
-  top: 0;
-  height: 100vh;
+  transition:
+    width t.$dur-slow t.$ease-out,
+    transform t.$dur-slow t.$ease-out;
+  overflow: hidden;
 
-  .brand {
-    padding: 0 t.$space-2;
-    &:hover {
-      text-decoration: none;
-    }
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: t.$space-2;
+    padding: t.$space-1 t.$space-2;
+    min-height: 40px;
+  }
+
+  .brand:hover {
+    text-decoration: none;
   }
 
   nav {
     display: flex;
     flex-direction: column;
-    gap: t.$space-5;
+    gap: t.$space-4;
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .group {
@@ -38,11 +54,13 @@
     gap: 2px;
 
     &__title {
-      font-size: 0.68rem;
+      font-size: 0.66rem;
       text-transform: uppercase;
       letter-spacing: 0.12em;
       color: var(--p-text-muted-color);
       padding: 0 t.$space-3 t.$space-1;
+      white-space: nowrap;
+      transition: opacity t.$dur t.$ease-out;
     }
 
     a {
@@ -55,18 +73,38 @@
       font-size: 0.92rem;
       font-weight: 550;
       text-decoration: none;
+      white-space: nowrap;
+      position: relative;
+      transition:
+        background-color t.$dur-fast t.$ease-out,
+        color t.$dur-fast t.$ease-out;
 
       i {
-        font-size: 0.95rem;
+        font-size: 1rem;
+        flex: none;
+        width: 22px;
+        text-align: center;
       }
       &:hover {
-        background: var(--p-content-hover-background);
+        background: var(--p-content-hover-background, color-mix(in srgb, var(--p-primary-color) 8%, transparent));
         color: var(--p-text-color);
         text-decoration: none;
       }
       &.active {
         background: var(--p-highlight-background);
         color: var(--p-primary-color);
+        font-weight: 650;
+      }
+      // marca de seleção à esquerda
+      &.active::before {
+        content: '';
+        position: absolute;
+        left: -#{t.$space-3};
+        top: 20%;
+        bottom: 20%;
+        width: 3px;
+        border-radius: t.$radius-pill;
+        background: var(--p-primary-color);
       }
     }
   }
@@ -74,25 +112,200 @@
   .foot {
     display: flex;
     flex-direction: column;
-    gap: t.$space-2;
+    gap: 2px;
+  }
 
-    ::ng-deep .p-button {
-      width: 100%;
+  .foot-btn {
+    display: flex;
+    align-items: center;
+    gap: t.$space-3;
+    padding: t.$space-2 t.$space-3;
+    border: 0;
+    background: transparent;
+    border-radius: t.$radius;
+    color: var(--p-text-muted-color);
+    font-size: 0.92rem;
+    font-weight: 550;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+      background-color t.$dur-fast t.$ease-out,
+      color t.$dur-fast t.$ease-out;
+
+    i {
+      font-size: 1rem;
+      width: 22px;
+      text-align: center;
+      flex: none;
+    }
+    &:hover {
+      background: var(--p-content-hover-background, color-mix(in srgb, var(--p-primary-color) 8%, transparent));
+      color: var(--p-text-color);
+    }
+    &--danger:hover {
+      color: var(--p-red-500, #ef4444);
+      background: color-mix(in srgb, var(--p-red-500, #ef4444) 12%, transparent);
+    }
+  }
+
+  // botão de recolher (no topo da sidebar)
+  .rail-toggle {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: t.$radius-sm;
+    background: transparent;
+    color: var(--p-text-muted-color);
+    cursor: pointer;
+    flex: none;
+    transition:
+      background-color t.$dur-fast t.$ease-out,
+      color t.$dur-fast t.$ease-out;
+    &:hover {
+      background: var(--p-content-hover-background, color-mix(in srgb, var(--p-primary-color) 10%, transparent));
+      color: var(--p-text-color);
+    }
+  }
+}
+
+/* ── Rail compacto: esconde rótulos/títulos, centraliza ícones ── */
+.is-collapsed .sidebar {
+  .group__title {
+    opacity: 0;
+    height: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  .group a,
+  .foot-btn {
+    justify-content: center;
+    gap: 0;
+    padding: t.$space-2;
+    .label {
+      display: none;
+    }
+  }
+  .group a.active::before {
+    left: 0;
+  }
+  .sidebar__head {
+    flex-direction: column;
+    gap: t.$space-2;
+  }
+}
+
+/* ── Coluna principal (deslocada pela largura da sidebar) ── */
+.main-col {
+  padding-left: var(--sw);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: padding-left t.$dur-slow t.$ease-out;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: t.$z-topbar;
+  height: t.$topbar-h;
+  display: flex;
+  align-items: center;
+  gap: t.$space-2;
+  padding: 0 t.$space-5;
+  background: color-mix(in srgb, var(--app-ground) 82%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--p-content-border-color);
+
+  .spacer {
+    flex: 1;
+  }
+
+  .hamburger {
+    display: none;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: t.$radius;
+    background: transparent;
+    color: var(--p-text-color);
+    cursor: pointer;
+    font-size: 1.1rem;
+  }
+
+  .rail-toggle--top {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: t.$radius;
+    background: transparent;
+    color: var(--p-text-muted-color);
+    cursor: pointer;
+    transition:
+      background-color t.$dur-fast t.$ease-out,
+      color t.$dur-fast t.$ease-out;
+    &:hover {
+      background: var(--p-content-hover-background, color-mix(in srgb, var(--p-primary-color) 10%, transparent));
+      color: var(--p-text-color);
     }
   }
 }
 
 .content {
-  padding: t.$space-6;
-  max-width: 1180px;
+  flex: 1;
+  padding: t.$space-6 t.$space-6 t.$space-7;
+  max-width: t.$content-max;
+  width: 100%;
 }
 
-@media (max-width: 720px) {
-  .shell {
-    grid-template-columns: 1fr;
-  }
+.backdrop {
+  display: none;
+}
+
+/* ── Mobile: sidebar vira drawer overlay com backdrop ── */
+@media (max-width: 860px) {
   .sidebar {
-    position: static;
-    height: auto;
+    transform: translateX(-100%);
+    box-shadow: var(--tomo-shadow-lg);
+  }
+  .shell.is-mobile-open .sidebar {
+    transform: translateX(0);
+  }
+  // no mobile o rail não se aplica: sempre largura cheia quando aberto
+  .shell,
+  .shell.is-collapsed {
+    --sw: #{t.$sidebar-w};
+  }
+  .main-col {
+    padding-left: 0;
+  }
+  .topbar .hamburger {
+    display: grid;
+  }
+  .topbar .rail-toggle--top {
+    display: none;
+  }
+  .shell.is-mobile-open .backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: t.$z-backdrop;
+    background: rgba(0, 0, 0, 0.45);
+    animation: tomo-fade-in t.$dur t.$ease-out;
+  }
+  .content {
+    padding: t.$space-5 t.$space-4 t.$space-6;
+  }
+}
+
+/* sidebar acima do backdrop no mobile */
+@media (max-width: 860px) {
+  .sidebar {
+    z-index: calc(#{t.$z-backdrop} + 1);
   }
 }

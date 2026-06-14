@@ -5,8 +5,9 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
-import { MessageService } from 'primeng/api';
 import { SettingMap } from '../../core/api.types';
+import { NotificationService } from '../../core/notification.service';
+import { Loading } from '../../shared/loading';
 
 interface SettingRow {
   key: string;
@@ -15,13 +16,13 @@ interface SettingRow {
 
 @Component({
   selector: 'app-settings',
-  imports: [FormsModule, CardModule, ButtonModule, InputTextModule, TextareaModule],
+  imports: [FormsModule, CardModule, ButtonModule, InputTextModule, TextareaModule, Loading],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
 })
 export class Settings {
   private readonly http = inject(HttpClient);
-  private readonly messages = inject(MessageService);
+  private readonly notify = inject(NotificationService);
 
   readonly rows = signal<SettingRow[] | null>(null);
 
@@ -44,7 +45,7 @@ export class Settings {
   load(): void {
     this.http.get<SettingMap>('/api/v1/settings').subscribe({
       next: (map) => this.rows.set(Object.entries(map).map(([key, value]) => ({ key, value }))),
-      error: () => this.messages.add({ severity: 'error', summary: 'Falha ao carregar configurações.' }),
+      error: () => this.notify.error('Falha ao carregar configurações.'),
     });
   }
 
@@ -67,10 +68,10 @@ export class Settings {
   private put(key: string, valueJson: string, done?: () => void): void {
     this.http.put(`/api/v1/settings/${encodeURIComponent(key)}`, { valueJson }).subscribe({
       next: () => {
-        this.messages.add({ severity: 'success', summary: `"${key}" salvo.` });
+        this.notify.success('Configuração salva', key);
         done?.();
       },
-      error: () => this.messages.add({ severity: 'error', summary: `Falha ao salvar "${key}".` }),
+      error: () => this.notify.error(`Falha ao salvar "${key}".`),
     });
   }
 }

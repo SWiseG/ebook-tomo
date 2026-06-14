@@ -1,6 +1,7 @@
-// Tomo — design tokens (tema escuro padrão · índigo + âmbar)
+// Tomo — design tokens (primitivas NÃO-cor; as cores vivem em tomo-preset.ts / PrimeNG vars)
+// Mantemos algumas cores legadas porque login.scss ainda as referencia.
 
-// Superfícies
+// ── Superfícies (legado — fundo escuro; uso de cor real vem das vars --p-*/--tomo-*)
 $bg: #0e0f14;
 $surface: #16181f;
 $surface-2: #1e212b;
@@ -8,20 +9,20 @@ $surface-3: #262a36;
 $border: #2a2e3a;
 $border-strong: #3a3f4e;
 
-// Texto
+// ── Texto (legado)
 $text: #e7e9f0;
 $text-muted: #9aa1b2;
 $text-faint: #6b7280;
 
-// Marca
-$primary: #6366f1;
-$primary-strong: #818cf8;
-$primary-soft: rgba(99, 102, 241, 0.16);
+// ── Marca (legado — usado por gradientes locais; a marca real é âmbar via preset)
+$primary: #d98a1f;
+$primary-strong: #f5a623;
+$primary-soft: rgba(217, 138, 31, 0.16);
 $accent: #f5a623;
 $accent-strong: #fbbf24;
 $accent-soft: rgba(245, 166, 35, 0.16);
 
-// Semânticos
+// ── Semânticos (legado)
 $success: #34d399;
 $success-soft: rgba(52, 211, 153, 0.16);
 $warning: #fbbf24;
@@ -31,13 +32,14 @@ $danger-soft: rgba(248, 113, 113, 0.16);
 $info: #38bdf8;
 $info-soft: rgba(56, 189, 248, 0.16);
 
-// Raio
-$radius-sm: 6px;
-$radius: 10px;
-$radius-lg: 14px;
+// ── Raio (escala mais suave/profissional)
+$radius-sm: 8px;
+$radius: 12px;
+$radius-lg: 16px;
+$radius-xl: 22px;
 $radius-pill: 999px;
 
-// Espaçamento
+// ── Espaçamento (escala 4px)
 $space-1: 4px;
 $space-2: 8px;
 $space-3: 12px;
@@ -46,14 +48,33 @@ $space-5: 24px;
 $space-6: 32px;
 $space-7: 48px;
 
-// Tipografia
+// ── Tipografia
 $font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
 $font-mono: 'JetBrains Mono', 'Cascadia Code', ui-monospace, 'Consolas', monospace;
 
-// Sombra
-$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-$shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
-$shadow-lg: 0 18px 50px rgba(0, 0, 0, 0.45);
+// ── Movimento (tokens centralizados de animação suave)
+$dur-fast: 120ms;
+$dur: 200ms;
+$dur-slow: 360ms;
+$ease-out: cubic-bezier(0.22, 1, 0.36, 1); // decelerate (entradas)
+$ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); // simétrica
+$ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1); // leve overshoot
 
-// Layout
-$sidebar-w: 248px;
+// ── Elevação (sombras quentes e difusas, não preto puro)
+$shadow-sm: 0 1px 2px rgba(60, 42, 20, 0.08), 0 1px 3px rgba(60, 42, 20, 0.06);
+$shadow: 0 6px 20px rgba(60, 42, 20, 0.1), 0 2px 6px rgba(60, 42, 20, 0.08);
+$shadow-lg: 0 18px 50px rgba(40, 28, 14, 0.18), 0 6px 16px rgba(40, 28, 14, 0.1);
+
+// ── Layout
+$sidebar-w: 256px;
+$sidebar-w-collapsed: 76px;
+$topbar-h: 60px;
+$content-max: 1200px;
+
+// ── Camadas (z-index)
+$z-content: 1;
+$z-sidebar: 40;
+$z-topbar: 50;
+$z-backdrop: 60;
+$z-loadbar: 80;
+$z-toast: 1100;

@@ -26,6 +26,6 @@ export class ThemeService {
     document.documentElement.classList.toggle('app-dark', this.dark());
     document
       .querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', this.dark() ? '#0e0f14' : '#faf3e3');
+      ?.setAttribute('content', this.dark() ? '#100d0a' : '#f4ecdd');
   }
 }

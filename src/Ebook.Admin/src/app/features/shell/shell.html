@@ -1,14 +1,36 @@
-<div class="shell">
+@if (navigating()) {
+  <div class="tomo-loadbar"></div>
+}
+
+<div class="shell" [class.is-collapsed]="layout.collapsed()" [class.is-mobile-open]="layout.mobileOpen()">
   <aside class="sidebar">
-    <a class="brand" routerLink="/dashboard"><tomo-logo /></a>
+    <div class="sidebar__head">
+      <a class="brand" routerLink="/dashboard"><tomo-logo [compact]="layout.collapsed()" /></a>
+      <button
+        type="button"
+        class="rail-toggle"
+        (click)="layout.toggleCollapsed()"
+        [pTooltip]="layout.collapsed() ? 'Expandir' : 'Recolher'"
+        tooltipPosition="right"
+        aria-label="Recolher menu"
+      >
+        <i class="pi" [class.pi-angle-left]="!layout.collapsed()" [class.pi-angle-right]="layout.collapsed()"></i>
+      </button>
+    </div>
 
     <nav>
       @for (group of groups; track group.title) {
         <div class="group">
           <span class="group__title">{{ group.title }}</span>
           @for (item of group.items; track item.path) {
-            <a [routerLink]="item.path" routerLinkActive="active">
-              <i [class]="item.icon"></i>{{ item.label }}
+            <a
+              [routerLink]="item.path"
+              routerLinkActive="active"
+              [pTooltip]="item.label"
+              tooltipPosition="right"
+              [tooltipDisabled]="!layout.collapsed()"
+            >
+              <i [class]="item.icon"></i><span class="label">{{ item.label }}</span>
             </a>
           }
         </div>
@@ -16,26 +38,65 @@
     </nav>
 
     <div class="foot">
-      <p-button
-        [text]="true"
-        severity="secondary"
-        [icon]="theme.dark() ? 'pi pi-sun' : 'pi pi-moon'"
-        [label]="theme.dark() ? 'Tema claro' : 'Tema escuro'"
-        (onClick)="theme.toggle()"
-      />
-      <p-button
-        [outlined]="true"
-        severity="danger"
-        icon="pi pi-sign-out"
-        label="Sair"
-        (onClick)="auth.logout()"
-      />
+      <button
+        type="button"
+        class="foot-btn"
+        (click)="theme.toggle()"
+        [pTooltip]="theme.dark() ? 'Tema claro' : 'Tema escuro'"
+        tooltipPosition="right"
+        [tooltipDisabled]="!layout.collapsed()"
+      >
+        <i class="pi" [class.pi-sun]="theme.dark()" [class.pi-moon]="!theme.dark()"></i>
+        <span class="label">{{ theme.dark() ? 'Tema claro' : 'Tema escuro' }}</span>
+      </button>
+      <button
+        type="button"
+        class="foot-btn foot-btn--danger"
+        (click)="auth.logout()"
+        pTooltip="Sair"
+        tooltipPosition="right"
+        [tooltipDisabled]="!layout.collapsed()"
+      >
+        <i class="pi pi-sign-out"></i><span class="label">Sair</span>
+      </button>
     </div>
   </aside>
 
-  <main class="content">
-    <router-outlet />
-  </main>
+  <div class="main-col">
+    <header class="topbar">
+      <button type="button" class="hamburger" (click)="layout.toggleMobile()" aria-label="Abrir menu">
+        <i class="pi pi-bars"></i>
+      </button>
+      <button type="button" class="rail-toggle rail-toggle--top" (click)="layout.toggleCollapsed()" aria-label="Recolher menu">
+        <i class="pi" [class.pi-angle-left]="!layout.collapsed()" [class.pi-angle-right]="layout.collapsed()"></i>
+      </button>
+      <span class="spacer"></span>
+      <p-button
+        [text]="true"
+        severity="secondary"
+        size="small"
+        icon="pi pi-question-circle"
+        label="Ajuda"
+        routerLink="/tutorial"
+      />
+      <p-button
+        [text]="true"
+        severity="secondary"
+        size="small"
+        [icon]="theme.dark() ? 'pi pi-sun' : 'pi pi-moon'"
+        (onClick)="theme.toggle()"
+        [pTooltip]="theme.dark() ? 'Tema claro' : 'Tema escuro'"
+        tooltipPosition="bottom"
+      />
+    </header>
+
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+
+  <div class="backdrop" (click)="layout.closeMobile()"></div>
 </div>
 
 <p-toast position="bottom-right" />
+<p-confirmDialog />

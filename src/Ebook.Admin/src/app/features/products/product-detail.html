@@ -5,7 +5,7 @@
 }
 
 @if (detail(); as d) {
-  <div class="page-head">
+  <div class="page-head anim-in">
     <div>
       <h1>{{ d.title }}</h1>
       <div class="sub"><span class="mono">{{ d.slug }}</span> · {{ d.qualityTier }}</div>
@@ -34,7 +34,7 @@
     }
   </div>
 
-  <div class="grid-2">
+  <div class="grid-2 anim-in">
     <p-card>
       <ng-template #title>Manuscrito</ng-template>
       @if (manuscriptHtml(); as html) {
@@ -88,5 +88,5 @@
     </aside>
   </div>
 } @else if (!error()) {
-  <p class="muted">Carregando…</p>
+  <app-loading variant="detail" />
 }

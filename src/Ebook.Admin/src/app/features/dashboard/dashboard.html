@@ -1,4 +1,4 @@
-<div class="page-head">
+<div class="page-head anim-in">
   <div>
     <h1>Dashboard</h1>
     <div class="sub">Visão geral do portfólio, da operação e do consumo de IA.</div>
@@ -14,9 +14,9 @@
 }
 
 @if (summary(); as s) {
-  <section class="block">
+  <section class="block anim-in">
     <div class="block__title">Portfólio</div>
-    <div class="kpi-grid">
+    <div class="kpi-grid anim-stagger">
       <a class="kpi" routerLink="/products">
         <i class="pi pi-box"></i>
         <div class="body">
@@ -41,9 +41,9 @@
     </div>
   </section>
 
-  <section class="block">
+  <section class="block anim-in">
     <div class="block__title">Operação</div>
-    <div class="kpi-grid">
+    <div class="kpi-grid anim-stagger">
       <a class="kpi" routerLink="/jobs" [class.warn]="s.jobsFailed > 0">
         <i class="pi pi-exclamation-triangle"></i>
         <div class="body">
@@ -61,9 +61,9 @@
     </div>
   </section>
 
-  <section class="block">
+  <section class="block anim-in">
     <div class="block__title">Inteligência</div>
-    <div class="kpi-grid">
+    <div class="kpi-grid anim-stagger">
       <div class="kpi">
         <i class="pi pi-bolt"></i>
         <div class="body">
@@ -81,5 +81,5 @@
     </div>
   </section>
 } @else if (!error()) {
-  <p class="muted">Carregando…</p>
+  <app-loading variant="kpi" [rows]="3" />
 }

@@ -1,7 +1,7 @@
-<div class="page-head">
+<div class="page-head anim-in">
   <div>
     <h1>Produtos</h1>
-    <div class="sub">Pipeline de conteúdo: do outline ao PDF com capa.</div>
+    <div class="sub">Pipeline de conteúdo: do outline ao PDF, capa e landing page.</div>
   </div>
   <div class="actions">
     <p-button label="Ir para nichos" icon="pi pi-compass" [outlined]="true" routerLink="/niches" />
@@ -13,7 +13,7 @@
 }
 
 @if (products(); as list) {
-  <p-table [value]="list" [paginator]="list.length > 12" [rows]="12" [rowHover]="true" size="small">
+  <p-table class="anim-in" [value]="list" [paginator]="list.length > 12" [rows]="12" [rowHover]="true" size="small">
     <ng-template #header>
       <tr>
         <th>Produto</th>
@@ -42,5 +42,5 @@
     </ng-template>
   </p-table>
 } @else if (!error()) {
-  <p class="muted">Carregando…</p>
+  <app-loading variant="table" [rows]="6" />
 }

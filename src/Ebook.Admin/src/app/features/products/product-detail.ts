@@ -8,12 +8,13 @@ import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { Outline, ProductDetail as ProductDetailDto } from '../../core/api.types';
 import { renderMarkdown } from '../../shared/markdown';
+import { Loading } from '../../shared/loading';
 
 const STAGES = ['Outline', 'Writing', 'Review', 'Pdf', 'Lp'] as const;
 
 @Component({
   selector: 'app-product-detail',
-  imports: [CurrencyPipe, RouterLink, CardModule, TagModule, ButtonModule],
+  imports: [CurrencyPipe, RouterLink, CardModule, TagModule, ButtonModule, Loading],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.scss',
 })

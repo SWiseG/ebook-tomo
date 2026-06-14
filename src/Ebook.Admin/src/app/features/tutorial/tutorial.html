@@ -1,0 +1,64 @@
+<section class="hero anim-in">
+  <span class="hero__badge"><i class="pi pi-compass"></i> Guia rápido</span>
+  <h1>Como usar o Tomo</h1>
+  <p class="hero__lead">
+    O Tomo é uma fábrica autônoma de e-books: descobre nichos, escreve o livro, gera PDF, capa e
+    landing page — e deixa a publicação a um clique seu. Veja o fluxo de ponta a ponta.
+  </p>
+  <div class="hero__actions">
+    <p-button label="Ir ao dashboard" icon="pi pi-th-large" routerLink="/dashboard" />
+    <p-button label="Descobrir nichos" icon="pi pi-compass" [outlined]="true" routerLink="/niches" />
+  </div>
+</section>
+
+<section class="section anim-in">
+  <h2 class="section__title">O fluxo, do nicho ao “no ar”</h2>
+  <p-timeline [value]="steps" align="left" styleClass="flow">
+    <ng-template #marker let-step>
+      <span class="flow__marker"><i [class]="step.icon"></i></span>
+    </ng-template>
+    <ng-template #content let-step>
+      <div class="flow__card">
+        <div class="flow__head">
+          <strong>{{ step.title }}</strong>
+          <p-tag [value]="step.tag" severity="secondary" />
+        </div>
+        <p>{{ step.text }}</p>
+      </div>
+    </ng-template>
+  </p-timeline>
+</section>
+
+<section class="section anim-in">
+  <h2 class="section__title">As áreas do painel</h2>
+  <div class="areas anim-stagger">
+    @for (area of areas; track area.title) {
+      <p-card>
+        <div class="area">
+          <span class="area__icon"><i [class]="area.icon"></i></span>
+          <div class="area__body">
+            <strong>{{ area.title }}</strong>
+            <p>{{ area.text }}</p>
+            <a [routerLink]="area.link" class="area__link">
+              {{ area.linkLabel }} <i class="pi pi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </p-card>
+    }
+  </div>
+</section>
+
+<section class="section anim-in">
+  <h2 class="section__title">Perguntas frequentes</h2>
+  <p-accordion [value]="0">
+    @for (faq of faqs; track faq.q; let i = $index) {
+      <p-accordion-panel [value]="i">
+        <p-accordion-header>{{ faq.q }}</p-accordion-header>
+        <p-accordion-content>
+          <p class="faq-answer">{{ faq.a }}</p>
+        </p-accordion-content>
+      </p-accordion-panel>
+    }
+  </p-accordion>
+</section>

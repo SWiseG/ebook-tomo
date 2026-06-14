@@ -1,4 +1,4 @@
-<div class="page-head">
+<div class="page-head anim-in">
   <div>
     <h1>Configurações</h1>
     <div class="sub">Valores dinâmicos da plataforma (JSON cru). Tetos de IA, descoberta, publicação.</div>
@@ -6,7 +6,7 @@
 </div>
 
 @if (rows(); as list) {
-  <div class="list">
+  <div class="list anim-in">
     @for (row of list; track row.key) {
       <p-card>
         <div class="setting">
@@ -42,5 +42,5 @@
     <p-button label="Adicionar" icon="pi pi-plus" size="small" severity="secondary" (onClick)="add()" />
   </p-card>
 } @else {
-  <p class="muted">Carregando…</p>
+  <app-loading variant="table" [rows]="4" />
 }

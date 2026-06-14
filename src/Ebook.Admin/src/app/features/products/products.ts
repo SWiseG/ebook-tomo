@@ -6,6 +6,7 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { ProductItem, ProductStatus } from '../../core/api.types';
+import { Loading } from '../../shared/loading';
 
 type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' | undefined;
 
@@ -21,7 +22,7 @@ const SEVERITY: Record<ProductStatus, Severity> = {
 
 @Component({
   selector: 'app-products',
-  imports: [DatePipe, CurrencyPipe, RouterLink, TableModule, TagModule, ButtonModule],
+  imports: [DatePipe, CurrencyPipe, RouterLink, TableModule, TagModule, ButtonModule, Loading],
   templateUrl: './products.html',
   styleUrl: './products.scss',
 })
