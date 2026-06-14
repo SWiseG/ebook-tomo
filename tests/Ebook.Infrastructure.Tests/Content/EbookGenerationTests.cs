@@ -7,10 +7,12 @@ using Ebook.Application.Content;
 using Ebook.Application.Content.Images;
 using Ebook.Application.Content.Pdf;
 using Ebook.Application.Publishing;
+using Ebook.Application.Social;
 using Ebook.Domain.Abstractions;
 using Ebook.Domain.Knowledge;
 using Ebook.Domain.Niches;
 using Ebook.Domain.Products;
+using Ebook.Domain.Social;
 using Ebook.Infrastructure.Content;
 using Ebook.Infrastructure.FileStore;
 using Ebook.Infrastructure.Jobs;
@@ -42,6 +44,7 @@ public class EbookGenerationTests
             s.AddSingleton<IImageComposer>(img);
             s.AddSingleton<IPhotoProvider, NullPhotoProvider>();
             s.AddSingleton<IKiwifyPublisher>(new FakeKiwifyPublisher());
+            s.AddSingleton<ISocialPublisher>(new FakeSocialPublisher());
             s.AddSingleton<IArtifactStore, FileArtifactStore>();
             s.AddScoped<IJobQueue, JobQueue>();
             s.AddScoped<ISettingsStore, SettingsStore>();
@@ -50,6 +53,7 @@ public class EbookGenerationTests
             s.AddScoped<IArtifactRepository, ArtifactRepository>();
             s.AddScoped<IKnowledgeRepository, KnowledgeRepository>();
             s.AddScoped<ITrendSnapshotRepository, TrendSnapshotRepository>();
+            s.AddScoped<ISocialPostRepository, SocialPostRepository>();
             s.AddScoped<IProductReader, ProductReader>();
         });
         return (provider, ai, pdf, img);

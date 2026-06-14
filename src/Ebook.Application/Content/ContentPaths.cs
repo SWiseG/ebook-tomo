@@ -26,6 +26,12 @@ public static class ContentPaths
     /// <summary>Bundle da landing page (HTML auto-contido) no <c>IArtifactStore</c> (/data/artifacts).</summary>
     public static string LpBundle(string slug) => $"products/{slug}/lp/index.html";
 
+    /// <summary>Calendário de conteúdo social (FileStore de conteúdo).</summary>
+    public static string SocialCalendar(string slug) => $"products/{slug}/social/calendar.json";
+
+    /// <summary>Card social de um post no <c>IArtifactStore</c> (/data/artifacts).</summary>
+    public static string SocialCard(string slug, int day) => $"products/{slug}/images/card-{day:D2}.png";
+
     /// <summary>Override opcional de paleta por nicho, no FileStore de conteúdo (E09-03).</summary>
     public static string PaletteConfig(string nicheSlug) => $"niches/{nicheSlug}/palette.json";
 

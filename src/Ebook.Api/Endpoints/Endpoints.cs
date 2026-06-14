@@ -6,6 +6,7 @@ using Ebook.Application.Content;
 using Ebook.Application.DevTools;
 using Ebook.Application.Discovery;
 using Ebook.Application.Publishing;
+using Ebook.Application.Social;
 using Ebook.Domain.Products;
 using Ebook.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -175,6 +176,11 @@ public static class Endpoints
                 new CompletePublishingCommand(id, request.KiwifyProductId, request.CheckoutUrl), ct)).ToHttp())
             .WithTags("Products")
             .WithSummary("Conclui a publicação manualmente (id Kiwify + URL de checkout → Live)");
+
+        secured.MapGet("/products/{id:guid}/social", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.QueryAsync(new GetProductSocialQuery(id), ct)).ToHttp())
+            .WithTags("Products")
+            .WithSummary("Agenda de conteúdo social do produto (calendário de 30 dias)");
 
         secured.MapGet("/settings", async (ISettingsStore settings, CancellationToken ct) =>
             Results.Ok(await settings.GetAllAsync(ct)))

@@ -8,11 +8,13 @@ using Ebook.Application.Content.Images;
 using Ebook.Application.Content.Pdf;
 using Ebook.Application.Discovery;
 using Ebook.Application.Publishing;
+using Ebook.Application.Social;
 using Ebook.Domain.Abstractions;
 using Ebook.Domain.Knowledge;
 using Ebook.Domain.Niches;
 using Ebook.Domain.Products;
 using Ebook.Domain.Sales;
+using Ebook.Domain.Social;
 using Ebook.Infrastructure.Administration;
 using Ebook.Infrastructure.Ai;
 using Ebook.Infrastructure.Content;
@@ -23,6 +25,7 @@ using Ebook.Infrastructure.Jobs;
 using Ebook.Infrastructure.Persistence;
 using Ebook.Infrastructure.Publishing;
 using Ebook.Infrastructure.Scheduling;
+using Ebook.Infrastructure.Social;
 using Ebook.Infrastructure.Security;
 using Ebook.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
@@ -42,6 +45,7 @@ public static class DependencyInjection
         services.Configure<AdminAuthOptions>(configuration.GetSection(AdminAuthOptions.SectionName));
         services.Configure<PexelsOptions>(configuration.GetSection(PexelsOptions.SectionName));
         services.Configure<KiwifyOptions>(configuration.GetSection(KiwifyOptions.SectionName));
+        services.Configure<MetaOptions>(configuration.GetSection(MetaOptions.SectionName));
 
         var dataRoot = configuration.GetSection(DataOptions.SectionName).Get<DataOptions>()?.RootPath ?? "./data";
         var dbDirectory = Path.Combine(dataRoot, "db");
@@ -74,8 +78,10 @@ public static class DependencyInjection
         services.AddScoped<IKnowledgeRepository, KnowledgeRepository>();
         services.AddScoped<ITrendSnapshotRepository, TrendSnapshotRepository>();
         services.AddScoped<ISaleRepository, SaleRepository>();
+        services.AddScoped<ISocialPostRepository, SocialPostRepository>();
         services.AddScoped<INicheReader, NicheReader>();
         services.AddSingleton<IKiwifyPublisher, KiwifyPublisher>();
+        services.AddSingleton<ISocialPublisher, MetaGraphPublisher>();
 
         // fontes de tendência (E02): client nomeado compartilhado + múltiplas implementações de ITrendSource
         services.AddHttpClient("trends", c =>
@@ -113,6 +119,15 @@ public static class DependencyInjection
                 .ForJob(discoveryKey)
                 .WithIdentity(TrendDiscoveryJob.JobName + "-trigger")
                 .WithCronSchedule(discoveryCron));
+
+            // calendário social: cron diário publica os posts vencidos (E08-03)
+            var socialCron = configuration["Scheduling:SocialCron"] ?? "0 0 13 * * ?";
+            var socialKey = new JobKey(SocialSchedulerJob.JobName);
+            quartz.AddJob<SocialSchedulerJob>(o => o.WithIdentity(socialKey));
+            quartz.AddTrigger(t => t
+                .ForJob(socialKey)
+                .WithIdentity(SocialSchedulerJob.JobName + "-trigger")
+                .WithCronSchedule(socialCron));
         });
         services.AddQuartzHostedService(o => o.WaitForJobsToComplete = true);
 

@@ -2,6 +2,7 @@ using Ebook.Domain.Knowledge;
 using Ebook.Domain.Niches;
 using Ebook.Domain.Products;
 using Ebook.Domain.Sales;
+using Ebook.Domain.Social;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -15,6 +16,7 @@ public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : D
     public DbSet<KnowledgeAsset> KnowledgeAssets => Set<KnowledgeAsset>();
     public DbSet<Artifact> Artifacts => Set<Artifact>();
     public DbSet<SaleEvent> SaleEvents => Set<SaleEvent>();
+    public DbSet<SocialPost> SocialPosts => Set<SocialPost>();
     public DbSet<OutboxEventRecord> OutboxEvents => Set<OutboxEventRecord>();
     public DbSet<ProcessedEventRecord> ProcessedEvents => Set<ProcessedEventRecord>();
     public DbSet<JobRecord> Jobs => Set<JobRecord>();
@@ -102,6 +104,23 @@ public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : D
             e.Property(x => x.UtmCampaign).HasMaxLength(120);
             e.Property(x => x.RawPayloadPath).HasMaxLength(400);
             e.HasIndex(x => new { x.ProductId, x.OccurredAtUtc });
+        });
+
+        modelBuilder.Entity<SocialPost>(e =>
+        {
+            e.ToTable("SocialPost");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Network).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.PostType).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Caption).HasMaxLength(3000);
+            e.Property(x => x.Hashtags).HasMaxLength(600);
+            e.Property(x => x.ContentPath).HasMaxLength(400);
+            e.Property(x => x.MediaPath).HasMaxLength(400);
+            e.Property(x => x.Utm).HasMaxLength(300);
+            e.Property(x => x.ExternalId).HasMaxLength(120);
+            e.HasIndex(x => x.ProductId);
+            e.HasIndex(x => new { x.Status, x.ScheduledAtUtc });
         });
 
         modelBuilder.Entity<OutboxEventRecord>(e =>

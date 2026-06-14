@@ -71,6 +71,18 @@ public sealed class FakeAiGateway : IAiGateway
               "variants": [{ "id": "A", "headline": "Assuma o controle", "active": true }]
             }
             """,
+        "social.calendar" => """
+            {
+              "posts": [
+                { "day": 1, "network": "Instagram", "postType": "Launch",
+                  "headline": "Saiu o guia!", "copy": "Lançamento do nosso e-book.",
+                  "hashtags": ["financas", "autonomos"], "timeSlot": "19:00" },
+                { "day": 3, "network": "Facebook", "postType": "Value",
+                  "headline": "Dica rápida", "copy": "Separe contas PF e PJ hoje.",
+                  "hashtags": ["dinheiro"], "timeSlot": "12:00" }
+              ]
+            }
+            """,
         _ => "{}"
     };
 }

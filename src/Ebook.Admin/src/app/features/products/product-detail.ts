@@ -9,7 +9,7 @@ import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { ConfirmationService } from 'primeng/api';
-import { Outline, ProductDetail as ProductDetailDto } from '../../core/api.types';
+import { Outline, ProductDetail as ProductDetailDto, SocialPostItem } from '../../core/api.types';
 import { renderMarkdown } from '../../shared/markdown';
 import { Loading } from '../../shared/loading';
 import { NotificationService } from '../../core/notification.service';
@@ -43,6 +43,7 @@ export class ProductDetail implements OnDestroy {
   readonly outline = signal<Outline | null>(null);
   readonly manuscriptHtml = signal<string | null>(null);
   readonly coverUrl = signal<SafeUrl | null>(null);
+  readonly social = signal<SocialPostItem[]>([]);
   readonly error = signal<string | null>(null);
   readonly busy = signal(false);
 
@@ -69,6 +70,29 @@ export class ProductDetail implements OnDestroy {
       },
       error: () => {},
     });
+
+    this.loadSocial();
+  }
+
+  private loadSocial(): void {
+    this.http
+      .get<SocialPostItem[]>(`/api/v1/products/${this.id}/social`)
+      .subscribe({ next: (list) => this.social.set(list), error: () => {} });
+  }
+
+  socialSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+    switch (status) {
+      case 'Published':
+        return 'success';
+      case 'Queued':
+        return 'warn';
+      case 'Failed':
+        return 'danger';
+      case 'Skipped':
+        return 'secondary';
+      default:
+        return 'info';
+    }
   }
 
   private loadDetail(): void {
@@ -129,6 +153,7 @@ export class ProductDetail implements OnDestroy {
       next: () => {
         this.notify.success(ok);
         this.loadDetail();
+        this.loadSocial();
         this.busy.set(false);
       },
       error: () => {

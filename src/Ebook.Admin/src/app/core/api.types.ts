@@ -92,4 +92,16 @@ export interface Outline {
   chapters: OutlineChapter[];
 }
 
+export interface SocialPostItem {
+  id: string;
+  day: number;
+  network: string;
+  postType: string;
+  caption: string;
+  status: string;
+  scheduledAtUtc: string;
+  publishedAtUtc: string | null;
+  externalId: string | null;
+}
+
 export type SettingMap = Record<string, string>;

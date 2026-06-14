@@ -25,4 +25,7 @@ public static class SettingKeys
 
     /// <summary>Publicar na Kiwify automaticamente ao iniciar a publicação (default false = manual-assistido).</summary>
     public const string KiwifyAutoPublish = "kiwify.autoPublish";
+
+    /// <summary>Publicar os posts sociais automaticamente no horário (default false = só agenda + cards).</summary>
+    public const string SocialAutoPublish = "social.autoPublish";
 }

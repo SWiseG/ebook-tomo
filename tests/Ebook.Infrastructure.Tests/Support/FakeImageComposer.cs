@@ -9,6 +9,7 @@ public sealed class FakeImageComposer : IImageComposer
 
     public int CoverCount { get; private set; }
     public int MockupCount { get; private set; }
+    public int SocialCount { get; private set; }
 
     public byte[] RenderCover(CoverArt art, byte[]? backgroundPhoto = null)
     {
@@ -22,7 +23,11 @@ public sealed class FakeImageComposer : IImageComposer
         return [.. Png];
     }
 
-    public byte[] RenderSocial(SocialArt art, byte[]? backgroundPhoto = null) => [.. Png];
+    public byte[] RenderSocial(SocialArt art, byte[]? backgroundPhoto = null)
+    {
+        SocialCount++;
+        return [.. Png];
+    }
 }
 
 /// <summary>Photo provider fake: sem foto (composer cai no gradiente da paleta).</summary>

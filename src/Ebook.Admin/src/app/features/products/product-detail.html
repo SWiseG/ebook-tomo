@@ -112,6 +112,24 @@
         </p-card>
       }
 
+      @if (social().length) {
+        <p-card>
+          <ng-template #title>Calendário social · {{ social().length }} posts</ng-template>
+          <ul class="social-list">
+            @for (post of social(); track post.id) {
+              <li class="social-item">
+                <span class="social-day">D{{ post.day }}</span>
+                <div class="social-body">
+                  <span class="social-meta">{{ post.network }} · {{ post.postType }}</span>
+                  <span class="social-caption">{{ post.caption }}</span>
+                </div>
+                <p-tag [value]="post.status" [severity]="socialSeverity(post.status)" />
+              </li>
+            }
+          </ul>
+        </p-card>
+      }
+
       @if (salesHeadline(); as headline) {
         <p-card>
           <ng-template #title>Copy de venda</ng-template>
