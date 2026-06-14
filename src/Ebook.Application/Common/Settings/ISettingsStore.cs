@@ -19,4 +19,7 @@ public static class SettingKeys
     public const string DiscoveryCategories = "discovery.categories";
     public const string DiscoveryTopN = "discovery.topN";
     public const string DiscoveryScoreWeights = "discovery.scoreWeights";
+
+    /// <summary>Base URL pública para links de checkout/pixel na LP. Vazio = caminhos relativos.</summary>
+    public const string LpBaseUrl = "lp.baseUrl";
 }

@@ -1,7 +1,8 @@
 @use '../../../styles/tokens' as t;
 
-.seg {
-  margin-bottom: t.$space-3;
+.filter {
+  display: block;
+  margin-bottom: t.$space-4;
 }
 
 .count {
@@ -14,5 +15,5 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: t.$text-muted;
+  color: var(--p-text-muted-color);
 }

@@ -23,6 +23,9 @@ public static class ContentPaths
 
     public static string Mockup(string slug) => $"products/{slug}/images/mockup.png";
 
+    /// <summary>Bundle da landing page (HTML auto-contido) no <c>IArtifactStore</c> (/data/artifacts).</summary>
+    public static string LpBundle(string slug) => $"products/{slug}/lp/index.html";
+
     /// <summary>Override opcional de paleta por nicho, no FileStore de conteúdo (E09-03).</summary>
     public static string PaletteConfig(string nicheSlug) => $"niches/{nicheSlug}/palette.json";
 

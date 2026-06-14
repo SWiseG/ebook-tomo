@@ -4,7 +4,7 @@
     <div class="sub">Pipeline de conteúdo: do outline ao PDF com capa.</div>
   </div>
   <div class="actions">
-    <button class="btn btn--ghost" routerLink="/niches">Ir para nichos</button>
+    <p-button label="Ir para nichos" icon="pi pi-compass" [outlined]="true" routerLink="/niches" />
   </div>
 </div>
 
@@ -13,41 +13,34 @@
 }
 
 @if (products(); as list) {
-  <div class="table-wrap">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Produto</th>
-          <th>Estágio</th>
-          <th>Status</th>
-          <th>Preço</th>
-          <th>Criado</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (p of list; track p.id) {
-          <tr (click)="open(p)" class="clickable">
-            <td>
-              <strong>{{ p.title }}</strong>
-              <div class="mono">{{ p.slug }}</div>
-            </td>
-            <td><span class="chip">{{ p.stage }}</span></td>
-            <td><span class="chip" [class]="'chip ' + chip(p.status)">{{ p.status }}</span></td>
-            <td class="num">
-              {{ p.price > 0 ? (p.price | currency: p.currency) : '—' }}
-            </td>
-            <td>{{ p.createdAtUtc | date: 'dd/MM/yy HH:mm' }}</td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="5">
-              <div class="empty">Nenhum produto. Gere um a partir de um nicho.</div>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
+  <p-table [value]="list" [paginator]="list.length > 12" [rows]="12" [rowHover]="true" size="small">
+    <ng-template #header>
+      <tr>
+        <th>Produto</th>
+        <th>Estágio</th>
+        <th>Status</th>
+        <th>Preço</th>
+        <th>Criado</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-p>
+      <tr class="clickable" (click)="open(p)">
+        <td>
+          <strong>{{ p.title }}</strong>
+          <div class="mono">{{ p.slug }}</div>
+        </td>
+        <td><p-tag [value]="p.stage" severity="secondary" /></td>
+        <td><p-tag [value]="p.status" [severity]="severity(p.status)" /></td>
+        <td>{{ p.price > 0 ? (p.price | currency: p.currency) : '—' }}</td>
+        <td>{{ p.createdAtUtc | date: 'dd/MM/yy HH:mm' }}</td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="5"><div class="empty">Nenhum produto. Gere um a partir de um nicho.</div></td>
+      </tr>
+    </ng-template>
+  </p-table>
 } @else if (!error()) {
   <p class="muted">Carregando…</p>
 }

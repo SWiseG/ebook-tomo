@@ -6,8 +6,12 @@
   place-items: center;
   padding: t.$space-4;
   background:
-    radial-gradient(900px 500px at 50% -10%, rgba(99, 102, 241, 0.18), transparent 70%),
-    t.$bg;
+    radial-gradient(
+      900px 500px at 50% -10%,
+      color-mix(in srgb, var(--p-primary-color) 22%, transparent),
+      transparent 70%
+    ),
+    var(--app-ground);
 }
 
 .login-card {
@@ -16,16 +20,31 @@
   display: flex;
   flex-direction: column;
   gap: t.$space-4;
+  padding: t.$space-6 t.$space-5;
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: t.$radius-lg;
   box-shadow: t.$shadow-lg;
 
   .subtitle {
     margin: 0 0 t.$space-2;
-    color: t.$text-muted;
+    color: var(--p-text-muted-color);
     font-size: 0.9rem;
   }
 
-  button {
-    margin-top: t.$space-2;
-    justify-content: center;
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: t.$space-2;
+
+    label {
+      font-size: 0.82rem;
+      color: var(--p-text-muted-color);
+    }
+  }
+
+  // p-password é um span wrapper; força largura total
+  ::ng-deep .p-password {
+    width: 100%;
   }
 }

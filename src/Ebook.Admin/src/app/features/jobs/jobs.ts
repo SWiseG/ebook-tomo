@@ -1,18 +1,25 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+import { ButtonModule } from 'primeng/button';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { JobItem, JobsPage } from '../../core/api.types';
 
-const CHIP: Record<JobItem['status'], string> = {
-  Pending: 'chip--info',
-  Running: 'chip--primary',
-  Succeeded: 'chip--success',
-  Dead: 'chip--danger',
+type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' | undefined;
+
+const SEVERITY: Record<JobItem['status'], Severity> = {
+  Pending: 'info',
+  Running: 'warn',
+  Succeeded: 'success',
+  Dead: 'danger',
 };
 
 @Component({
   selector: 'app-jobs',
-  imports: [DatePipe],
+  imports: [DatePipe, FormsModule, TableModule, TagModule, ButtonModule, SelectButtonModule],
   templateUrl: './jobs.html',
   styleUrl: './jobs.scss',
 })
@@ -20,28 +27,29 @@ export class Jobs {
   private readonly http = inject(HttpClient);
 
   readonly page = signal<JobsPage | null>(null);
-  readonly statusFilter = signal<string>('');
-  readonly statuses = ['', 'Pending', 'Running', 'Succeeded', 'Dead'];
+
+  status = '';
+  readonly statusOptions = [
+    { label: 'Todos', value: '' },
+    { label: 'Pendentes', value: 'Pending' },
+    { label: 'Rodando', value: 'Running' },
+    { label: 'Sucesso', value: 'Succeeded' },
+    { label: 'Dead', value: 'Dead' },
+  ];
 
   constructor() {
     this.load();
   }
 
-  chip(status: JobItem['status']): string {
-    return CHIP[status];
+  severity(status: JobItem['status']): Severity {
+    return SEVERITY[status];
   }
 
   load(): void {
-    const status = this.statusFilter();
-    const query = status ? `&status=${status}` : '';
+    const query = this.status ? `&status=${this.status}` : '';
     this.http
       .get<JobsPage>(`/api/v1/jobs?page=1&size=50${query}`)
       .subscribe((data) => this.page.set(data));
-  }
-
-  filter(status: string): void {
-    this.statusFilter.set(status);
-    this.load();
   }
 
   retry(job: JobItem): void {

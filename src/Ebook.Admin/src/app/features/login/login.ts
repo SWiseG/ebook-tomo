@@ -1,12 +1,16 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { PasswordModule } from 'primeng/password';
+import { MessageModule } from 'primeng/message';
 import { AuthService } from '../../core/auth.service';
 import { TomoLogo } from '../../shared/tomo-logo';
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule, TomoLogo],
+  imports: [FormsModule, TomoLogo, ButtonModule, InputTextModule, PasswordModule, MessageModule],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })

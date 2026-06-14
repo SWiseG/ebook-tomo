@@ -3,6 +3,9 @@ import { Component, OnDestroy, inject, signal } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { CardModule } from 'primeng/card';
+import { TagModule } from 'primeng/tag';
+import { ButtonModule } from 'primeng/button';
 import { Outline, ProductDetail as ProductDetailDto } from '../../core/api.types';
 import { renderMarkdown } from '../../shared/markdown';
 
@@ -10,7 +13,7 @@ const STAGES = ['Outline', 'Writing', 'Review', 'Pdf', 'Lp'] as const;
 
 @Component({
   selector: 'app-product-detail',
-  imports: [CurrencyPipe, RouterLink],
+  imports: [CurrencyPipe, RouterLink, CardModule, TagModule, ButtonModule],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.scss',
 })
@@ -74,6 +77,13 @@ export class ProductDetail implements OnDestroy {
       return (JSON.parse(json) as { headline?: string }).headline ?? null;
     } catch {
       return null;
+    }
+  }
+
+  openLp(): void {
+    const url = this.detail()?.lpUrl;
+    if (url) {
+      window.open(url, '_blank', 'noopener');
     }
   }
 

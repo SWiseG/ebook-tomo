@@ -2,24 +2,12 @@
 
 .block {
   margin-bottom: t.$space-6;
-}
 
-.notice {
-  margin: 0 0 t.$space-4;
-  padding: t.$space-3 t.$space-4;
-  border-radius: t.$radius;
-  background: t.$primary-soft;
-  color: t.$primary-strong;
-  font-size: 0.9rem;
-}
-
-a.kpi {
-  text-decoration: none;
-  color: inherit;
-  transition: border-color 0.12s ease;
-
-  &:hover {
-    border-color: t.$border-strong;
-    text-decoration: none;
+  &__title {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--p-text-muted-color);
+    margin-bottom: t.$space-3;
   }
 }

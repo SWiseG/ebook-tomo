@@ -5,34 +5,29 @@
   </div>
 </div>
 
-@if (notice(); as message) {
-  <p class="notice">{{ message }}</p>
-}
-@if (error(); as message) {
-  <p class="error">{{ message }}</p>
-}
-
 @if (rows(); as list) {
   <div class="list">
     @for (row of list; track row.key) {
-      <div class="card setting">
-        <div class="field">
-          <label>{{ row.key }}</label>
-          <textarea rows="2" [(ngModel)]="row.value" [name]="row.key"></textarea>
+      <p-card>
+        <div class="setting">
+          <div class="field">
+            <label>{{ row.key }}</label>
+            <textarea pTextarea rows="2" [(ngModel)]="row.value" [name]="row.key" fluid></textarea>
+          </div>
+          <p-button label="Salvar" icon="pi pi-check" size="small" (onClick)="save(row)" />
         </div>
-        <button class="btn btn--primary btn--sm" (click)="save(row)">Salvar</button>
-      </div>
+      </p-card>
     } @empty {
       <div class="empty">Nenhuma configuração gravada ainda.</div>
     }
   </div>
 
-  <div class="card new">
-    <div class="card__title">Nova configuração</div>
-    <div class="new__grid">
+  <p-card>
+    <ng-template #title>Nova configuração</ng-template>
+    <div class="new-grid">
       <div class="field">
         <label>Chave</label>
-        <input list="known-keys" [(ngModel)]="newKey" name="newKey" placeholder="discovery.topN" />
+        <input pInputText list="known-keys" [(ngModel)]="newKey" name="newKey" placeholder="discovery.topN" fluid />
         <datalist id="known-keys">
           @for (k of knownKeys; track k) {
             <option [value]="k"></option>
@@ -41,11 +36,11 @@
       </div>
       <div class="field">
         <label>Valor (JSON)</label>
-        <textarea rows="2" [(ngModel)]="newValue" name="newValue"></textarea>
+        <textarea pTextarea rows="2" [(ngModel)]="newValue" name="newValue" fluid></textarea>
       </div>
     </div>
-    <button class="btn btn--accent btn--sm" (click)="add()">Adicionar</button>
-  </div>
-} @else if (!error()) {
+    <p-button label="Adicionar" icon="pi pi-plus" size="small" severity="secondary" (onClick)="add()" />
+  </p-card>
+} @else {
   <p class="muted">Carregando…</p>
 }

@@ -12,7 +12,7 @@ namespace Ebook.Application.Content;
 
 /// <summary>
 /// Etapa Pdf: renderiza o manuscrito aprovado em um PDF comercial (tema por nicho),
-/// registra o artefato Pdf e avança o produto para Lp (insumo da Fase E06).
+/// registra o artefato Pdf, avança o produto para Lp e enfileira a geração da landing page (E06).
 /// Re-entrante: pula a renderização quando o PDF já existe.
 /// </summary>
 public sealed class PdfJobHandler(
@@ -22,6 +22,7 @@ public sealed class PdfJobHandler(
     IPdfRenderer renderer,
     IFileStore fileStore,
     IArtifactStore artifactStore,
+    IJobQueue jobQueue,
     IUnitOfWork unitOfWork,
     IClock clock,
     ILogger<PdfJobHandler> logger) : IJobHandler
@@ -61,6 +62,13 @@ public sealed class PdfJobHandler(
 
         await unitOfWork.SaveChangesAsync(ct);
         logger.LogInformation("PDF pronto para {Slug}", product.Slug);
+
+        await jobQueue.EnqueueAsync(new JobRequest(
+            ContentJobs.Lp,
+            JsonSerializer.Serialize(new LpJobPayload(product.Id), JsonOptions),
+            ContentJobs.LpKey(product.Id),
+            ProductId: product.Id), ct);
+
         return Result.Success();
     }
 

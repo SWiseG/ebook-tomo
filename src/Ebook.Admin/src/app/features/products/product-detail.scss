@@ -1,9 +1,11 @@
 @use '../../../styles/tokens' as t;
 
 .back {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: t.$space-1;
   margin-bottom: t.$space-4;
-  color: t.$text-muted;
+  color: var(--p-text-muted-color);
   font-size: 0.88rem;
 }
 
@@ -15,7 +17,43 @@
 }
 
 .stepper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.$space-2;
   margin-bottom: t.$space-5;
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: t.$space-2;
+    padding: t.$space-2 t.$space-3;
+    border-radius: t.$radius;
+    border: 1px solid var(--p-content-border-color);
+    color: var(--p-text-muted-color);
+    font-size: 0.84rem;
+    background: var(--p-content-background);
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--p-surface-400);
+    }
+    &.done {
+      color: var(--p-text-color);
+      .dot {
+        background: var(--p-green-500, #22c55e);
+      }
+    }
+    &.current {
+      border-color: var(--p-primary-color);
+      color: var(--p-primary-color);
+      background: var(--p-highlight-background);
+      .dot {
+        background: var(--p-primary-color);
+      }
+    }
+  }
 }
 
 .side {
@@ -27,7 +65,6 @@
 .cover {
   width: 100%;
   border-radius: t.$radius;
-  border: 1px solid t.$border;
   display: block;
 }
 
@@ -36,16 +73,23 @@
   font-weight: 600;
 }
 
+.lp-link {
+  display: block;
+  margin-bottom: t.$space-3;
+  font-size: 0.84rem;
+  color: var(--p-primary-color);
+  word-break: break-all;
+}
+
 .promise {
   margin: 0 0 t.$space-3;
-  color: t.$text-muted;
+  color: var(--p-text-muted-color);
   font-size: 0.9rem;
 }
 
 .chapters {
   margin: 0;
   padding-left: t.$space-5;
-  color: t.$text;
   font-size: 0.9rem;
   display: flex;
   flex-direction: column;

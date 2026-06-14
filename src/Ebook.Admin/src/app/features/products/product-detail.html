@@ -1,4 +1,4 @@
-<a class="back" routerLink="/products">← Produtos</a>
+<a class="back" routerLink="/products"><i class="pi pi-arrow-left"></i> Produtos</a>
 
 @if (error(); as message) {
   <p class="error">{{ message }}</p>
@@ -8,68 +8,82 @@
   <div class="page-head">
     <div>
       <h1>{{ d.title }}</h1>
-      <div class="sub">
-        <span class="mono">{{ d.slug }}</span> · {{ d.qualityTier }}
-      </div>
+      <div class="sub"><span class="mono">{{ d.slug }}</span> · {{ d.qualityTier }}</div>
     </div>
     <div class="actions">
-      <button class="btn btn--ghost" (click)="downloadPdf()">Baixar PDF</button>
+      @if (d.lpUrl) {
+        <p-button label="Abrir LP" icon="pi pi-external-link" (onClick)="openLp()" />
+      }
+      <p-button label="Baixar PDF" icon="pi pi-download" [outlined]="true" (onClick)="downloadPdf()" />
     </div>
   </div>
 
   <div class="chips">
-    <span class="chip chip--primary">{{ d.status }}</span>
-    <span class="chip">estágio: {{ d.stage }}</span>
+    <p-tag [value]="d.status" />
+    <p-tag [value]="'estágio: ' + d.stage" severity="secondary" />
     @if (d.price > 0) {
-      <span class="chip chip--accent">{{ d.price | currency: d.currency }}</span>
+      <p-tag [value]="(d.price | currency: d.currency) ?? ''" severity="warn" />
     }
   </div>
 
   <div class="stepper">
     @for (step of steps; track step) {
-      <span class="step" [class]="'step ' + stepClass(step)">
+      <span class="step" [class]="stepClass(step)">
         <span class="dot"></span>{{ step }}
       </span>
     }
   </div>
 
   <div class="grid-2">
-    <section class="card">
-      <div class="card__title">Manuscrito</div>
+    <p-card>
+      <ng-template #title>Manuscrito</ng-template>
       @if (manuscriptHtml(); as html) {
         <div class="prose" [innerHTML]="html"></div>
       } @else {
         <p class="muted">Manuscrito ainda não gerado.</p>
       }
-    </section>
+    </p-card>
 
     <aside class="side">
-      <section class="card">
-        <div class="card__title">Capa</div>
+      <p-card>
+        <ng-template #title>Capa</ng-template>
         @if (coverUrl(); as url) {
           <img class="cover" [src]="url" alt="Capa do e-book" />
         } @else {
           <p class="muted">Capa ainda não gerada.</p>
         }
-      </section>
+      </p-card>
+
+      @if (d.lpUrl) {
+        <p-card>
+          <ng-template #title>Landing page</ng-template>
+          <a class="mono lp-link" [href]="d.lpUrl" target="_blank" rel="noopener">{{ d.lpUrl }}</a>
+          <p-button
+            label="Abrir landing page"
+            icon="pi pi-external-link"
+            size="small"
+            [outlined]="true"
+            (onClick)="openLp()" />
+        </p-card>
+      }
 
       @if (salesHeadline(); as headline) {
-        <section class="card">
-          <div class="card__title">Copy de venda</div>
+        <p-card>
+          <ng-template #title>Copy de venda</ng-template>
           <p class="headline">{{ headline }}</p>
-        </section>
+        </p-card>
       }
 
       @if (outline(); as o) {
-        <section class="card">
-          <div class="card__title">Outline · {{ o.chapters.length }} capítulos</div>
+        <p-card>
+          <ng-template #title>Outline · {{ o.chapters.length }} capítulos</ng-template>
           <p class="promise">{{ o.promise }}</p>
           <ol class="chapters">
             @for (c of o.chapters; track c.n) {
               <li>{{ c.title }}</li>
             }
           </ol>
-        </section>
+        </p-card>
       }
     </aside>
   </div>

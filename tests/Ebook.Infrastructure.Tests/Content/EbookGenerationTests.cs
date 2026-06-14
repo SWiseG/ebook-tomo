@@ -100,8 +100,8 @@ public class EbookGenerationTests
         var artifactStore = scope.ServiceProvider.GetRequiredService<IArtifactStore>();
 
         var product = await db.Products.AsNoTracking().SingleAsync(p => p.Id == productId);
-        Assert.Equal(ProductStatus.Pipeline, product.Status);
-        Assert.Equal(ProductStage.Lp, product.Stage); // PDF gerado, aguardando landing page (E06)
+        Assert.Equal(ProductStatus.AwaitingApproval, product.Status); // LP pronta → gate de aprovação (padrão)
+        Assert.Equal(ProductStage.Lp, product.Stage); // fim do pipeline de conteúdo
         Assert.Equal("Dinheiro Sob Controle", product.Title); // título refinado pelo outline
         Assert.Equal(27m, product.Price);
         Assert.Contains("headline", product.SalesCopyJson, StringComparison.Ordinal);
@@ -128,6 +128,15 @@ public class EbookGenerationTests
         Assert.NotNull(pdfBytes);
         Assert.StartsWith("%PDF", System.Text.Encoding.UTF8.GetString(pdfBytes![..4]), StringComparison.Ordinal);
 
+        // landing page (E06): bundle HTML auto-contido com headline, capa embutida e CTA → redirect de checkout
+        var lpBytes = await artifactStore.ReadBytesAsync(ContentPaths.LpBundle(product.Slug));
+        Assert.NotNull(lpBytes);
+        var lpHtml = System.Text.Encoding.UTF8.GetString(lpBytes!);
+        Assert.Contains("Assuma o controle do seu dinheiro", lpHtml, StringComparison.Ordinal); // headline da copy
+        Assert.Contains("data:image/png;base64,", lpHtml, StringComparison.Ordinal); // capa embutida
+        Assert.Contains($"/go/{product.Slug}", lpHtml, StringComparison.Ordinal); // CTA aponta para o redirect
+        Assert.Equal($"/lp/{product.Slug}", product.LpUrl); // URL pública (base relativa por padrão)
+
         // economia de tokens: pack gerado uma vez e reusado entre outline e sales-copy
         Assert.Equal(1, ai.CallsFor("knowledge.pack"));
         Assert.Equal(1, ai.CallsFor("ebook.outline"));
@@ -140,7 +149,8 @@ public class EbookGenerationTests
         Assert.Equal(1, await db.Artifacts.CountAsync(a => a.Type == ArtifactType.Cover));
         Assert.Equal(1, await db.Artifacts.CountAsync(a => a.Type == ArtifactType.Mockup));
         Assert.Equal(1, await db.Artifacts.CountAsync(a => a.Type == ArtifactType.Pdf));
-        Assert.Equal(6, await db.Jobs.CountAsync()); // outline + 2 capítulos + review + cover + pdf
+        Assert.Equal(1, await db.Artifacts.CountAsync(a => a.Type == ArtifactType.LpBundle));
+        Assert.Equal(7, await db.Jobs.CountAsync()); // outline + 2 capítulos + review + cover + pdf + lp
         Assert.True(await db.Jobs.AllAsync(j => j.Status == JobStatus.Succeeded));
     }
 
@@ -155,6 +165,30 @@ public class EbookGenerationTests
         await RunJobsAsync(provider);
 
         Assert.Equal(0, ai.CallsFor("ebook.review")); // Draft usa moldura templada
+    }
+
+    [Fact]
+    public async Task Modo_Auto_publica_sem_gate_de_aprovacao()
+    {
+        var (provider, _, _, _) = Build();
+        using var _ = provider;
+        var nicheId = await SeedNicheAsync(provider);
+
+        using (var scope = provider.CreateScope())
+        {
+            var settings = scope.ServiceProvider.GetRequiredService<ISettingsStore>();
+            await settings.SetAsync(SettingKeys.PublishingRequiresApproval, false);
+        }
+
+        var productId = await GenerateAsync(provider, nicheId, QualityTier.Commercial);
+        await RunJobsAsync(provider);
+
+        using var verify = provider.CreateScope();
+        var db = verify.ServiceProvider.GetRequiredService<EbookDbContext>();
+        var product = await db.Products.AsNoTracking().SingleAsync(p => p.Id == productId);
+        Assert.Equal(ProductStatus.Publishing, product.Status); // Auto: avança direto à publicação
+        Assert.Equal(ProductStage.Publishing, product.Stage);
+        Assert.NotNull(product.LpUrl);
     }
 
     [Fact]
@@ -207,11 +241,13 @@ public class EbookGenerationTests
         var product = await verifyDb.Products.AsNoTracking().SingleAsync(p => p.Id == productId);
 
         Assert.Equal(ProductStage.Lp, product.Stage); // não avançou além do esperado
+        Assert.Equal(ProductStatus.AwaitingApproval, product.Status); // transição não repetida
         Assert.Equal(chapterCallsBefore, ai.CallsFor("ebook.chapter")); // arquivos já existem: zero IA extra
         Assert.Equal(rendersBefore, pdf.RenderCount); // PDF já existe: zero re-render
         Assert.Equal(coversBefore, img.CoverCount); // capa já existe: zero re-render
         Assert.Equal(1, await verifyDb.Artifacts.CountAsync(a => a.Type == ArtifactType.Manuscript));
         Assert.Equal(1, await verifyDb.Artifacts.CountAsync(a => a.Type == ArtifactType.Cover));
         Assert.Equal(1, await verifyDb.Artifacts.CountAsync(a => a.Type == ArtifactType.Pdf));
+        Assert.Equal(1, await verifyDb.Artifacts.CountAsync(a => a.Type == ArtifactType.LpBundle));
     }
 }

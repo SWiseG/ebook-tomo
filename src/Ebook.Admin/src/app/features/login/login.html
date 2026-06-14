@@ -1,31 +1,38 @@
 <div class="login-page">
-  <form class="login-card card" (ngSubmit)="submit()">
+  <form class="login-card" (ngSubmit)="submit()">
     <tomo-logo />
     <p class="subtitle">Fábrica autônoma de e-books</p>
 
     <div class="field">
       <label for="username">Usuário</label>
-      <input id="username" name="username" [(ngModel)]="username" autocomplete="username" required />
-    </div>
-
-    <div class="field">
-      <label for="password">Senha</label>
       <input
-        id="password"
-        name="password"
-        type="password"
-        [(ngModel)]="password"
-        autocomplete="current-password"
+        pInputText
+        id="username"
+        name="username"
+        [(ngModel)]="username"
+        autocomplete="username"
+        fluid
         required
       />
     </div>
 
+    <div class="field">
+      <label for="password">Senha</label>
+      <p-password
+        inputId="password"
+        name="password"
+        [(ngModel)]="password"
+        [feedback]="false"
+        [toggleMask]="true"
+        [fluid]="true"
+        autocomplete="current-password"
+      />
+    </div>
+
     @if (error(); as message) {
-      <p class="error">{{ message }}</p>
+      <p-message severity="error">{{ message }}</p-message>
     }
 
-    <button type="submit" class="btn btn--primary" [disabled]="loading()">
-      {{ loading() ? 'Entrando…' : 'Entrar' }}
-    </button>
+    <p-button type="submit" [loading]="loading()" label="Entrar" icon="pi pi-sign-in" />
   </form>
 </div>

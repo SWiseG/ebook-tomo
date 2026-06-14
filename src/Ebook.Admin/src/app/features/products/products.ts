@@ -2,21 +2,26 @@ import { HttpClient } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+import { ButtonModule } from 'primeng/button';
 import { ProductItem, ProductStatus } from '../../core/api.types';
 
-const STATUS_CHIP: Record<ProductStatus, string> = {
-  Pipeline: 'chip--info',
-  AwaitingApproval: 'chip--warn',
-  Reworking: 'chip--warn',
-  Publishing: 'chip--primary',
-  Live: 'chip--success',
-  Iterating: 'chip--accent',
-  Retired: 'chip',
+type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' | undefined;
+
+const SEVERITY: Record<ProductStatus, Severity> = {
+  Pipeline: 'info',
+  AwaitingApproval: 'warn',
+  Reworking: 'warn',
+  Publishing: undefined,
+  Live: 'success',
+  Iterating: 'contrast',
+  Retired: 'secondary',
 };
 
 @Component({
   selector: 'app-products',
-  imports: [DatePipe, CurrencyPipe, RouterLink],
+  imports: [DatePipe, CurrencyPipe, RouterLink, TableModule, TagModule, ButtonModule],
   templateUrl: './products.html',
   styleUrl: './products.scss',
 })
@@ -34,8 +39,8 @@ export class Products {
     });
   }
 
-  chip(status: ProductStatus): string {
-    return STATUS_CHIP[status];
+  severity(status: ProductStatus): Severity {
+    return SEVERITY[status];
   }
 
   open(p: ProductItem): void {

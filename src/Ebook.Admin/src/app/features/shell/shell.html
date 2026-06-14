@@ -1,24 +1,41 @@
 <div class="shell">
   <aside class="sidebar">
-    <a class="brand" routerLink="/dashboard">
-      <tomo-logo />
-    </a>
+    <a class="brand" routerLink="/dashboard"><tomo-logo /></a>
 
     <nav>
       @for (group of groups; track group.title) {
         <div class="group">
           <span class="group__title">{{ group.title }}</span>
           @for (item of group.items; track item.path) {
-            <a [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
+            <a [routerLink]="item.path" routerLinkActive="active">
+              <i [class]="item.icon"></i>{{ item.label }}
+            </a>
           }
         </div>
       }
     </nav>
 
-    <button class="btn btn--danger logout" (click)="auth.logout()">Sair</button>
+    <div class="foot">
+      <p-button
+        [text]="true"
+        severity="secondary"
+        [icon]="theme.dark() ? 'pi pi-sun' : 'pi pi-moon'"
+        [label]="theme.dark() ? 'Tema claro' : 'Tema escuro'"
+        (onClick)="theme.toggle()"
+      />
+      <p-button
+        [outlined]="true"
+        severity="danger"
+        icon="pi pi-sign-out"
+        label="Sair"
+        (onClick)="auth.logout()"
+      />
+    </div>
   </aside>
 
   <main class="content">
     <router-outlet />
   </main>
 </div>
+
+<p-toast position="bottom-right" />

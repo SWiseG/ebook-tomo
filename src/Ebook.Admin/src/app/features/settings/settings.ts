@@ -1,6 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CardModule } from 'primeng/card';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
+import { MessageService } from 'primeng/api';
 import { SettingMap } from '../../core/api.types';
 
 interface SettingRow {
@@ -10,16 +15,15 @@ interface SettingRow {
 
 @Component({
   selector: 'app-settings',
-  imports: [FormsModule],
+  imports: [FormsModule, CardModule, ButtonModule, InputTextModule, TextareaModule],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
 })
 export class Settings {
   private readonly http = inject(HttpClient);
+  private readonly messages = inject(MessageService);
 
   readonly rows = signal<SettingRow[] | null>(null);
-  readonly notice = signal<string | null>(null);
-  readonly error = signal<string | null>(null);
 
   newKey = '';
   newValue = '{}';
@@ -39,9 +43,8 @@ export class Settings {
 
   load(): void {
     this.http.get<SettingMap>('/api/v1/settings').subscribe({
-      next: (map) =>
-        this.rows.set(Object.entries(map).map(([key, value]) => ({ key, value }))),
-      error: () => this.error.set('Falha ao carregar configurações.'),
+      next: (map) => this.rows.set(Object.entries(map).map(([key, value]) => ({ key, value }))),
+      error: () => this.messages.add({ severity: 'error', summary: 'Falha ao carregar configurações.' }),
     });
   }
 
@@ -62,14 +65,12 @@ export class Settings {
   }
 
   private put(key: string, valueJson: string, done?: () => void): void {
-    this.notice.set(null);
-    this.error.set(null);
     this.http.put(`/api/v1/settings/${encodeURIComponent(key)}`, { valueJson }).subscribe({
       next: () => {
-        this.notice.set(`"${key}" salvo.`);
+        this.messages.add({ severity: 'success', summary: `"${key}" salvo.` });
         done?.();
       },
-      error: () => this.error.set(`Falha ao salvar "${key}".`),
+      error: () => this.messages.add({ severity: 'error', summary: `Falha ao salvar "${key}".` }),
     });
   }
 }

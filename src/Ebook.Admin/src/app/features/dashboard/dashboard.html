@@ -4,61 +4,79 @@
     <div class="sub">Visão geral do portfólio, da operação e do consumo de IA.</div>
   </div>
   <div class="actions">
-    <button class="btn btn--ghost" routerLink="/products">Ver produtos</button>
-    <button class="btn btn--primary" (click)="discover()">Descobrir nichos</button>
+    <p-button label="Ver produtos" icon="pi pi-book" [outlined]="true" routerLink="/products" />
+    <p-button label="Descobrir nichos" icon="pi pi-compass" (onClick)="discover()" />
   </div>
 </div>
 
-@if (notice(); as message) {
-  <p class="notice">{{ message }}</p>
-}
 @if (error(); as message) {
   <p class="error">{{ message }}</p>
 }
 
 @if (summary(); as s) {
   <section class="block">
-    <div class="card__title">Portfólio</div>
+    <div class="block__title">Portfólio</div>
     <div class="kpi-grid">
       <a class="kpi" routerLink="/products">
-        <span class="label">Produtos ativos</span>
-        <span class="value">{{ s.productsActive | number }}</span>
+        <i class="pi pi-box"></i>
+        <div class="body">
+          <span class="value">{{ s.productsActive | number }}</span>
+          <span class="label">Produtos ativos</span>
+        </div>
       </a>
       <a class="kpi" routerLink="/products">
-        <span class="label">Em pipeline</span>
-        <span class="value">{{ s.productsInPipeline | number }}</span>
+        <i class="pi pi-sync"></i>
+        <div class="body">
+          <span class="value">{{ s.productsInPipeline | number }}</span>
+          <span class="label">Em pipeline</span>
+        </div>
       </a>
-      <a class="kpi accent" routerLink="/niches">
-        <span class="label">Nichos candidatos</span>
-        <span class="value">{{ s.nichesCandidate | number }}</span>
+      <a class="kpi" routerLink="/niches">
+        <i class="pi pi-compass"></i>
+        <div class="body">
+          <span class="value">{{ s.nichesCandidate | number }}</span>
+          <span class="label">Nichos candidatos</span>
+        </div>
       </a>
     </div>
   </section>
 
   <section class="block">
-    <div class="card__title">Operação</div>
+    <div class="block__title">Operação</div>
     <div class="kpi-grid">
       <a class="kpi" routerLink="/jobs" [class.warn]="s.jobsFailed > 0">
-        <span class="label">Jobs em dead-letter</span>
-        <span class="value">{{ s.jobsFailed | number }}</span>
+        <i class="pi pi-exclamation-triangle"></i>
+        <div class="body">
+          <span class="value">{{ s.jobsFailed | number }}</span>
+          <span class="label">Jobs em dead-letter</span>
+        </div>
       </a>
       <a class="kpi" routerLink="/jobs">
-        <span class="label">Jobs pendentes</span>
-        <span class="value">{{ s.jobsPending | number }}</span>
+        <i class="pi pi-clock"></i>
+        <div class="body">
+          <span class="value">{{ s.jobsPending | number }}</span>
+          <span class="label">Jobs pendentes</span>
+        </div>
       </a>
     </div>
   </section>
 
   <section class="block">
-    <div class="card__title">Inteligência</div>
+    <div class="block__title">Inteligência</div>
     <div class="kpi-grid">
       <div class="kpi">
-        <span class="label">Chamadas de IA hoje</span>
-        <span class="value">{{ s.aiCallsToday | number }}</span>
+        <i class="pi pi-bolt"></i>
+        <div class="body">
+          <span class="value">{{ s.aiCallsToday | number }}</span>
+          <span class="label">Chamadas de IA hoje</span>
+        </div>
       </div>
-      <div class="kpi accent">
-        <span class="label">Cache hit de IA hoje</span>
-        <span class="value">{{ s.aiCacheHitRateToday | percent: '1.0-1' }}</span>
+      <div class="kpi">
+        <i class="pi pi-database"></i>
+        <div class="body">
+          <span class="value">{{ s.aiCacheHitRateToday | percent: '1.0-1' }}</span>
+          <span class="label">Cache hit de IA hoje</span>
+        </div>
       </div>
     </div>
   </section>

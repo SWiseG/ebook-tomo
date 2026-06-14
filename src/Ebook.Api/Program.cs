@@ -76,6 +76,7 @@ try
     app.UseAuthorization();
 
     app.MapApiEndpoints();
+    app.MapPublicEndpoints();
 
     if (app.Environment.IsDevelopment())
     {

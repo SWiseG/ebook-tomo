@@ -4,81 +4,87 @@
     <div class="sub">Descobertos pelo motor de tendências, pontuados e ranqueados.</div>
   </div>
   <div class="actions">
-    <button class="btn btn--primary" (click)="discover()">Descobrir nichos</button>
+    <p-button label="Descobrir nichos" icon="pi pi-compass" (onClick)="discover()" />
   </div>
 </div>
 
-@if (notice(); as message) {
-  <p class="notice">{{ message }}</p>
-}
-@if (error(); as message) {
-  <p class="error">{{ message }}</p>
-}
-
-<div class="seg">
-  @for (s of statuses; track s) {
-    <button [class.active]="statusFilter() === s" (click)="filter(s)">
-      {{ s === '' ? 'Todos' : s }}
-    </button>
-  }
-</div>
+<p-selectButton
+  class="filter"
+  [options]="statusOptions"
+  [(ngModel)]="status"
+  optionLabel="label"
+  optionValue="value"
+  [allowEmpty]="false"
+  (onChange)="load()"
+/>
 
 @if (niches(); as list) {
-  <div class="table-wrap">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Nicho</th>
-          <th>Score</th>
-          <th>Ciclo</th>
-          <th>Status</th>
-          <th>Descoberto</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (n of list; track n.id) {
-          <tr>
-            <td>
-              <strong>{{ n.name }}</strong>
-              <div class="mono">{{ n.slug }}</div>
-            </td>
-            <td class="num">{{ n.score | number: '1.2-2' }}</td>
-            <td class="num">{{ n.cycleNumber }}</td>
-            <td><span class="chip" [class]="'chip ' + chip(n.status)">{{ n.status }}</span></td>
-            <td>{{ n.discoveredAtUtc | date: 'dd/MM/yy' }}</td>
-            <td>
-              <div class="row-actions">
-                @if (n.status === 'Candidate') {
-                  <button class="btn btn--sm" [disabled]="busy() === n.id" (click)="approve(n)">
-                    Aprovar
-                  </button>
-                }
-                <button
-                  class="btn btn--sm btn--accent"
-                  [disabled]="busy() === n.id"
-                  (click)="generate(n)"
-                >
-                  Gerar produto
-                </button>
-                @if (n.status !== 'Discarded' && n.status !== 'Active') {
-                  <button class="btn btn--sm btn--danger" [disabled]="busy() === n.id" (click)="discard(n)">
-                    Descartar
-                  </button>
-                }
-              </div>
-            </td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="6">
-              <div class="empty">Nenhum nicho ainda. Clique em "Descobrir nichos".</div>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
-} @else if (!error()) {
+  <p-table
+    [value]="list"
+    [paginator]="list.length > 12"
+    [rows]="12"
+    [rowHover]="true"
+    size="small"
+  >
+    <ng-template #header>
+      <tr>
+        <th>Nicho</th>
+        <th pSortableColumn="score">Score <p-sortIcon field="score" /></th>
+        <th>Ciclo</th>
+        <th>Status</th>
+        <th>Descoberto</th>
+        <th></th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-n>
+      <tr>
+        <td>
+          <strong>{{ n.name }}</strong>
+          <div class="mono">{{ n.slug }}</div>
+        </td>
+        <td>{{ n.score | number: '1.2-2' }}</td>
+        <td>{{ n.cycleNumber }}</td>
+        <td><p-tag [value]="n.status" [severity]="severity(n.status)" /></td>
+        <td>{{ n.discoveredAtUtc | date: 'dd/MM/yy' }}</td>
+        <td>
+          <div class="row-actions">
+            @if (n.status === 'Candidate') {
+              <p-button
+                label="Aprovar"
+                size="small"
+                [outlined]="true"
+                [disabled]="busy() === n.id"
+                (onClick)="approve(n)"
+              />
+            }
+            <p-button
+              label="Gerar produto"
+              icon="pi pi-sparkles"
+              size="small"
+              [disabled]="busy() === n.id"
+              [loading]="busy() === n.id"
+              (onClick)="generate(n)"
+            />
+            @if (n.status !== 'Discarded' && n.status !== 'Active') {
+              <p-button
+                icon="pi pi-trash"
+                size="small"
+                severity="danger"
+                [text]="true"
+                [disabled]="busy() === n.id"
+                (onClick)="discard(n)"
+              />
+            }
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="6"><div class="empty">Nenhum nicho ainda. Clique em "Descobrir nichos".</div></td>
+      </tr>
+    </ng-template>
+  </p-table>
+} @else {
   <p class="muted">Carregando…</p>
 }

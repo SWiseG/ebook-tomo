@@ -11,8 +11,8 @@
   flex-direction: column;
   gap: t.$space-5;
   padding: t.$space-5 t.$space-4;
-  background: t.$surface;
-  border-right: 1px solid t.$border;
+  background: var(--app-panel);
+  border-right: 1px solid var(--p-content-border-color);
   position: sticky;
   top: 0;
   height: 100vh;
@@ -41,31 +41,44 @@
       font-size: 0.68rem;
       text-transform: uppercase;
       letter-spacing: 0.12em;
-      color: t.$text-faint;
+      color: var(--p-text-muted-color);
       padding: 0 t.$space-3 t.$space-1;
     }
 
     a {
+      display: flex;
+      align-items: center;
+      gap: t.$space-3;
       padding: t.$space-2 t.$space-3;
       border-radius: t.$radius;
-      color: t.$text-muted;
+      color: var(--p-text-muted-color);
       font-size: 0.92rem;
       font-weight: 550;
+      text-decoration: none;
 
+      i {
+        font-size: 0.95rem;
+      }
       &:hover {
-        background: t.$surface-2;
-        color: t.$text;
+        background: var(--p-content-hover-background);
+        color: var(--p-text-color);
         text-decoration: none;
       }
       &.active {
-        background: t.$primary-soft;
-        color: t.$primary-strong;
+        background: var(--p-highlight-background);
+        color: var(--p-primary-color);
       }
     }
   }
 
-  .logout {
-    justify-content: center;
+  .foot {
+    display: flex;
+    flex-direction: column;
+    gap: t.$space-2;
+
+    ::ng-deep .p-button {
+      width: 100%;
+    }
   }
 }
 

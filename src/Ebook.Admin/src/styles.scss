@@ -1,5 +1,15 @@
 @use 'styles/tokens' as t;
 
+/* ── Tema: cor de fundo da aplicação por esquema (PrimeNG cuida dos componentes) ── */
+:root {
+  --app-ground: #faf3e3; // bege (claro)
+  --app-panel: #fffdf7; // creme (sidebar/cards próprios)
+}
+:root.app-dark {
+  --app-ground: #0e0f14; // mantém o escuro atual
+  --app-panel: #16181f;
+}
+
 /* ── Reset & base ─────────────────────────────────────────── */
 * {
   box-sizing: border-box;
@@ -9,8 +19,8 @@ html,
 body {
   margin: 0;
   min-height: 100vh;
-  background: t.$bg;
-  color: t.$text;
+  background: var(--app-ground);
+  color: var(--p-text-color, #e7e9f0);
   font-family: t.$font-sans;
   font-size: 15px;
   line-height: 1.5;
@@ -25,22 +35,14 @@ h3 {
   letter-spacing: -0.01em;
 }
 
-a {
-  color: t.$primary-strong;
-  text-decoration: none;
-  &:hover {
-    text-decoration: underline;
-  }
-}
-
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: t.$surface-3;
+  background: var(--p-surface-400);
   border-radius: t.$radius-pill;
-  border: 2px solid t.$bg;
+  border: 2px solid var(--app-ground);
 }
 
 /* ── Page scaffolding ─────────────────────────────────────── */
@@ -56,7 +58,7 @@ a {
     font-size: 1.5rem;
   }
   .sub {
-    color: t.$text-muted;
+    color: var(--p-text-muted-color);
     font-size: 0.9rem;
     margin-top: t.$space-1;
   }
@@ -68,335 +70,73 @@ a {
 }
 
 .muted {
-  color: t.$text-muted;
+  color: var(--p-text-muted-color);
 }
 .error {
-  color: t.$danger;
+  color: var(--p-red-500, #ef4444);
 }
 .empty {
   padding: t.$space-6;
   text-align: center;
-  color: t.$text-muted;
-  border: 1px dashed t.$border;
+  color: var(--p-text-muted-color);
+  border: 1px dashed var(--p-content-border-color);
   border-radius: t.$radius;
 }
-
-/* ── Cards ────────────────────────────────────────────────── */
-.card {
-  background: t.$surface;
-  border: 1px solid t.$border;
-  border-radius: t.$radius-lg;
-  padding: t.$space-5;
-}
-.card__title {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: t.$text-muted;
-  margin-bottom: t.$space-3;
+.mono {
+  font-family: t.$font-mono;
+  font-size: 0.82rem;
+  color: var(--p-text-muted-color);
 }
 
-/* ── KPI ──────────────────────────────────────────────────── */
+/* ── KPI cards (estilo SaaS: ícone + valor + label) ───────── */
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
   gap: t.$space-4;
 }
 .kpi {
-  background: t.$surface;
-  border: 1px solid t.$border;
-  border-radius: t.$radius-lg;
-  padding: t.$space-4 t.$space-5;
   display: flex;
-  flex-direction: column;
-  gap: t.$space-2;
-  position: relative;
-  overflow: hidden;
+  gap: t.$space-3;
+  align-items: flex-start;
+  padding: t.$space-4 t.$space-5;
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: t.$radius-lg;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.12s ease;
 
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 3px;
-    background: t.$primary;
+  &:hover {
+    border-color: var(--p-primary-color);
+    text-decoration: none;
   }
-  &.accent::before {
-    background: t.$accent;
+  .pi {
+    font-size: 1.1rem;
+    color: var(--p-primary-color);
+    background: var(--p-highlight-background);
+    padding: 10px;
+    border-radius: t.$radius;
   }
-  &.warn::before {
-    background: t.$danger;
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
   .label {
-    color: t.$text-muted;
+    color: var(--p-text-muted-color);
     font-size: 0.82rem;
   }
   .value {
-    font-size: 1.7rem;
+    font-size: 1.6rem;
     font-weight: 680;
     letter-spacing: -0.02em;
   }
+  &.warn .pi {
+    color: var(--p-red-500, #ef4444);
+    background: color-mix(in srgb, var(--p-red-500, #ef4444) 16%, transparent);
+  }
   &.warn .value {
-    color: t.$danger;
-  }
-}
-
-/* ── Buttons ──────────────────────────────────────────────── */
-button {
-  font-family: inherit;
-}
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: t.$space-2;
-  padding: t.$space-2 t.$space-4;
-  background: t.$surface-2;
-  border: 1px solid t.$border-strong;
-  border-radius: t.$radius;
-  color: t.$text;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 550;
-  white-space: nowrap;
-  transition:
-    filter 0.12s ease,
-    background 0.12s ease,
-    border-color 0.12s ease;
-
-  &:hover {
-    background: t.$surface-3;
-  }
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-.btn--primary {
-  background: t.$primary;
-  border-color: t.$primary;
-  color: #fff;
-  &:hover {
-    background: t.$primary;
-    filter: brightness(1.1);
-  }
-}
-.btn--accent {
-  background: t.$accent;
-  border-color: t.$accent;
-  color: #1a1206;
-  &:hover {
-    background: t.$accent;
-    filter: brightness(1.07);
-  }
-}
-.btn--ghost {
-  background: transparent;
-  border-color: t.$border;
-  color: t.$text-muted;
-  &:hover {
-    color: t.$text;
-    background: t.$surface-2;
-  }
-}
-.btn--danger {
-  background: transparent;
-  border-color: t.$border;
-  color: t.$text-muted;
-  &:hover {
-    color: t.$danger;
-    border-color: t.$danger;
-    background: t.$danger-soft;
-  }
-}
-.btn--sm {
-  padding: t.$space-1 t.$space-3;
-  font-size: 0.82rem;
-}
-
-/* ── Chips / status ───────────────────────────────────────── */
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: t.$space-1;
-  padding: 3px 10px;
-  border-radius: t.$radius-pill;
-  font-size: 0.76rem;
-  font-weight: 600;
-  background: t.$surface-3;
-  color: t.$text-muted;
-  white-space: nowrap;
-}
-.chip--primary {
-  background: t.$primary-soft;
-  color: t.$primary-strong;
-}
-.chip--accent {
-  background: t.$accent-soft;
-  color: t.$accent-strong;
-}
-.chip--success {
-  background: t.$success-soft;
-  color: t.$success;
-}
-.chip--warn {
-  background: t.$warning-soft;
-  color: t.$warning;
-}
-.chip--danger {
-  background: t.$danger-soft;
-  color: t.$danger;
-}
-.chip--info {
-  background: t.$info-soft;
-  color: t.$info;
-}
-
-/* ── Tables ───────────────────────────────────────────────── */
-.table-wrap {
-  background: t.$surface;
-  border: 1px solid t.$border;
-  border-radius: t.$radius-lg;
-  overflow: auto;
-}
-table.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-
-  th,
-  td {
-    text-align: left;
-    padding: t.$space-3 t.$space-4;
-    border-bottom: 1px solid t.$border;
-    vertical-align: middle;
-  }
-  th {
-    color: t.$text-muted;
-    font-weight: 600;
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    position: sticky;
-    top: 0;
-    background: t.$surface-2;
-  }
-  tbody tr:last-child td {
-    border-bottom: none;
-  }
-  tbody tr:hover td {
-    background: t.$surface-2;
-  }
-  .row-actions {
-    display: flex;
-    gap: t.$space-2;
-    justify-content: flex-end;
-  }
-  .mono {
-    font-family: t.$font-mono;
-    font-size: 0.82rem;
-    color: t.$text-muted;
-  }
-  .num {
-    font-variant-numeric: tabular-nums;
-  }
-}
-
-/* ── Fields ───────────────────────────────────────────────── */
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: t.$space-2;
-  label {
-    font-size: 0.82rem;
-    color: t.$text-muted;
-  }
-}
-input,
-select,
-textarea {
-  font-family: inherit;
-  font-size: 0.9rem;
-  padding: t.$space-2 t.$space-3;
-  background: t.$bg;
-  border: 1px solid t.$border-strong;
-  border-radius: t.$radius;
-  color: t.$text;
-  width: 100%;
-  &:focus {
-    outline: none;
-    border-color: t.$primary;
-    box-shadow: 0 0 0 3px t.$primary-soft;
-  }
-}
-textarea {
-  resize: vertical;
-  font-family: t.$font-mono;
-  font-size: 0.82rem;
-  line-height: 1.45;
-}
-
-/* ── Segmented filter ─────────────────────────────────────── */
-.seg {
-  display: inline-flex;
-  gap: t.$space-1;
-  background: t.$surface;
-  border: 1px solid t.$border;
-  border-radius: t.$radius;
-  padding: t.$space-1;
-  flex-wrap: wrap;
-
-  button {
-    padding: t.$space-1 t.$space-3;
-    background: transparent;
-    border: none;
-    border-radius: t.$radius-sm;
-    color: t.$text-muted;
-    cursor: pointer;
-    font-size: 0.84rem;
-    &:hover {
-      color: t.$text;
-    }
-    &.active {
-      background: t.$primary-soft;
-      color: t.$primary-strong;
-    }
-  }
-}
-
-/* ── Stepper (pipeline) ───────────────────────────────────── */
-.stepper {
-  display: flex;
-  flex-wrap: wrap;
-  gap: t.$space-2;
-  .step {
-    display: flex;
-    align-items: center;
-    gap: t.$space-2;
-    padding: t.$space-2 t.$space-3;
-    border-radius: t.$radius;
-    border: 1px solid t.$border;
-    color: t.$text-muted;
-    font-size: 0.84rem;
-    background: t.$surface;
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: t.$border-strong;
-    }
-    &.done {
-      color: t.$text;
-      .dot {
-        background: t.$success;
-      }
-    }
-    &.current {
-      border-color: t.$primary;
-      color: t.$primary-strong;
-      background: t.$primary-soft;
-      .dot {
-        background: t.$primary;
-      }
-    }
+    color: var(--p-red-500, #ef4444);
   }
 }
 
@@ -410,25 +150,23 @@ textarea {
   h2 {
     font-size: 1.2rem;
     margin: t.$space-5 0 t.$space-2;
-    color: t.$primary-strong;
+    color: var(--p-primary-color);
   }
   h3 {
     font-size: 1rem;
     margin: t.$space-4 0 t.$space-1;
-    color: t.$accent-strong;
+    color: var(--p-text-muted-color);
   }
   p {
     margin: 0 0 t.$space-3;
-    color: t.$text;
   }
   ul {
     margin: 0 0 t.$space-3;
     padding-left: t.$space-5;
-    color: t.$text;
   }
 }
 
-/* ── Grid helper ──────────────────────────────────────────── */
+/* ── Helpers de grade ─────────────────────────────────────── */
 .grid-2 {
   display: grid;
   grid-template-columns: 2fr 1fr;

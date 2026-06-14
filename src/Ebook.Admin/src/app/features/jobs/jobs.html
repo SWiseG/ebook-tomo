@@ -5,52 +5,49 @@
   </div>
 </div>
 
-<div class="seg">
-  @for (option of statuses; track option) {
-    <button [class.active]="statusFilter() === option" (click)="filter(option)">
-      {{ option === '' ? 'Todos' : option }}
-    </button>
-  }
-</div>
+<p-selectButton
+  class="filter"
+  [options]="statusOptions"
+  [(ngModel)]="status"
+  optionLabel="label"
+  optionValue="value"
+  [allowEmpty]="false"
+  (onChange)="load()"
+/>
 
 @if (page(); as p) {
   <p class="muted count">{{ p.total }} job(s)</p>
-  <div class="table-wrap">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Tipo</th>
-          <th>Status</th>
-          <th>Tentativas</th>
-          <th>Criado</th>
-          <th>Erro</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (job of p.items; track job.id) {
-          <tr>
-            <td class="mono">{{ job.type }}</td>
-            <td><span class="chip" [class]="'chip ' + chip(job.status)">{{ job.status }}</span></td>
-            <td class="num">{{ job.attempts }}</td>
-            <td>{{ job.createdAtUtc | date: 'dd/MM HH:mm' }}</td>
-            <td class="error-cell">{{ job.lastError ?? '—' }}</td>
-            <td>
-              <div class="row-actions">
-                @if (job.status === 'Dead') {
-                  <button class="btn btn--sm" (click)="retry(job)">Reprocessar</button>
-                }
-              </div>
-            </td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="6"><div class="empty">Nenhum job.</div></td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
+  <p-table [value]="p.items" [paginator]="p.items.length > 15" [rows]="15" [rowHover]="true" size="small">
+    <ng-template #header>
+      <tr>
+        <th>Tipo</th>
+        <th>Status</th>
+        <th>Tentativas</th>
+        <th>Criado</th>
+        <th>Erro</th>
+        <th></th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-job>
+      <tr>
+        <td class="mono">{{ job.type }}</td>
+        <td><p-tag [value]="job.status" [severity]="severity(job.status)" /></td>
+        <td>{{ job.attempts }}</td>
+        <td>{{ job.createdAtUtc | date: 'dd/MM HH:mm' }}</td>
+        <td class="error-cell">{{ job.lastError ?? '—' }}</td>
+        <td>
+          @if (job.status === 'Dead') {
+            <p-button label="Reprocessar" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="retry(job)" />
+          }
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="6"><div class="empty">Nenhum job.</div></td>
+      </tr>
+    </ng-template>
+  </p-table>
 } @else {
   <p class="muted">Carregando…</p>
 }
