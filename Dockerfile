@@ -14,12 +14,16 @@ RUN dotnet restore src/Ebook.Api
 RUN dotnet publish src/Ebook.Api -c Release -o /out --no-restore
 
 # ── 3. Runtime: ASP.NET + Node (Claude Code CLI da assinatura Pro) ─────────
-# Fases futuras trocam a base por mcr.microsoft.com/playwright/dotnet (Kiwify)
+# E10 (vídeo): ffmpeg incluído abaixo. Piper TTS = baixar o binário + voz pt-BR e apontar
+#   Video__PiperPath / Video__PiperVoicePath.
+# E07 (Kiwify/Playwright): instalar o Chromium do Playwright para ligar a automação, p.ex.:
+#   RUN pwsh /app/playwright.ps1 install --with-deps chromium
+#   (ou trocar a base por mcr.microsoft.com/playwright/dotnet na versão correspondente do NuGet).
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates gnupg \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs fontconfig fonts-liberation \
+    && apt-get install -y --no-install-recommends nodejs fontconfig fonts-liberation ffmpeg \
     && npm install -g @anthropic-ai/claude-code \
     && apt-get purge -y gnupg \
     && rm -rf /var/lib/apt/lists/*

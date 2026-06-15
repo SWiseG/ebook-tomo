@@ -11,6 +11,7 @@ using Ebook.Application.Discovery;
 using Ebook.Application.Optimization;
 using Ebook.Application.Publishing;
 using Ebook.Application.Social;
+using Ebook.Application.Video;
 using Ebook.Domain.Abstractions;
 using Ebook.Domain.Knowledge;
 using Ebook.Domain.Niches;
@@ -31,6 +32,7 @@ using Ebook.Infrastructure.Persistence;
 using Ebook.Infrastructure.Publishing;
 using Ebook.Infrastructure.Scheduling;
 using Ebook.Infrastructure.Social;
+using Ebook.Infrastructure.Video;
 using Ebook.Infrastructure.Security;
 using Ebook.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
@@ -51,6 +53,7 @@ public static class DependencyInjection
         services.Configure<PexelsOptions>(configuration.GetSection(PexelsOptions.SectionName));
         services.Configure<KiwifyOptions>(configuration.GetSection(KiwifyOptions.SectionName));
         services.Configure<MetaOptions>(configuration.GetSection(MetaOptions.SectionName));
+        services.Configure<VideoOptions>(configuration.GetSection(VideoOptions.SectionName));
 
         var dataRoot = configuration.GetSection(DataOptions.SectionName).Get<DataOptions>()?.RootPath ?? "./data";
         var dbDirectory = Path.Combine(dataRoot, "db");
@@ -91,7 +94,9 @@ public static class DependencyInjection
         services.AddScoped<IOptimizationRepository, OptimizationRepository>();
         services.AddScoped<IOptimizationReader, OptimizationReader>();
         services.AddSingleton<IKiwifyPublisher, KiwifyPublisher>();
-        services.AddSingleton<ISocialPublisher, MetaGraphPublisher>();
+        services.AddHttpClient<ISocialPublisher, MetaGraphPublisher>(c => c.Timeout = TimeSpan.FromSeconds(60));
+        services.AddSingleton<ITtsEngine, PiperTtsEngine>();
+        services.AddSingleton<IVideoComposer, FfmpegVideoComposer>();
 
         // fontes de tendência (E02): client nomeado compartilhado + múltiplas implementações de ITrendSource
         services.AddHttpClient("trends", c =>
@@ -156,6 +161,15 @@ public static class DependencyInjection
                 .ForJob(optimizeKey)
                 .WithIdentity(OptimizeCycleJob.JobName + "-trigger")
                 .WithCronSchedule(optimizeCron));
+
+            // vídeo: cron semanal gera Reels por produto ativo (E10), gated por video.enabled
+            var videoCron = configuration["Scheduling:VideoCron"] ?? "0 0 14 ? * MON";
+            var videoKey = new JobKey(VideoSchedulerJob.JobName);
+            quartz.AddJob<VideoSchedulerJob>(o => o.WithIdentity(videoKey));
+            quartz.AddTrigger(t => t
+                .ForJob(videoKey)
+                .WithIdentity(VideoSchedulerJob.JobName + "-trigger")
+                .WithCronSchedule(videoCron));
         });
         services.AddQuartzHostedService(o => o.WaitForJobsToComplete = true);
 

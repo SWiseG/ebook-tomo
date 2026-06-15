@@ -5,10 +5,12 @@ using Ebook.Application;
 using Ebook.Infrastructure;
 using Ebook.Infrastructure.Observability;
 using Ebook.Infrastructure.Persistence;
+using Ebook.Infrastructure.Publishing;
 using Ebook.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Serilog;
@@ -17,6 +19,19 @@ using Serilog;
 if (args is ["hash-password", var password])
 {
     Console.WriteLine(new Pbkdf2PasswordHasher().Hash(password));
+    return;
+}
+
+// Login interativo na Kiwify: salva a sessão (storageState) para a automação Playwright (E07)
+if (args is ["kiwify-login"])
+{
+    var cfg = new ConfigurationBuilder()
+        .AddJsonFile("appsettings.json", optional: true)
+        .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", optional: true)
+        .AddEnvironmentVariables()
+        .Build();
+    var kiwify = cfg.GetSection(KiwifyOptions.SectionName).Get<KiwifyOptions>() ?? new KiwifyOptions();
+    await KiwifyLogin.RunAsync(kiwify.BaseUrl, kiwify.StorageStatePath);
     return;
 }
 

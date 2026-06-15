@@ -83,6 +83,18 @@ public sealed class FakeAiGateway : IAiGateway
               ]
             }
             """,
+        "video.script" => """
+            {
+              "hook": "Você ainda não controla seu dinheiro?",
+              "scenes": [
+                { "narration": "Toda semana o dinheiro some.", "onScreen": "Para de sumir", "seconds": 7 },
+                { "narration": "Existe um método simples.", "onScreen": "Método de 30 dias", "seconds": 8 },
+                { "narration": "Garanta o seu guia no link da bio.", "onScreen": "Link na bio", "seconds": 6 }
+              ],
+              "caption": "Assuma o controle do seu dinheiro. Link na bio.",
+              "hashtags": ["financas", "autonomos"]
+            }
+            """,
         _ => "{}"
     };
 }

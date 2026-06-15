@@ -8,6 +8,7 @@ using Ebook.Application.Content.Images;
 using Ebook.Application.Content.Pdf;
 using Ebook.Application.Publishing;
 using Ebook.Application.Social;
+using Ebook.Application.Video;
 using Ebook.Domain.Abstractions;
 using Ebook.Domain.Knowledge;
 using Ebook.Domain.Niches;
@@ -47,6 +48,8 @@ public class SocialTests
             s.AddSingleton<IPhotoProvider, NullPhotoProvider>();
             s.AddSingleton<IKiwifyPublisher>(new FakeKiwifyPublisher());
             s.AddSingleton<ISocialPublisher>(social);
+            s.AddSingleton<ITtsEngine>(new FakeTtsEngine());
+            s.AddSingleton<IVideoComposer>(new FakeVideoComposer());
             s.AddSingleton<IArtifactStore, FileArtifactStore>();
             s.AddScoped<IJobQueue, JobQueue>();
             s.AddScoped<ISettingsStore, SettingsStore>();

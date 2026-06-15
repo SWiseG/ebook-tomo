@@ -42,6 +42,21 @@ public static class PublicEndpoints
         .AllowAnonymous()
         .ExcludeFromDescription();
 
+        // mídia pública (cards/reels) para a Graph API do Meta consumir via image_url/video_url (E08/E10)
+        app.MapGet("/media/{**path}", async (string path, IArtifactStore artifacts, CancellationToken ct) =>
+        {
+            var contentType = MediaContentType(path);
+            if (contentType is null || !IsSafeMediaPath(path))
+            {
+                return Results.NotFound();
+            }
+
+            var bytes = await artifacts.ReadBytesAsync(path, ct);
+            return bytes is null ? Results.NotFound() : Results.Bytes(bytes, contentType);
+        })
+        .AllowAnonymous()
+        .ExcludeFromDescription();
+
         app.MapGet("/go/{slug}", async (
             string slug,
             [FromQuery(Name = "utm_source")] string? utmSource,
@@ -146,6 +161,33 @@ public static class PublicEndpoints
         {
             logger.LogWarning(ex, "Falha ao registrar analytics ({Type}) para {Slug}", hit.Type, hit.Slug);
         }
+    }
+
+    // só serve imagens/vídeos sob products/{slug}/{images|video}/ — bloqueia traversal e outros artefatos
+    private static bool IsSafeMediaPath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || path.Contains("..", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var segments = path.Split('/');
+        return segments.Length == 4
+            && segments[0] == "products"
+            && IsValidSlug(segments[1])
+            && segments[2] is "images" or "video";
+    }
+
+    private static string? MediaContentType(string path)
+    {
+        var ext = Path.GetExtension(path).ToLowerInvariant();
+        return ext switch
+        {
+            ".png" => "image/png",
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".mp4" => "video/mp4",
+            _ => null
+        };
     }
 
     private static bool IsValidSlug(string slug)

@@ -64,12 +64,6 @@
 
   <div class="main-col">
     <header class="topbar">
-      <button type="button" class="hamburger" (click)="layout.toggleMobile()" aria-label="Abrir menu">
-        <i class="pi pi-bars"></i>
-      </button>
-      <button type="button" class="rail-toggle rail-toggle--top" (click)="layout.toggleCollapsed()" aria-label="Recolher menu">
-        <i class="pi" [class.pi-angle-left]="!layout.collapsed()" [class.pi-angle-right]="layout.collapsed()"></i>
-      </button>
       <span class="spacer"></span>
       <p-button
         [text]="true"

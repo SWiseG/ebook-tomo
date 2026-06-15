@@ -34,4 +34,7 @@ public static class SettingKeys
 
     /// <summary>Executar as decisões do otimizador automaticamente (default false = veto humano).</summary>
     public const string RoiAutoExecute = "roi.autoExecute";
+
+    /// <summary>Gerar Reels (vídeo) semanalmente por produto ativo (default false; exige Piper+FFmpeg).</summary>
+    public const string VideoEnabled = "video.enabled";
 }

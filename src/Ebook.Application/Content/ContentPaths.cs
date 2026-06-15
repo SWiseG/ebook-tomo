@@ -32,6 +32,12 @@ public static class ContentPaths
     /// <summary>Card social de um post no <c>IArtifactStore</c> (/data/artifacts).</summary>
     public static string SocialCard(string slug, int day) => $"products/{slug}/images/card-{day:D2}.png";
 
+    /// <summary>Reel (vídeo 9:16) no <c>IArtifactStore</c> (/data/artifacts).</summary>
+    public static string VideoReel(string slug, int n) => $"products/{slug}/video/reel-{n}.mp4";
+
+    /// <summary>Roteiro do Reel (FileStore de conteúdo).</summary>
+    public static string VideoScript(string slug) => $"products/{slug}/video/script.json";
+
     /// <summary>Override opcional de paleta por nicho, no FileStore de conteúdo (E09-03).</summary>
     public static string PaletteConfig(string nicheSlug) => $"niches/{nicheSlug}/palette.json";
 
