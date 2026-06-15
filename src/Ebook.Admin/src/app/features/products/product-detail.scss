@@ -92,6 +92,41 @@
   gap: t.$space-2;
 }
 
+.funnel {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-2;
+}
+
+.funnel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: t.$space-3;
+  font-size: 0.92rem;
+
+  .funnel-label {
+    display: inline-flex;
+    align-items: center;
+    gap: t.$space-2;
+    color: var(--p-text-muted-color);
+
+    i {
+      color: var(--p-primary-color);
+      font-size: 0.85rem;
+    }
+  }
+  .funnel-value {
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &--strong .funnel-value {
+    color: var(--p-primary-color);
+    font-size: 1.05rem;
+  }
+}
+
 .social-list {
   list-style: none;
   margin: 0;

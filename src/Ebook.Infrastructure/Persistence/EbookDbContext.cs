@@ -1,3 +1,4 @@
+using Ebook.Domain.Analytics;
 using Ebook.Domain.Knowledge;
 using Ebook.Domain.Niches;
 using Ebook.Domain.Products;
@@ -17,6 +18,8 @@ public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : D
     public DbSet<Artifact> Artifacts => Set<Artifact>();
     public DbSet<SaleEvent> SaleEvents => Set<SaleEvent>();
     public DbSet<SocialPost> SocialPosts => Set<SocialPost>();
+    public DbSet<AnalyticsEvent> AnalyticsEvents => Set<AnalyticsEvent>();
+    public DbSet<MetricDaily> MetricDailies => Set<MetricDaily>();
     public DbSet<OutboxEventRecord> OutboxEvents => Set<OutboxEventRecord>();
     public DbSet<ProcessedEventRecord> ProcessedEvents => Set<ProcessedEventRecord>();
     public DbSet<JobRecord> Jobs => Set<JobRecord>();
@@ -121,6 +124,29 @@ public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : D
             e.Property(x => x.ExternalId).HasMaxLength(120);
             e.HasIndex(x => x.ProductId);
             e.HasIndex(x => new { x.Status, x.ScheduledAtUtc });
+        });
+
+        modelBuilder.Entity<AnalyticsEvent>(e =>
+        {
+            e.ToTable("AnalyticsEvent");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Channel).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.UtmSource).HasMaxLength(120);
+            e.Property(x => x.UtmCampaign).HasMaxLength(120);
+            e.Property(x => x.UtmContent).HasMaxLength(120);
+            e.HasIndex(x => x.OccurredAtUtc);
+            e.HasIndex(x => new { x.ProductId, x.OccurredAtUtc });
+        });
+
+        modelBuilder.Entity<MetricDaily>(e =>
+        {
+            e.ToTable("MetricDaily");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Channel).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Revenue).HasConversion<double>();
+            e.HasIndex(x => new { x.ProductId, x.DateUtc, x.Channel }).IsUnique();
+            e.HasIndex(x => x.DateUtc);
         });
 
         modelBuilder.Entity<OutboxEventRecord>(e =>

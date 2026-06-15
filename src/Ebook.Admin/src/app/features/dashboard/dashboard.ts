@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
-import { DecimalPipe, PercentPipe } from '@angular/common';
+import { CurrencyPipe, DecimalPipe, PercentPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DashboardSummary } from '../../core/api.types';
@@ -9,7 +9,7 @@ import { Loading } from '../../shared/loading';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [DecimalPipe, PercentPipe, RouterLink, ButtonModule, Loading],
+  imports: [CurrencyPipe, DecimalPipe, PercentPipe, RouterLink, ButtonModule, Loading],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })

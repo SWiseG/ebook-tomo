@@ -6,6 +6,7 @@ using Ebook.Application.Common.Settings;
 using Ebook.Application.Content;
 using Ebook.Application.Content.Images;
 using Ebook.Application.Content.Pdf;
+using Ebook.Application.Analytics;
 using Ebook.Application.Discovery;
 using Ebook.Application.Publishing;
 using Ebook.Application.Social;
@@ -17,6 +18,7 @@ using Ebook.Domain.Sales;
 using Ebook.Domain.Social;
 using Ebook.Infrastructure.Administration;
 using Ebook.Infrastructure.Ai;
+using Ebook.Infrastructure.Analytics;
 using Ebook.Infrastructure.Content;
 using Ebook.Infrastructure.Discovery;
 using Ebook.Infrastructure.Events;
@@ -80,6 +82,9 @@ public static class DependencyInjection
         services.AddScoped<ISaleRepository, SaleRepository>();
         services.AddScoped<ISocialPostRepository, SocialPostRepository>();
         services.AddScoped<INicheReader, NicheReader>();
+        services.AddScoped<IAnalyticsRecorder, AnalyticsRecorder>();
+        services.AddScoped<IMetricsAggregator, MetricsAggregator>();
+        services.AddScoped<IMetricsReader, MetricsReader>();
         services.AddSingleton<IKiwifyPublisher, KiwifyPublisher>();
         services.AddSingleton<ISocialPublisher, MetaGraphPublisher>();
 
@@ -128,6 +133,15 @@ public static class DependencyInjection
                 .ForJob(socialKey)
                 .WithIdentity(SocialSchedulerJob.JobName + "-trigger")
                 .WithCronSchedule(socialCron));
+
+            // métricas: agregação diária do funil (E11-02)
+            var metricsCron = configuration["Scheduling:MetricsCron"] ?? "0 30 2 * * ?";
+            var metricsKey = new JobKey(MetricsAggregationJob.JobName);
+            quartz.AddJob<MetricsAggregationJob>(o => o.WithIdentity(metricsKey));
+            quartz.AddTrigger(t => t
+                .ForJob(metricsKey)
+                .WithIdentity(MetricsAggregationJob.JobName + "-trigger")
+                .WithCronSchedule(metricsCron));
         });
         services.AddQuartzHostedService(o => o.WaitForJobsToComplete = true);
 

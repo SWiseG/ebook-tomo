@@ -30,8 +30,20 @@ public sealed class DashboardReader(EbookDbContext db, IClock clock) : IDashboar
 
         var hitRate = aiToday.Count == 0 ? 0 : (double)aiToday.Count(h => h) / aiToday.Count;
 
+        // funil dos últimos 30 dias (E11-03) a partir de MetricDaily
+        var from = today.AddDays(-30);
+        var metrics = await db.MetricDailies.AsNoTracking()
+            .Where(m => m.DateUtc >= from)
+            .ToListAsync(ct);
+        var visits = metrics.Sum(m => m.Visits);
+        var clicks = metrics.Sum(m => m.CheckoutClicks);
+        var sales = metrics.Sum(m => m.Sales);
+        var revenue = metrics.Sum(m => m.Revenue);
+        var conversion = visits > 0 ? Math.Round((double)sales / visits, 4) : 0;
+
         return new DashboardSummaryDto(
             productsActive, productsInPipeline, nichesCandidate,
-            jobsFailed, jobsPending, aiToday.Count, Math.Round(hitRate, 3));
+            jobsFailed, jobsPending, aiToday.Count, Math.Round(hitRate, 3),
+            visits, clicks, sales, revenue, conversion);
     }
 }

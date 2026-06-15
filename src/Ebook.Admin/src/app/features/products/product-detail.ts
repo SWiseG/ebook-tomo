@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnDestroy, inject, signal } from '@angular/core';
-import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, DecimalPipe, PercentPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
@@ -9,7 +9,12 @@ import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { ConfirmationService } from 'primeng/api';
-import { Outline, ProductDetail as ProductDetailDto, SocialPostItem } from '../../core/api.types';
+import {
+  Outline,
+  ProductDetail as ProductDetailDto,
+  ProductMetrics,
+  SocialPostItem,
+} from '../../core/api.types';
 import { renderMarkdown } from '../../shared/markdown';
 import { Loading } from '../../shared/loading';
 import { NotificationService } from '../../core/notification.service';
@@ -20,6 +25,8 @@ const STAGES = ['Outline', 'Writing', 'Review', 'Pdf', 'Lp'] as const;
   selector: 'app-product-detail',
   imports: [
     CurrencyPipe,
+    DecimalPipe,
+    PercentPipe,
     FormsModule,
     RouterLink,
     CardModule,
@@ -44,6 +51,7 @@ export class ProductDetail implements OnDestroy {
   readonly manuscriptHtml = signal<string | null>(null);
   readonly coverUrl = signal<SafeUrl | null>(null);
   readonly social = signal<SocialPostItem[]>([]);
+  readonly metrics = signal<ProductMetrics | null>(null);
   readonly error = signal<string | null>(null);
   readonly busy = signal(false);
 
@@ -72,12 +80,19 @@ export class ProductDetail implements OnDestroy {
     });
 
     this.loadSocial();
+    this.loadMetrics();
   }
 
   private loadSocial(): void {
     this.http
       .get<SocialPostItem[]>(`/api/v1/products/${this.id}/social`)
       .subscribe({ next: (list) => this.social.set(list), error: () => {} });
+  }
+
+  private loadMetrics(): void {
+    this.http
+      .get<ProductMetrics>(`/api/v1/products/${this.id}/metrics`)
+      .subscribe({ next: (m) => this.metrics.set(m), error: () => {} });
   }
 
   socialSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {

@@ -1,7 +1,9 @@
+using Ebook.Application.Analytics;
 using Ebook.Application.Common.Messaging;
 using Ebook.Application.Content;
 using Ebook.Application.Publishing;
 using Ebook.Domain.Abstractions;
+using Ebook.Domain.Analytics;
 using Ebook.Infrastructure.Persistence;
 using Ebook.Infrastructure.Publishing;
 using Microsoft.AspNetCore.Mvc;
@@ -40,7 +42,14 @@ public static class PublicEndpoints
         .AllowAnonymous()
         .ExcludeFromDescription();
 
-        app.MapGet("/go/{slug}", async (string slug, EbookDbContext db, CancellationToken ct) =>
+        app.MapGet("/go/{slug}", async (
+            string slug,
+            [FromQuery(Name = "utm_source")] string? utmSource,
+            [FromQuery(Name = "utm_campaign")] string? utmCampaign,
+            [FromQuery(Name = "utm_content")] string? utmContent,
+            EbookDbContext db,
+            IAnalyticsRecorder recorder,
+            CancellationToken ct) =>
         {
             if (!IsValidSlug(slug))
             {
@@ -57,7 +66,8 @@ public static class PublicEndpoints
                 return Results.NotFound();
             }
 
-            logger.LogInformation("Clique de checkout {Slug}", slug);
+            await TryRecordAsync(recorder, new AnalyticsHit(
+                slug, AnalyticsEventType.CheckoutClick, utmSource, utmCampaign, utmContent), logger, ct);
 
             // checkout ainda não publicado (gate de aprovação / pré-E07): página de espera honesta
             return string.IsNullOrWhiteSpace(product.CheckoutUrl)
@@ -67,11 +77,18 @@ public static class PublicEndpoints
         .AllowAnonymous()
         .ExcludeFromDescription();
 
-        app.MapGet("/px.gif", (string? s) =>
+        app.MapGet("/px.gif", async (
+            string? s,
+            [FromQuery(Name = "utm_source")] string? utmSource,
+            [FromQuery(Name = "utm_campaign")] string? utmCampaign,
+            [FromQuery(Name = "utm_content")] string? utmContent,
+            IAnalyticsRecorder recorder,
+            CancellationToken ct) =>
         {
-            if (!string.IsNullOrWhiteSpace(s))
+            if (!string.IsNullOrWhiteSpace(s) && IsValidSlug(s))
             {
-                logger.LogInformation("Visita de LP {Slug}", s);
+                await TryRecordAsync(recorder, new AnalyticsHit(
+                    s, AnalyticsEventType.Visit, utmSource, utmCampaign, utmContent), logger, ct);
             }
 
             return Results.Bytes(TransparentGif, "image/gif");
@@ -116,6 +133,20 @@ public static class PublicEndpoints
         "<title>Em breve</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"></head>" +
         "<body style=\"font-family:sans-serif;display:grid;place-items:center;height:100vh;margin:0;text-align:center\">" +
         "<div><h1>Em breve</h1><p>Este produto estará disponível para compra em instantes.</p></div></body></html>";
+
+    // gravação de analytics nunca pode quebrar o pixel/redirect
+    private static async Task TryRecordAsync(
+        IAnalyticsRecorder recorder, AnalyticsHit hit, ILogger logger, CancellationToken ct)
+    {
+        try
+        {
+            await recorder.RecordAsync(hit, ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Falha ao registrar analytics ({Type}) para {Slug}", hit.Type, hit.Slug);
+        }
+    }
 
     private static bool IsValidSlug(string slug)
     {

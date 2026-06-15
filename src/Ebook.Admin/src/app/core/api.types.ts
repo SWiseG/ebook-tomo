@@ -11,6 +11,11 @@ export interface DashboardSummary {
   jobsPending: number;
   aiCallsToday: number;
   aiCacheHitRateToday: number;
+  visits30d: number;
+  checkoutClicks30d: number;
+  sales30d: number;
+  revenue30d: number;
+  conversionRate30d: number;
 }
 
 export interface JobItem {
@@ -102,6 +107,27 @@ export interface SocialPostItem {
   scheduledAtUtc: string;
   publishedAtUtc: string | null;
   externalId: string | null;
+}
+
+export interface Funnel {
+  visits: number;
+  checkoutClicks: number;
+  sales: number;
+  revenue: number;
+  conversionRate: number;
+}
+
+export interface ChannelMetric {
+  channel: string;
+  visits: number;
+  checkoutClicks: number;
+  sales: number;
+  revenue: number;
+}
+
+export interface ProductMetrics {
+  total: Funnel;
+  byChannel: ChannelMetric[];
 }
 
 export type SettingMap = Record<string, string>;

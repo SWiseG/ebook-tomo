@@ -112,6 +112,36 @@
         </p-card>
       }
 
+      @if (metrics(); as m) {
+        @if (m.total.visits > 0 || m.total.sales > 0) {
+          <p-card>
+            <ng-template #title>Funil · 30 dias</ng-template>
+            <div class="funnel">
+              <div class="funnel-row">
+                <span class="funnel-label"><i class="pi pi-eye"></i> Visitas</span>
+                <span class="funnel-value">{{ m.total.visits | number }}</span>
+              </div>
+              <div class="funnel-row">
+                <span class="funnel-label"><i class="pi pi-arrow-up-right"></i> Cliques</span>
+                <span class="funnel-value">{{ m.total.checkoutClicks | number }}</span>
+              </div>
+              <div class="funnel-row">
+                <span class="funnel-label"><i class="pi pi-shopping-cart"></i> Vendas</span>
+                <span class="funnel-value">{{ m.total.sales | number }}</span>
+              </div>
+              <div class="funnel-row funnel-row--strong">
+                <span class="funnel-label"><i class="pi pi-dollar"></i> Receita</span>
+                <span class="funnel-value">{{ m.total.revenue | currency: 'BRL' }}</span>
+              </div>
+              <div class="funnel-row">
+                <span class="funnel-label"><i class="pi pi-percentage"></i> Conversão</span>
+                <span class="funnel-value">{{ m.total.conversionRate | percent: '1.0-2' }}</span>
+              </div>
+            </div>
+          </p-card>
+        }
+      }
+
       @if (social().length) {
         <p-card>
           <ng-template #title>Calendário social · {{ social().length }} posts</ng-template>

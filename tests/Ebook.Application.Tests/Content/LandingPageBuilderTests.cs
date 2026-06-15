@@ -38,6 +38,8 @@ public class LandingPageBuilderTests
         Assert.Contains("data:image/png;base64,", html, StringComparison.Ordinal); // capa embutida
         Assert.Contains("/go/dinheiro-sob-controle", html, StringComparison.Ordinal); // CTA
         Assert.Contains("/px.gif?s=dinheiro-sob-controle", html, StringComparison.Ordinal); // pixel
+        Assert.Contains("URLSearchParams", html, StringComparison.Ordinal); // script de UTM (E11-01)
+        Assert.Contains("utm_source", html, StringComparison.Ordinal); // repasse de UTM para pixel/CTA
         Assert.Contains("27,00", html, StringComparison.Ordinal); // preço atual (pt-BR)
         Assert.Contains("47,00", html, StringComparison.Ordinal); // âncora riscada
         Assert.EndsWith("</html>", html, StringComparison.Ordinal);

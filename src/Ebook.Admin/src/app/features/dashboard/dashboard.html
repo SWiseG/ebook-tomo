@@ -62,6 +62,47 @@
   </section>
 
   <section class="block anim-in">
+    <div class="block__title">Resultados · últimos 30 dias</div>
+    <div class="kpi-grid anim-stagger">
+      <div class="kpi">
+        <i class="pi pi-eye"></i>
+        <div class="body">
+          <span class="value">{{ s.visits30d | number }}</span>
+          <span class="label">Visitas nas LPs</span>
+        </div>
+      </div>
+      <div class="kpi">
+        <i class="pi pi-arrow-up-right"></i>
+        <div class="body">
+          <span class="value">{{ s.checkoutClicks30d | number }}</span>
+          <span class="label">Cliques de checkout</span>
+        </div>
+      </div>
+      <div class="kpi">
+        <i class="pi pi-shopping-cart"></i>
+        <div class="body">
+          <span class="value">{{ s.sales30d | number }}</span>
+          <span class="label">Vendas</span>
+        </div>
+      </div>
+      <div class="kpi">
+        <i class="pi pi-dollar"></i>
+        <div class="body">
+          <span class="value">{{ s.revenue30d | currency: 'BRL' }}</span>
+          <span class="label">Receita</span>
+        </div>
+      </div>
+      <div class="kpi">
+        <i class="pi pi-percentage"></i>
+        <div class="body">
+          <span class="value">{{ s.conversionRate30d | percent: '1.0-2' }}</span>
+          <span class="label">Conversão (venda/visita)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block anim-in">
     <div class="block__title">Inteligência</div>
     <div class="kpi-grid anim-stagger">
       <div class="kpi">

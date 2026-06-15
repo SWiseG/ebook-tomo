@@ -10,7 +10,12 @@ public sealed record DashboardSummaryDto(
     int JobsFailed,
     int JobsPending,
     int AiCallsToday,
-    double AiCacheHitRateToday);
+    double AiCacheHitRateToday,
+    int Visits30d,
+    int CheckoutClicks30d,
+    int Sales30d,
+    decimal Revenue30d,
+    double ConversionRate30d);
 
 /// <summary>Leitura agregada para o painel; implementado na Infrastructure (consulta direta).</summary>
 public interface IDashboardReader

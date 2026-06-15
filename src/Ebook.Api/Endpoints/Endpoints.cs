@@ -1,5 +1,6 @@
 using Ebook.Application.Administration.Auth;
 using Ebook.Application.Administration.Dashboard;
+using Ebook.Application.Analytics;
 using Ebook.Application.Common.Messaging;
 using Ebook.Application.Common.Settings;
 using Ebook.Application.Content;
@@ -181,6 +182,19 @@ public static class Endpoints
             (await dispatcher.QueryAsync(new GetProductSocialQuery(id), ct)).ToHttp())
             .WithTags("Products")
             .WithSummary("Agenda de conteúdo social do produto (calendário de 30 dias)");
+
+        secured.MapGet("/products/{id:guid}/metrics", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.QueryAsync(new GetProductMetricsQuery(id), ct)).ToHttp())
+            .WithTags("Products")
+            .WithSummary("Funil de métricas do produto (visitas → cliques → vendas, 30 dias)");
+
+        secured.MapPost("/analytics/aggregate", async (IMetricsAggregator aggregator, CancellationToken ct) =>
+        {
+            var rows = await aggregator.AggregateAsync(DateTime.UtcNow.Date, ct);
+            return Results.Ok(new { date = DateTime.UtcNow.Date, rows });
+        })
+            .WithTags("Analytics")
+            .WithSummary("Dispara a agregação de métricas de hoje (MetricDaily)");
 
         secured.MapGet("/settings", async (ISettingsStore settings, CancellationToken ct) =>
             Results.Ok(await settings.GetAllAsync(ct)))

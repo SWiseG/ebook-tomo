@@ -339,8 +339,18 @@ public static class LandingPageBuilder
     private static string Footer(LpModel m) =>
         $"<footer><div class=\"wrap\">{Esc(m.Title)} · Todos os direitos reservados</div></footer>";
 
+    // pixel sem src + script que repassa os utm_* da URL ao pixel (uma batida) e aos CTAs (E11-01)
     private static string Pixel(LpModel m) =>
-        $"<img src=\"{Esc(m.PixelUrl)}\" alt=\"\" width=\"1\" height=\"1\" style=\"position:absolute;left:-9999px\" />";
+        "<img id=\"tomo-px\" alt=\"\" width=\"1\" height=\"1\" style=\"position:absolute;left:-9999px\" />" +
+        "<script>(function(){var b='" + JsString(m.PixelUrl) + "';" +
+        "var p=new URLSearchParams(location.search);" +
+        "var u=['utm_source','utm_campaign','utm_content']" +
+        ".filter(function(k){return p.get(k);})" +
+        ".map(function(k){return k+'='+encodeURIComponent(p.get(k));}).join('&');" +
+        "var px=document.getElementById('tomo-px');if(px){px.src=b+(u?'&'+u:'');}" +
+        "document.querySelectorAll('a.cta').forEach(function(a){" +
+        "if(u){a.href=a.href+(a.href.indexOf('?')>-1?'&':'?')+u;}});" +
+        "})();</script>";
 
     private static string Money(decimal value, string currency)
     {
@@ -355,4 +365,10 @@ public static class LandingPageBuilder
     private static readonly HtmlEncoder Encoder = HtmlEncoder.Create(new TextEncoderSettings(UnicodeRanges.All));
 
     private static string Esc(string value) => Encoder.Encode(value);
+
+    // escapa uma string para um literal JS entre aspas simples (slug é controlado, mas previne quebra)
+    private static string JsString(string value) =>
+        value.Replace("\\", "\\\\", StringComparison.Ordinal)
+            .Replace("'", "\\'", StringComparison.Ordinal)
+            .Replace("<", "\\x3c", StringComparison.Ordinal);
 }
