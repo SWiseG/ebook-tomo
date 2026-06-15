@@ -36,10 +36,9 @@ COPY prompts ./prompts
 ENV ASPNETCORE_URLS=http://+:8080 \
     Data__RootPath=/data \
     Ai__PromptsPath=/app/prompts \
-    HOME=/home/app
+    HOME=/root
 
-RUN mkdir -p /data /home/app && chown -R app:app /data /home/app /app
-USER app
+RUN mkdir -p /data
 
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s \
