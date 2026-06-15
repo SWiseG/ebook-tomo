@@ -41,7 +41,6 @@ ENV ASPNETCORE_URLS=http://+:8080 \
 RUN mkdir -p /data /home/app && chown -R app:app /data /home/app /app
 USER app
 
-VOLUME ["/data"]
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s \
     CMD curl -fsS http://localhost:8080/health/live || exit 1
