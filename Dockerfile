@@ -44,5 +44,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s \
     CMD curl -fsS http://localhost:8080/health/live || exit 1
 
-# Inject Claude credentials from env var on every start (survives redeploys)
-ENTRYPOINT ["/bin/sh", "-c", "if [ -n \"$CLAUDE_CREDENTIALS_JSON\" ]; then mkdir -p /data/.claude && printf '%s' \"$CLAUDE_CREDENTIALS_JSON\" > /data/.claude/.credentials.json; fi && exec dotnet Ebook.Api.dll"]
+# Inject Claude credentials from env var at first start (only if file absent, preserves refreshed tokens)
+ENTRYPOINT ["/bin/sh", "-c", "if [ -n \"$CLAUDE_CREDENTIALS_JSON\" ] && [ ! -f /data/.claude/.credentials.json ]; then mkdir -p /data/.claude && printf '%s' \"$CLAUDE_CREDENTIALS_JSON\" > /data/.claude/.credentials.json && echo '[startup] Claude credentials injected'; fi && exec dotnet Ebook.Api.dll"]
