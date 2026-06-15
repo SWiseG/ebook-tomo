@@ -38,7 +38,7 @@ ENV ASPNETCORE_URLS=http://+:8080 \
     Ai__PromptsPath=/app/prompts \
     HOME=/root
 
-RUN mkdir -p /data
+RUN mkdir -p /data && ln -s /data/.claude /root/.claude
 
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s \
