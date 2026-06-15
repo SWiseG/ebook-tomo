@@ -40,6 +40,12 @@ public sealed class ProductRepository(EbookDbContext db) : IProductRepository
     public Task<Product?> GetByKiwifyProductIdAsync(string kiwifyProductId, CancellationToken ct = default) =>
         db.Products.FirstOrDefaultAsync(p => p.KiwifyProductId == kiwifyProductId, ct);
 
+    public async Task<IReadOnlyList<Product>> ListByStatusAsync(ProductStatus status, CancellationToken ct = default) =>
+        await db.Products.Where(p => p.Status == status).ToListAsync(ct);
+
+    public Task<int> CountByStatusAsync(ProductStatus status, CancellationToken ct = default) =>
+        db.Products.CountAsync(p => p.Status == status, ct);
+
     public void Add(Product product) => db.Products.Add(product);
 }
 

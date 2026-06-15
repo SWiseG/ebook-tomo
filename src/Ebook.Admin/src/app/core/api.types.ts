@@ -130,4 +130,24 @@ export interface ProductMetrics {
   byChannel: ChannelMetric[];
 }
 
+export interface OptimizationRun {
+  id: string;
+  cycleNumber: number;
+  executedAtUtc: string;
+  status: string;
+  decisionCount: number;
+}
+
+export type OptimizationDecisionKind = 'Scale' | 'Keep' | 'Iterate' | 'Kill';
+
+export interface OptimizationDecision {
+  id: string;
+  productId: string;
+  productTitle: string;
+  decision: OptimizationDecisionKind;
+  status: 'Proposed' | 'Approved' | 'Executed' | 'Vetoed';
+  rationale: string;
+  actionsJson: string;
+}
+
 export type SettingMap = Record<string, string>;

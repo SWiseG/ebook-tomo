@@ -1,0 +1,61 @@
+@use '../../../styles/tokens' as t;
+
+.block__title {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--p-text-muted-color);
+  margin-bottom: t.$space-3;
+}
+
+.rationale {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+  margin-top: 2px;
+  max-width: 42ch;
+}
+
+.row-actions {
+  display: flex;
+  gap: t.$space-2;
+  align-items: center;
+}
+
+.runs {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-2;
+}
+
+.run {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  padding: t.$space-3;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: t.$radius;
+  background: var(--p-content-background);
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    border-color t.$dur-fast t.$ease-out,
+    background-color t.$dur-fast t.$ease-out;
+
+  &:hover {
+    border-color: var(--p-primary-color);
+  }
+  &--active {
+    border-color: var(--p-primary-color);
+    background: var(--p-highlight-background);
+  }
+
+  .run-cycle {
+    font-weight: 650;
+    font-size: 0.95rem;
+  }
+  .run-meta {
+    font-size: 0.78rem;
+    color: var(--p-text-muted-color);
+  }
+}

@@ -6,6 +6,7 @@ using Ebook.Application.Common.Settings;
 using Ebook.Application.Content;
 using Ebook.Application.DevTools;
 using Ebook.Application.Discovery;
+using Ebook.Application.Optimization;
 using Ebook.Application.Publishing;
 using Ebook.Application.Social;
 using Ebook.Domain.Products;
@@ -195,6 +196,31 @@ public static class Endpoints
         })
             .WithTags("Analytics")
             .WithSummary("Dispara a agregação de métricas de hoje (MetricDaily)");
+
+        secured.MapPost("/optimizer/run", async (IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(new RunOptimizationCommand(), ct)).ToHttp())
+            .WithTags("Optimizer")
+            .WithSummary("Dispara o ciclo de otimização de ROI (classifica os produtos Live)");
+
+        secured.MapGet("/optimizer/runs", async (IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.QueryAsync(new GetOptimizationRunsQuery(), ct)).ToHttp())
+            .WithTags("Optimizer")
+            .WithSummary("Lista as execuções do otimizador");
+
+        secured.MapGet("/optimizer/runs/{id:guid}/decisions", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.QueryAsync(new GetRunDecisionsQuery(id), ct)).ToHttp())
+            .WithTags("Optimizer")
+            .WithSummary("Decisões de uma execução (para revisão/veto)");
+
+        secured.MapPost("/optimizer/decisions/{id:guid}/approve", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(new ApproveDecisionCommand(id), ct)).ToHttp())
+            .WithTags("Optimizer")
+            .WithSummary("Aprova e executa uma decisão do otimizador");
+
+        secured.MapPost("/optimizer/decisions/{id:guid}/veto", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(new VetoDecisionCommand(id), ct)).ToHttp())
+            .WithTags("Optimizer")
+            .WithSummary("Veta uma decisão do otimizador (não executa)");
 
         secured.MapGet("/settings", async (ISettingsStore settings, CancellationToken ct) =>
             Results.Ok(await settings.GetAllAsync(ct)))

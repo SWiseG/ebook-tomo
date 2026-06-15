@@ -1,6 +1,7 @@
 using Ebook.Domain.Analytics;
 using Ebook.Domain.Knowledge;
 using Ebook.Domain.Niches;
+using Ebook.Domain.Optimization;
 using Ebook.Domain.Products;
 using Ebook.Domain.Sales;
 using Ebook.Domain.Social;
@@ -20,6 +21,8 @@ public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : D
     public DbSet<SocialPost> SocialPosts => Set<SocialPost>();
     public DbSet<AnalyticsEvent> AnalyticsEvents => Set<AnalyticsEvent>();
     public DbSet<MetricDaily> MetricDailies => Set<MetricDaily>();
+    public DbSet<OptimizationRun> OptimizationRuns => Set<OptimizationRun>();
+    public DbSet<OptimizationDecision> OptimizationDecisions => Set<OptimizationDecision>();
     public DbSet<OutboxEventRecord> OutboxEvents => Set<OutboxEventRecord>();
     public DbSet<ProcessedEventRecord> ProcessedEvents => Set<ProcessedEventRecord>();
     public DbSet<JobRecord> Jobs => Set<JobRecord>();
@@ -147,6 +150,25 @@ public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : D
             e.Property(x => x.Revenue).HasConversion<double>();
             e.HasIndex(x => new { x.ProductId, x.DateUtc, x.Channel }).IsUnique();
             e.HasIndex(x => x.DateUtc);
+        });
+
+        modelBuilder.Entity<OptimizationRun>(e =>
+        {
+            e.ToTable("OptimizationRun");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.ReportPath).HasMaxLength(400);
+            e.HasIndex(x => x.CycleNumber).IsUnique();
+        });
+
+        modelBuilder.Entity<OptimizationDecision>(e =>
+        {
+            e.ToTable("OptimizationDecision");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Decision).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+            e.HasIndex(x => x.RunId);
+            e.HasIndex(x => x.ProductId);
         });
 
         modelBuilder.Entity<OutboxEventRecord>(e =>

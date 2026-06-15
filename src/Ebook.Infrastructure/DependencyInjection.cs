@@ -8,11 +8,13 @@ using Ebook.Application.Content.Images;
 using Ebook.Application.Content.Pdf;
 using Ebook.Application.Analytics;
 using Ebook.Application.Discovery;
+using Ebook.Application.Optimization;
 using Ebook.Application.Publishing;
 using Ebook.Application.Social;
 using Ebook.Domain.Abstractions;
 using Ebook.Domain.Knowledge;
 using Ebook.Domain.Niches;
+using Ebook.Domain.Optimization;
 using Ebook.Domain.Products;
 using Ebook.Domain.Sales;
 using Ebook.Domain.Social;
@@ -24,6 +26,7 @@ using Ebook.Infrastructure.Discovery;
 using Ebook.Infrastructure.Events;
 using Ebook.Infrastructure.FileStore;
 using Ebook.Infrastructure.Jobs;
+using Ebook.Infrastructure.Optimization;
 using Ebook.Infrastructure.Persistence;
 using Ebook.Infrastructure.Publishing;
 using Ebook.Infrastructure.Scheduling;
@@ -85,6 +88,8 @@ public static class DependencyInjection
         services.AddScoped<IAnalyticsRecorder, AnalyticsRecorder>();
         services.AddScoped<IMetricsAggregator, MetricsAggregator>();
         services.AddScoped<IMetricsReader, MetricsReader>();
+        services.AddScoped<IOptimizationRepository, OptimizationRepository>();
+        services.AddScoped<IOptimizationReader, OptimizationReader>();
         services.AddSingleton<IKiwifyPublisher, KiwifyPublisher>();
         services.AddSingleton<ISocialPublisher, MetaGraphPublisher>();
 
@@ -142,6 +147,15 @@ public static class DependencyInjection
                 .ForJob(metricsKey)
                 .WithIdentity(MetricsAggregationJob.JobName + "-trigger")
                 .WithCronSchedule(metricsCron));
+
+            // otimização de ROI: ciclo de ~30 dias (E12)
+            var optimizeCron = configuration["Scheduling:OptimizeCron"] ?? "0 0 5 1 * ?";
+            var optimizeKey = new JobKey(OptimizeCycleJob.JobName);
+            quartz.AddJob<OptimizeCycleJob>(o => o.WithIdentity(optimizeKey));
+            quartz.AddTrigger(t => t
+                .ForJob(optimizeKey)
+                .WithIdentity(OptimizeCycleJob.JobName + "-trigger")
+                .WithCronSchedule(optimizeCron));
         });
         services.AddQuartzHostedService(o => o.WaitForJobsToComplete = true);
 

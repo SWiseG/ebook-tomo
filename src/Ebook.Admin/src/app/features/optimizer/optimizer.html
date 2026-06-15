@@ -1,0 +1,83 @@
+<div class="page-head anim-in">
+  <div>
+    <h1>Otimizador de ROI</h1>
+    <div class="sub">Classifica produtos por desempenho (escalar / manter / iterar / matar).</div>
+  </div>
+  <div class="actions">
+    <p-button label="Rodar ciclo" icon="pi pi-bolt" [loading]="busy()" (onClick)="run()" />
+  </div>
+</div>
+
+@if (runs(); as list) {
+  @if (list.length === 0) {
+    <div class="empty">Nenhum ciclo executado. Clique em "Rodar ciclo".</div>
+  } @else {
+    <div class="grid-2 anim-in">
+      <div>
+        <div class="block__title">Decisões @if (selected(); as r) { · ciclo {{ r.cycleNumber }} }</div>
+        <p-table [value]="decisions()" [rowHover]="true" size="small">
+          <ng-template #header>
+            <tr>
+              <th>Produto</th>
+              <th>Decisão</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-d>
+            <tr>
+              <td>
+                <strong>{{ d.productTitle }}</strong>
+                <div class="rationale">{{ d.rationale }}</div>
+              </td>
+              <td><p-tag [value]="d.decision" [severity]="decisionSeverity(d.decision)" /></td>
+              <td><p-tag [value]="d.status" [severity]="statusSeverity(d.status)" /></td>
+              <td>
+                @if (d.status === 'Proposed') {
+                  <div class="row-actions">
+                    <p-button
+                      label="Aprovar"
+                      size="small"
+                      [disabled]="busy()"
+                      (onClick)="approve(d)"
+                    />
+                    <p-button
+                      icon="pi pi-times"
+                      size="small"
+                      severity="danger"
+                      [text]="true"
+                      [disabled]="busy()"
+                      (onClick)="veto(d)"
+                    />
+                  </div>
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="4"><div class="empty">Selecione um ciclo para ver as decisões.</div></td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <aside class="runs">
+        <div class="block__title">Execuções</div>
+        @for (r of list; track r.id) {
+          <button
+            type="button"
+            class="run"
+            [class.run--active]="selected()?.id === r.id"
+            (click)="select(r)"
+          >
+            <span class="run-cycle">Ciclo {{ r.cycleNumber }}</span>
+            <span class="run-meta">{{ r.executedAtUtc | date: 'dd/MM/yy HH:mm' }} · {{ r.decisionCount }} decisões</span>
+          </button>
+        }
+      </aside>
+    </div>
+  }
+} @else {
+  <app-loading variant="table" [rows]="5" />
+}

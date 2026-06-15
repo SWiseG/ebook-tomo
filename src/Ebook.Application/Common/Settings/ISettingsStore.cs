@@ -28,4 +28,10 @@ public static class SettingKeys
 
     /// <summary>Publicar os posts sociais automaticamente no horário (default false = só agenda + cards).</summary>
     public const string SocialAutoPublish = "social.autoPublish";
+
+    /// <summary>Limiares do classificador de ROI (JSON de RoiThresholds).</summary>
+    public const string RoiThresholds = "roi.thresholds";
+
+    /// <summary>Executar as decisões do otimizador automaticamente (default false = veto humano).</summary>
+    public const string RoiAutoExecute = "roi.autoExecute";
 }

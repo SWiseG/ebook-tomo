@@ -66,6 +66,7 @@ export class Shell {
       title: 'Operação',
       items: [
         { path: '/jobs', label: 'Jobs', icon: 'pi pi-bolt' },
+        { path: '/optimizer', label: 'Otimizador', icon: 'pi pi-bullseye' },
         { path: '/settings', label: 'Configurações', icon: 'pi pi-sliders-h' },
       ],
     },
