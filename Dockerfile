@@ -2,7 +2,7 @@
 FROM node:22-alpine AS admin-build
 WORKDIR /app
 COPY src/Ebook.Admin/package*.json ./
-RUN npm ci
+RUN npm install --prefer-offline
 COPY src/Ebook.Admin/ ./
 RUN npm run build
 
