@@ -1,6 +1,18 @@
 @use 'styles/tokens' as t;
 @use 'styles/motion';
 
+/* Override primeicons @font-face with absolute path — fonts committed to public/fonts/
+   so they survive the Docker/Linux build without relying on npm CSS bundling. */
+@font-face {
+  font-family: 'primeicons';
+  font-display: block;
+  src: url('/fonts/primeicons.woff2') format('woff2'),
+       url('/fonts/primeicons.woff') format('woff'),
+       url('/fonts/primeicons.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 /* ─────────────────────────────────────────────────────────────
    Tomo — camada de aplicação sobre o PrimeNG.
    Cores vêm das vars --p-* (tomo-preset.ts). Aqui só semântica de
