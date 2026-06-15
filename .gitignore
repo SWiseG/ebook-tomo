@@ -19,6 +19,9 @@ data/
 # Secrets
 .env
 deploy/.env
+# Config de ambiente (segredos locais: NÃO commitar; appsettings.json base é o template)
+src/Ebook.Api/appsettings.Development.json
+src/Ebook.Api/appsettings.Production.json
 
 # IDE
 .idea/

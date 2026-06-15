@@ -1,6 +1,6 @@
 services:
   api:
-    image: ghcr.io/OWNER/ebook-api:latest # ajustar OWNER após criar o repositório GitHub
+    image: ghcr.io/${GHCR_OWNER:?defina GHCR_OWNER no .env}/ebook-api:latest
     restart: unless-stopped
     env_file: .env
     ports:
