@@ -1,7 +1,9 @@
 using System.Text;
 using Ebook.Api.Endpoints;
 using Ebook.Api.OpenApi;
+using Ebook.Api.Realtime;
 using Ebook.Application;
+using Ebook.Application.Common.Realtime;
 using Ebook.Infrastructure;
 using Ebook.Infrastructure.Observability;
 using Ebook.Infrastructure.Persistence;
@@ -58,17 +60,41 @@ try
 
     builder.Services
         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer(o => o.TokenValidationParameters = new TokenValidationParameters
+        .AddJwtBearer(o =>
         {
-            ValidateIssuer = true,
-            ValidIssuer = jwt.Issuer,
-            ValidateAudience = true,
-            ValidAudience = jwt.Audience,
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Secret)),
-            ClockSkew = TimeSpan.FromMinutes(1)
+            o.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = jwt.Issuer,
+                ValidateAudience = true,
+                ValidAudience = jwt.Audience,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Secret)),
+                ClockSkew = TimeSpan.FromMinutes(1)
+            };
+
+            // SignalR (WebSocket) não envia header Authorization no handshake:
+            // aceita o JWT via query string "access_token" apenas no path do hub.
+            o.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                    {
+                        context.Token = accessToken;
+                    }
+
+                    return Task.CompletedTask;
+                }
+            };
         });
     builder.Services.AddAuthorization();
+
+    // Tempo real: SignalR + implementação que sobrescreve o NullRealtimeNotifier da Infrastructure.
+    builder.Services.AddSignalR();
+    builder.Services.AddSingleton<IRealtimeNotifier, SignalRRealtimeNotifier>();
 
     builder.Services.AddHealthChecks()
         .AddCheck<DatabaseHealthCheck>("database", tags: ["ready"])
@@ -92,6 +118,7 @@ try
 
     app.MapApiEndpoints();
     app.MapPublicEndpoints();
+    app.MapHub<TomoHub>("/hubs/tomo");
 
     if (app.Environment.IsDevelopment())
     {

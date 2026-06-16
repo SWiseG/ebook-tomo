@@ -1,6 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnDestroy, inject, signal } from '@angular/core';
 import { CurrencyPipe, DecimalPipe, PercentPipe } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime, filter, merge } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
@@ -18,6 +20,7 @@ import {
 import { renderMarkdown } from '../../shared/markdown';
 import { Loading } from '../../shared/loading';
 import { NotificationService } from '../../core/notification.service';
+import { RealtimeService } from '../../core/realtime.service';
 
 const STAGES = ['Outline', 'Writing', 'Review', 'Pdf', 'Lp'] as const;
 
@@ -43,6 +46,7 @@ export class ProductDetail implements OnDestroy {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly notify = inject(NotificationService);
   private readonly confirm = inject(ConfirmationService);
+  private readonly realtime = inject(RealtimeService);
   private readonly id = inject(ActivatedRoute).snapshot.paramMap.get('id')!;
 
   readonly steps = STAGES;
@@ -62,7 +66,28 @@ export class ProductDetail implements OnDestroy {
 
   constructor() {
     this.loadDetail();
+    this.loadOutlineAndManuscript();
+    this.loadCoverOnce();
+    this.loadSocial();
+    this.loadMetrics();
 
+    // Atualização ao vivo: jobs deste produto e transições deste produto
+    // recarregam o detalhe (avança o stepper, libera manuscrito/capa/LP).
+    merge(
+      this.realtime.jobChanged$.pipe(filter((j) => j.productId === this.id)),
+      this.realtime.productChanged$.pipe(filter((p) => p.productId === this.id)),
+    )
+      .pipe(debounceTime(700), takeUntilDestroyed())
+      .subscribe(() => {
+        this.loadDetail();
+        this.loadOutlineAndManuscript();
+        this.loadCoverOnce();
+        this.loadSocial();
+        this.loadMetrics();
+      });
+  }
+
+  private loadOutlineAndManuscript(): void {
     this.http
       .get<Outline>(`/api/v1/products/${this.id}/outline`)
       .subscribe({ next: (o) => this.outline.set(o), error: () => {} });
@@ -70,7 +95,12 @@ export class ProductDetail implements OnDestroy {
     this.http
       .get(`/api/v1/products/${this.id}/manuscript`, { responseType: 'text' })
       .subscribe({ next: (md) => this.manuscriptHtml.set(renderMarkdown(md)), error: () => {} });
+  }
 
+  private loadCoverOnce(): void {
+    if (this.objectUrl) {
+      return; // capa já carregada — não revalida nem vaza object URL
+    }
     this.http.get(`/api/v1/products/${this.id}/cover`, { responseType: 'blob' }).subscribe({
       next: (blob) => {
         this.objectUrl = URL.createObjectURL(blob);
@@ -78,9 +108,6 @@ export class ProductDetail implements OnDestroy {
       },
       error: () => {},
     });
-
-    this.loadSocial();
-    this.loadMetrics();
   }
 
   private loadSocial(): void {

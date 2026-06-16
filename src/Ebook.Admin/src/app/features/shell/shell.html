@@ -64,7 +64,67 @@
 
   <div class="main-col">
     <header class="topbar">
+      <button
+        type="button"
+        class="hamburger"
+        (click)="layout.toggleMobile()"
+        aria-label="Abrir menu"
+      >
+        <i class="pi pi-bars"></i>
+      </button>
+
       <span class="spacer"></span>
+
+      <span
+        class="conn-dot"
+        [class.online]="realtime.connected()"
+        [pTooltip]="realtime.connected() ? 'Tempo real conectado' : 'Tempo real desconectado'"
+        tooltipPosition="bottom"
+      ></span>
+
+      <button
+        type="button"
+        class="bell"
+        (click)="bell.toggle($event)"
+        [pTooltip]="'Notificações'"
+        tooltipPosition="bottom"
+        aria-label="Notificações"
+      >
+        <i class="pi pi-bell"></i>
+        @if (realtime.unreadCount() > 0) {
+          <span class="bell__badge">{{ realtime.unreadCount() }}</span>
+        }
+      </button>
+
+      <p-popover #bell (onShow)="realtime.markAllRead()">
+        <div class="notif">
+          <div class="notif__head">
+            <strong>Notificações</strong>
+            @if (realtime.notifications().length > 0) {
+              <button type="button" class="notif__clear" (click)="realtime.clear()">Limpar</button>
+            }
+          </div>
+          @if (realtime.notifications().length === 0) {
+            <p class="notif__empty">Sem novidades por aqui.</p>
+          } @else {
+            <ul class="notif__list">
+              @for (n of realtime.notifications(); track n.id) {
+                <li class="notif__item notif__item--{{ n.severity }}">
+                  <span class="notif__dot"></span>
+                  <div class="notif__body">
+                    <span class="notif__title">{{ n.title }}</span>
+                    @if (n.detail) {
+                      <span class="notif__detail">{{ n.detail }}</span>
+                    }
+                    <span class="notif__time">{{ n.at | date: 'shortTime' }}</span>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </p-popover>
+
       <p-button
         [text]="true"
         severity="secondary"

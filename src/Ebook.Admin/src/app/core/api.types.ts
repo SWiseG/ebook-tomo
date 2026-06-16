@@ -151,3 +151,19 @@ export interface OptimizationDecision {
 }
 
 export type SettingMap = Record<string, string>;
+
+/** Push do hub SignalR quando um job muda de estado. */
+export interface RealtimeJobChanged {
+  id: string;
+  type: string;
+  status: JobItem['status'];
+  attempts: number;
+  productId: string | null;
+  lastError: string | null;
+}
+
+/** Push do hub SignalR quando um produto sofre uma transição de domínio. */
+export interface RealtimeProductChanged {
+  productId: string;
+  event: string;
+}

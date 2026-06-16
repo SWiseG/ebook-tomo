@@ -1,10 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { CurrencyPipe, DecimalPipe, PercentPipe } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime, merge } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DashboardSummary } from '../../core/api.types';
 import { NotificationService } from '../../core/notification.service';
+import { RealtimeService } from '../../core/realtime.service';
 import { Loading } from '../../shared/loading';
 
 @Component({
@@ -16,11 +19,21 @@ import { Loading } from '../../shared/loading';
 export class Dashboard {
   private readonly http = inject(HttpClient);
   private readonly notify = inject(NotificationService);
+  private readonly realtime = inject(RealtimeService);
 
   readonly summary = signal<DashboardSummary | null>(null);
   readonly error = signal<string | null>(null);
 
   constructor() {
+    this.load();
+
+    // KPIs refletem jobs + produtos: recarrega quando qualquer um muda.
+    merge(this.realtime.jobChanged$, this.realtime.productChanged$)
+      .pipe(debounceTime(800), takeUntilDestroyed())
+      .subscribe(() => this.load());
+  }
+
+  private load(): void {
     this.http.get<DashboardSummary>('/api/v1/dashboard/summary').subscribe({
       next: (data) => this.summary.set(data),
       error: () => this.error.set('Falha ao carregar o resumo.'),

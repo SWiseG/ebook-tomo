@@ -256,6 +256,159 @@
   }
 }
 
+/* ── Indicador de conexão em tempo real ── */
+.conn-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--p-surface-400, #9ca3af);
+  box-shadow: 0 0 0 0 transparent;
+  transition:
+    background-color t.$dur t.$ease-out,
+    box-shadow t.$dur t.$ease-out;
+
+  &.online {
+    background: var(--p-green-500, #22c55e);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-green-500, #22c55e) 22%, transparent);
+  }
+}
+
+/* ── Sino de notificações ── */
+.bell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: t.$radius;
+  background: transparent;
+  color: var(--p-text-muted-color);
+  cursor: pointer;
+  font-size: 1.05rem;
+  transition:
+    background-color t.$dur-fast t.$ease-out,
+    color t.$dur-fast t.$ease-out;
+
+  &:hover {
+    background: var(--p-content-hover-background, color-mix(in srgb, var(--p-primary-color) 10%, transparent));
+    color: var(--p-text-color);
+  }
+
+  &__badge {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    border-radius: t.$radius-pill;
+    background: var(--p-red-500, #ef4444);
+    color: #fff;
+    font-size: 0.66rem;
+    font-weight: 700;
+    line-height: 17px;
+    text-align: center;
+    box-shadow: 0 0 0 2px var(--app-ground);
+  }
+}
+
+/* ── Conteúdo do popover de notificações ── */
+.notif {
+  width: min(320px, 86vw);
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: t.$space-2;
+  }
+
+  &__clear {
+    border: 0;
+    background: transparent;
+    color: var(--p-primary-color);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  &__empty {
+    margin: t.$space-2 0;
+    color: var(--p-text-muted-color);
+    font-size: 0.88rem;
+    text-align: center;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 360px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__item {
+    display: flex;
+    gap: t.$space-3;
+    padding: t.$space-2;
+    border-radius: t.$radius;
+
+    &:hover {
+      background: var(--p-content-hover-background, color-mix(in srgb, var(--p-primary-color) 6%, transparent));
+    }
+  }
+
+  &__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex: none;
+    background: var(--p-surface-400, #9ca3af);
+  }
+  &__item--success &__dot {
+    background: var(--p-green-500, #22c55e);
+  }
+  &__item--info &__dot {
+    background: var(--p-primary-color);
+  }
+  &__item--warn &__dot {
+    background: var(--p-amber-500, #f59e0b);
+  }
+  &__item--danger &__dot {
+    background: var(--p-red-500, #ef4444);
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+  &__title {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--p-text-color);
+  }
+  &__detail {
+    font-size: 0.78rem;
+    color: var(--p-text-muted-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  &__time {
+    font-size: 0.7rem;
+    color: var(--p-text-muted-color);
+    margin-top: 2px;
+  }
+}
+
 .content {
   flex: 1;
   padding: t.$space-6 t.$space-6 t.$space-7;

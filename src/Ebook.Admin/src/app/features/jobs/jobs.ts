@@ -1,6 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -8,6 +10,7 @@ import { ButtonModule } from 'primeng/button';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { JobItem, JobsPage } from '../../core/api.types';
 import { NotificationService } from '../../core/notification.service';
+import { RealtimeService } from '../../core/realtime.service';
 import { Loading } from '../../shared/loading';
 
 type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' | undefined;
@@ -28,6 +31,7 @@ const SEVERITY: Record<JobItem['status'], Severity> = {
 export class Jobs {
   private readonly http = inject(HttpClient);
   private readonly notify = inject(NotificationService);
+  private readonly realtime = inject(RealtimeService);
 
   readonly page = signal<JobsPage | null>(null);
 
@@ -42,6 +46,11 @@ export class Jobs {
 
   constructor() {
     this.load();
+
+    // Atualização ao vivo: cada mudança de job recarrega a lista (debounced p/ rajadas).
+    this.realtime.jobChanged$
+      .pipe(debounceTime(600), takeUntilDestroyed())
+      .subscribe(() => this.load());
   }
 
   severity(status: JobItem['status']): Severity {

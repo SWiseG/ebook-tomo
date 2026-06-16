@@ -3,6 +3,11 @@
     "target": "http://localhost:5161",
     "secure": false
   },
+  "/hubs": {
+    "target": "http://localhost:5161",
+    "secure": false,
+    "ws": true
+  },
   "/health": {
     "target": "http://localhost:5161",
     "secure": false

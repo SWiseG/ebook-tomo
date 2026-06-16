@@ -1,6 +1,7 @@
 using Ebook.Application.Common.Events;
 using Ebook.Application.Common.Jobs;
 using Ebook.Application.Common.Messaging;
+using Ebook.Application.Common.Realtime;
 using Ebook.Application.Knowledge;
 using Ebook.Application.Optimization;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,9 @@ public static class DependencyInjection
         services.AddScoped<IKnowledgeService, KnowledgeService>();
         services.AddScoped<IOptimizationService, OptimizationService>();
         services.AddScoped<IOptimizationExecutor, OptimizationExecutor>();
+
+        // notificações em tempo real: no-op por padrão; a Api sobrescreve com o SignalR
+        services.AddSingleton<IRealtimeNotifier, NullRealtimeNotifier>();
 
         var assembly = typeof(DependencyInjection).Assembly;
         Type[] handlerOpenTypes =

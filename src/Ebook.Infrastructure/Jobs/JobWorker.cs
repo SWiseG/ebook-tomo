@@ -1,4 +1,5 @@
 using Ebook.Application.Common.Jobs;
+using Ebook.Application.Common.Realtime;
 using Ebook.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -57,6 +58,7 @@ public sealed class JobWorker(
     {
         using var scope = scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<EbookDbContext>();
+        var notifier = scope.ServiceProvider.GetService<IRealtimeNotifier>();
         var now = DateTime.UtcNow;
 
         var job = await db.Jobs
@@ -73,6 +75,7 @@ public sealed class JobWorker(
         job.StartedAtUtc = now;
         job.Attempts++;
         await db.SaveChangesAsync(ct);
+        await NotifyAsync(notifier, job, ct);
 
         var handler = scope.ServiceProvider.GetServices<IJobHandler>()
             .FirstOrDefault(h => h.Type == job.Type);
@@ -83,6 +86,7 @@ public sealed class JobWorker(
             job.LastError = $"Nenhum IJobHandler registrado para o tipo '{job.Type}'.";
             job.FinishedAtUtc = DateTime.UtcNow;
             await db.SaveChangesAsync(ct);
+            await NotifyAsync(notifier, job, ct);
             logger.LogError("Job {JobId} sem handler para tipo {JobType}", job.Id, job.Type);
             return true;
         }
@@ -115,8 +119,15 @@ public sealed class JobWorker(
 
         job.FinishedAtUtc = DateTime.UtcNow;
         await db.SaveChangesAsync(CancellationToken.None);
+        await NotifyAsync(notifier, job, CancellationToken.None);
         return true;
     }
+
+    /// <summary>Emite o estado atual do job para o painel. Best-effort: o notifier nunca lança.</summary>
+    private static Task NotifyAsync(IRealtimeNotifier? notifier, JobRecord job, CancellationToken ct) =>
+        notifier?.JobChangedAsync(
+            new RealtimeJobChanged(job.Id, job.Type, job.Status.ToString(), job.Attempts, job.ProductId, job.LastError),
+            ct) ?? Task.CompletedTask;
 
     private void Reschedule(JobRecord job, string error)
     {
