@@ -18,7 +18,7 @@
 
   @if (page(); as p) {
     <p class="muted count">{{ t('jobs.count', { count: p.total }) }}</p>
-    <p-table class="anim-in" [value]="p.items" [paginator]="p.items.length > 15" [rows]="15" [rowHover]="true" size="small">
+    <p-table class="anim-in cards-sm" [value]="p.items" [paginator]="p.items.length > 15" [rows]="15" [rowHover]="true" size="small">
       <ng-template #header>
         <tr>
           <th>{{ t('jobs.col.type') }}</th>
@@ -31,11 +31,11 @@
       </ng-template>
       <ng-template #body let-job>
         <tr>
-          <td class="mono">{{ job.type }}</td>
-          <td><p-tag [value]="t('status.job.' + job.status)" [severity]="severity(job.status)" /></td>
-          <td>{{ job.attempts }}</td>
-          <td>{{ job.createdAtUtc | date: 'dd/MM HH:mm' }}</td>
-          <td class="error-cell">{{ job.lastError ?? '—' }}</td>
+          <td class="mono" [attr.data-label]="t('jobs.col.type')">{{ job.type }}</td>
+          <td [attr.data-label]="t('jobs.col.status')"><p-tag [value]="t('status.job.' + job.status)" [severity]="severity(job.status)" /></td>
+          <td [attr.data-label]="t('jobs.col.attempts')">{{ job.attempts }}</td>
+          <td [attr.data-label]="t('jobs.col.created')">{{ job.createdAtUtc | date: 'dd/MM HH:mm' }}</td>
+          <td class="error-cell" [attr.data-label]="t('jobs.col.error')">{{ job.lastError ?? '—' }}</td>
           <td>
             @if (job.status === 'Dead') {
               <p-button [label]="t('jobs.retry')" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="retry(job)" />

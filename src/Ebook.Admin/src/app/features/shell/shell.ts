@@ -1,5 +1,6 @@
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   NavigationCancel,
@@ -59,9 +60,13 @@ export class Shell {
   readonly language = inject(LanguageService);
   readonly realtime = inject(RealtimeService);
   private readonly router = inject(Router);
+  private readonly http = inject(HttpClient);
 
   /** true enquanto uma navegação (incl. carregamento lazy) está em andamento → barra de progresso. */
   readonly navigating = signal(false);
+
+  /** Número de build (build.txt gerado na publicação); ausente em dev sem build → rodapé escondido. */
+  readonly build = signal<string | null>(null);
 
   /** Idioma ativo (objeto), para mostrar a bandeira no botão do seletor. */
   readonly currentLanguage = computed(
@@ -101,6 +106,12 @@ export class Shell {
         this.navigating.set(false);
         this.layout.closeMobile(); // fecha o drawer ao trocar de rota
       }
+    });
+
+    // Número de build (se publicado): consome /build.txt; ausente → rodapé fica escondido.
+    this.http.get('/build.txt', { responseType: 'text' }).subscribe({
+      next: (v) => this.build.set(v.trim() || null),
+      error: () => this.build.set(null),
     });
 
     // Conexão em tempo real viva enquanto o shell (sessão autenticada) existir.

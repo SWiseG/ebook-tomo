@@ -14,7 +14,7 @@
   }
 
   @if (products(); as list) {
-    <p-table class="anim-in" [value]="list" [paginator]="list.length > 12" [rows]="12" [rowHover]="true" size="small">
+    <p-table class="anim-in cards-sm" [value]="list" [paginator]="list.length > 12" [rows]="12" [rowHover]="true" size="small">
       <ng-template #header>
         <tr>
           <th>{{ t('products.col.product') }}</th>
@@ -28,15 +28,17 @@
       </ng-template>
       <ng-template #body let-p>
         <tr class="clickable" (click)="open(p)">
-          <td>
-            <strong>{{ p.title }}</strong>
-            <div class="mono">{{ p.slug }}</div>
+          <td [attr.data-label]="t('products.col.product')">
+            <span>
+              <strong>{{ p.title }}</strong>
+              <div class="mono">{{ p.slug }}</div>
+            </span>
           </td>
-          <td><p-tag [value]="t('status.stage.' + p.stage)" severity="secondary" /></td>
-          <td><p-tag [value]="t('status.product.' + p.status)" [severity]="severity(p.status)" /></td>
-          <td>{{ p.publicationPlatform ? t('status.platform.' + p.publicationPlatform) : '—' }}</td>
-          <td>{{ p.price > 0 ? (p.price | currency: p.currency) : '—' }}</td>
-          <td>{{ p.createdAtUtc | date: 'dd/MM/yy HH:mm' }}</td>
+          <td [attr.data-label]="t('products.col.stage')"><p-tag [value]="t('status.stage.' + p.stage)" severity="secondary" /></td>
+          <td [attr.data-label]="t('products.col.status')"><p-tag [value]="t('status.product.' + p.status)" [severity]="severity(p.status)" /></td>
+          <td [attr.data-label]="t('products.col.platform')">{{ p.publicationPlatform ? t('status.platform.' + p.publicationPlatform) : '—' }}</td>
+          <td [attr.data-label]="t('products.col.price')">{{ p.price > 0 ? (p.price | currency: p.currency) : '—' }}</td>
+          <td [attr.data-label]="t('products.col.created')">{{ p.createdAtUtc | date: 'dd/MM/yy HH:mm' }}</td>
           <td>
             <p-button
               icon="pi pi-ellipsis-v"

@@ -297,3 +297,66 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Mobile: tabelas marcadas com .cards-sm viram cards empilhados ──────────
+   Cada <td> precisa de [data-label] (rótulo da coluna); células sem rótulo
+   (ações) ficam em linha cheia. Selectores não-layered vencem o PrimeNG. */
+@media (max-width: 860px) {
+  .page-head h1 {
+    font-size: 1.3rem;
+  }
+  .page-head .actions {
+    width: 100%;
+  }
+
+  /* diálogos não estouram a viewport no celular */
+  .p-dialog {
+    max-width: 94vw;
+  }
+
+  .cards-sm {
+    .p-datatable-thead {
+      display: none;
+    }
+    .p-datatable-tbody > tr {
+      display: block;
+      margin-bottom: t.$space-3;
+      padding: t.$space-2 t.$space-3;
+      border: 1px solid var(--p-content-border-color);
+      border-radius: t.$radius-lg;
+      background: var(--p-content-background);
+      box-shadow: var(--tomo-shadow-sm);
+    }
+    .p-datatable-tbody > tr > td {
+      border: 0;
+      padding: t.$space-2 0;
+    }
+    .p-datatable-tbody > tr > td[data-label] {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: t.$space-4;
+      text-align: right;
+
+      &::before {
+        content: attr(data-label);
+        flex: none;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--p-text-muted-color);
+        text-align: left;
+      }
+    }
+    /* célula de ações: botão alvo de toque confortável, alinhado à direita */
+    .p-datatable-tbody > tr > td:not([data-label]) {
+      display: flex;
+      justify-content: flex-end;
+      padding-top: t.$space-1;
+
+      .p-button {
+        min-width: 44px;
+        min-height: 44px;
+      }
+    }
+  }
+}

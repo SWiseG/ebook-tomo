@@ -64,6 +64,11 @@
       >
         <i class="pi pi-sign-out"></i><span class="label">{{ t('shell.logout') }}</span>
       </button>
+      @if (build(); as b) {
+        @if (!layout.collapsed()) {
+          <span class="build-tag">build {{ b }}</span>
+        }
+      }
     </div>
   </aside>
 

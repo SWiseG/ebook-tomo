@@ -21,7 +21,7 @@
 
   @if (niches(); as list) {
     <p-table
-      class="anim-in"
+      class="anim-in cards-sm"
       [value]="list"
       [paginator]="list.length > 12"
       [rows]="12"
@@ -40,14 +40,16 @@
       </ng-template>
       <ng-template #body let-n>
         <tr>
-          <td>
-            <strong>{{ n.name }}</strong>
-            <div class="mono">{{ n.slug }}</div>
+          <td [attr.data-label]="t('niches.col.niche')">
+            <span>
+              <strong>{{ n.name }}</strong>
+              <div class="mono">{{ n.slug }}</div>
+            </span>
           </td>
-          <td>{{ n.score | number: '1.2-2' }}</td>
-          <td>{{ n.cycleNumber }}</td>
-          <td><p-tag [value]="t('status.niche.' + n.status)" [severity]="severity(n.status)" /></td>
-          <td>{{ n.discoveredAtUtc | date: 'dd/MM/yy' }}</td>
+          <td [attr.data-label]="t('niches.col.score')">{{ n.score | number: '1.2-2' }}</td>
+          <td [attr.data-label]="t('niches.col.cycle')">{{ n.cycleNumber }}</td>
+          <td [attr.data-label]="t('niches.col.status')"><p-tag [value]="t('status.niche.' + n.status)" [severity]="severity(n.status)" /></td>
+          <td [attr.data-label]="t('niches.col.discovered')">{{ n.discoveredAtUtc | date: 'dd/MM/yy' }}</td>
           <td>
             <div class="row-actions">
               @if (n.status === 'Candidate') {

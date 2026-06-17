@@ -22,7 +22,7 @@
               {{ t('optimizer.decisions') }}
             }
           </div>
-          <p-table [value]="decisions()" [rowHover]="true" size="small">
+          <p-table class="cards-sm" [value]="decisions()" [rowHover]="true" size="small">
             <ng-template #header>
               <tr>
                 <th>{{ t('optimizer.col.product') }}</th>
@@ -33,12 +33,14 @@
             </ng-template>
             <ng-template #body let-d>
               <tr>
-                <td>
-                  <strong>{{ d.productTitle }}</strong>
-                  <div class="rationale">{{ d.rationale }}</div>
+                <td [attr.data-label]="t('optimizer.col.product')">
+                  <span>
+                    <strong>{{ d.productTitle }}</strong>
+                    <div class="rationale">{{ d.rationale }}</div>
+                  </span>
                 </td>
-                <td><p-tag [value]="t('status.decision.' + d.decision)" [severity]="decisionSeverity(d.decision)" /></td>
-                <td><p-tag [value]="t('status.decisionStatus.' + d.status)" [severity]="statusSeverity(d.status)" /></td>
+                <td [attr.data-label]="t('optimizer.col.decision')"><p-tag [value]="t('status.decision.' + d.decision)" [severity]="decisionSeverity(d.decision)" /></td>
+                <td [attr.data-label]="t('optimizer.col.status')"><p-tag [value]="t('status.decisionStatus.' + d.status)" [severity]="statusSeverity(d.status)" /></td>
                 <td>
                   @if (d.status === 'Proposed') {
                     <div class="row-actions">

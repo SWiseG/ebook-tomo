@@ -37,6 +37,16 @@
   gap: t.$space-3;
 }
 
+@media (max-width: 860px) {
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+  .cover-box {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 .lp-link {
   word-break: break-all;
   color: var(--p-primary-color);
