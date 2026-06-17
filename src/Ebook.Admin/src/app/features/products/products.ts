@@ -24,6 +24,15 @@ import { Loading } from '../../shared/loading';
 
 type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' | undefined;
 
+/** Recorte do sales-copy.json (copy de venda gerada pela IA) usado para pré-preencher o modal. */
+interface SalesCopy {
+  headline?: string;
+  subheadline?: string;
+  bullets?: string[];
+  solutionSection?: string;
+  category?: string;
+}
+
 const SEVERITY: Record<ProductStatus, Severity> = {
   Pipeline: 'info',
   AwaitingApproval: 'warn',
@@ -165,13 +174,16 @@ export class Products {
   private openPublicationData(p: ProductItem): void {
     this.current = p;
     this.http.get<ProductDetail>(`/api/v1/products/${p.id}`).subscribe((d) => {
+      const copy = this.parseSalesCopy(d.salesCopyJson);
       this.pubPlatform = d.publicationPlatform ?? 'Kiwify';
       this.pubTitle = d.title;
-      this.pubDescription = d.description ?? '';
+      // Descrição = copy de venda gerada (a menos que já tenha sido editada/salva).
+      this.pubDescription = d.description?.trim() ? d.description : this.composeDescription(copy);
       this.pubPrice = d.price;
       this.pubCurrency = d.currency || 'BRL';
       this.pubEmailLanguage = d.emailLanguage ?? 'pt-BR';
-      this.pubCategory = d.category ?? '';
+      // Categoria sugerida: salva → da copy (IA) → heurística pelo título.
+      this.pubCategory = d.category?.trim() || copy.category?.trim() || this.suggestCategory(d.title);
       this.pubLpUrl = d.lpUrl;
       this.loadCover(p.id);
       this.pubDialog.set(true);
@@ -296,6 +308,46 @@ export class Products {
       error: (e: { error?: { detail?: string } }) =>
         this.notify.error(e.error?.detail ?? this.t.translate('common.actionFailed')),
     });
+  }
+
+  private parseSalesCopy(json: string | null | undefined): SalesCopy {
+    if (!json) return {};
+    try {
+      return JSON.parse(json) as SalesCopy;
+    } catch {
+      return {};
+    }
+  }
+
+  /** Monta a descrição para a Kiwify a partir da copy de venda (headline + sub + bullets + solução). */
+  private composeDescription(copy: SalesCopy): string {
+    const parts: string[] = [];
+    if (copy.headline?.trim()) parts.push(copy.headline.trim());
+    if (copy.subheadline?.trim()) parts.push(copy.subheadline.trim());
+    const bullets = (copy.bullets ?? []).filter((b) => b?.trim()).map((b) => `• ${b.trim()}`);
+    if (bullets.length) parts.push(bullets.join('\n'));
+    if (copy.solutionSection?.trim()) parts.push(copy.solutionSection.trim());
+    return parts.join('\n\n');
+  }
+
+  /** Sugere uma categoria pelo título quando a IA não a forneceu (fallback heurístico). */
+  private suggestCategory(title: string): string {
+    const t = title.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const rules: [RegExp, string][] = [
+      [/financ|dinheiro|invest|renda|lucro|econom|riqueza|divida/, 'Finanças'],
+      [/emagre|dieta|fitness|saude|queima|peso|treino|gordura|metabol/, 'Saúde'],
+      [/relacion|amor|casamento|conquist|paquera/, 'Relacionamentos'],
+      [/produtiv|habito|foco|mentalidade|autoestima|disciplina|ansiedade/, 'Desenvolvimento Pessoal'],
+      [/negocio|empreend|carreira|vendas|marketing|trafego|cliente/, 'Negócios e Carreira'],
+      [/deus|espirit|oracao|biblia|cristao/, 'Espiritualidade'],
+      [/receita|culinaria|cozinha/, 'Culinária'],
+      [/ingles|idioma|estudo|concurso|aprend/, 'Educação'],
+      [/beleza|skincare|maquiagem|cabelo/, 'Beleza'],
+    ];
+    for (const [re, cat] of rules) {
+      if (re.test(t)) return cat;
+    }
+    return 'Desenvolvimento Pessoal';
   }
 
   private revokeCover(): void {

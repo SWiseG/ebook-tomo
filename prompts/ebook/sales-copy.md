@@ -14,12 +14,14 @@ Regras:
 - Seções de dor e de solução, FAQ que quebra objeções reais.
 - Preço sugerido em reais (BRL) coerente com o nicho: "anchor" (valor de referência) maior que "current" (preço de venda).
 - Uma variante A ativa.
+- "category": categoria do produto adequada à plataforma de venda, em pt-BR (ex.: "Saúde", "Finanças", "Relacionamentos", "Desenvolvimento Pessoal", "Negócios e Carreira", "Educação", "Espiritualidade", "Beleza", "Culinária").
 
 Responda APENAS com JSON válido (sem cercas de markdown, sem texto extra), exatamente neste formato:
 
 {
   "headline": "",
   "subheadline": "",
+  "category": "",
   "bullets": ["", ""],
   "painSection": "",
   "solutionSection": "",
