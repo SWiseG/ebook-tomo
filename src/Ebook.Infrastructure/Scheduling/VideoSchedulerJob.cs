@@ -36,7 +36,7 @@ public sealed class VideoSchedulerJob(
         }
 
         var week = ISOWeek.GetWeekOfYear(clock.UtcNow);
-        var live = await products.ListByStatusAsync(ProductStatus.Live, ct);
+        var live = await products.ListByStatusAsync(ProductStatus.Synchronized, ct);
         foreach (var product in live)
         {
             await jobQueue.EnqueueAsync(new JobRequest(

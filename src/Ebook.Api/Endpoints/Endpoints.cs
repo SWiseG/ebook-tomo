@@ -27,6 +27,14 @@ public sealed record RejectProductRequest(string? Reason);
 
 public sealed record CompletePublishingRequest(string KiwifyProductId, string CheckoutUrl);
 
+public sealed record PublicationDataRequest(
+    string Platform, string Title, string Description, decimal Price, string Currency,
+    string EmailLanguage, string Category);
+
+public sealed record CheckoutLinkRequest(string CheckoutUrl);
+
+public sealed record MarkPublishedRequest(string Platform);
+
 public static class Endpoints
 {
     public static void MapApiEndpoints(this WebApplication app)
@@ -178,6 +186,33 @@ public static class Endpoints
                 new CompletePublishingCommand(id, request.KiwifyProductId, request.CheckoutUrl), ct)).ToHttp())
             .WithTags("Products")
             .WithSummary("Conclui a publicação manualmente (id Kiwify + URL de checkout → Live)");
+
+        secured.MapGet("/products/{id:guid}/kiwify-match", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.QueryAsync(new ResolveKiwifyProductQuery(id), ct)).ToHttp())
+            .WithTags("Products")
+            .WithSummary("Busca, na API da Kiwify, o id + URL de checkout do produto (casamento por nome)");
+
+        secured.MapPut("/products/{id:guid}/publication-data", async (Guid id, PublicationDataRequest request, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(new SetPublicationDataCommand(
+                id, request.Platform, request.Title, request.Description, request.Price,
+                request.Currency, request.EmailLanguage, request.Category), ct)).ToHttp())
+            .WithTags("Products")
+            .WithSummary("Grava os dados de publicação (plataforma, nome, descrição, preço, etc.)");
+
+        secured.MapPut("/products/{id:guid}/checkout", async (Guid id, CheckoutLinkRequest request, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(new SetCheckoutLinkCommand(id, request.CheckoutUrl), ct)).ToHttp())
+            .WithTags("Products")
+            .WithSummary("Insere o link de checkout (absorvido pela landing page em runtime)");
+
+        secured.MapPost("/products/{id:guid}/mark-published", async (Guid id, MarkPublishedRequest request, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(new MarkPublishedCommand(id, request.Platform), ct)).ToHttp())
+            .WithTags("Products")
+            .WithSummary("Marca como publicado (Publishing → Published) e dispara a sincronização");
+
+        secured.MapPost("/products/{id:guid}/sync", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(new SyncProductCommand(id), ct)).ToHttp())
+            .WithTags("Products")
+            .WithSummary("Sincroniza: confirma o produto na Kiwify (Synchronized/Unsynchronized)");
 
         secured.MapGet("/products/{id:guid}/social", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
             (await dispatcher.QueryAsync(new GetProductSocialQuery(id), ct)).ToHttp())

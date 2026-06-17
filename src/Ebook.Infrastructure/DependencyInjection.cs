@@ -94,6 +94,8 @@ public static class DependencyInjection
         services.AddScoped<IOptimizationRepository, OptimizationRepository>();
         services.AddScoped<IOptimizationReader, OptimizationReader>();
         services.AddSingleton<IKiwifyPublisher, KiwifyPublisher>();
+        services.AddHttpClient(KiwifyApiClient.HttpClientName, c => c.Timeout = TimeSpan.FromSeconds(20));
+        services.AddSingleton<IKiwifyCatalog, KiwifyApiClient>();
         services.AddHttpClient<ISocialPublisher, MetaGraphPublisher>(c => c.Timeout = TimeSpan.FromSeconds(60));
         services.AddSingleton<ITtsEngine, PiperTtsEngine>();
         services.AddSingleton<IVideoComposer, FfmpegVideoComposer>();

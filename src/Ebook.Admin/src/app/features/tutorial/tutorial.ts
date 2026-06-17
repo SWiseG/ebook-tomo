@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -26,7 +27,15 @@ interface Faq {
 
 @Component({
   selector: 'app-tutorial',
-  imports: [RouterLink, CardModule, ButtonModule, TagModule, TimelineModule, AccordionModule],
+  imports: [
+    RouterLink,
+    TranslocoDirective,
+    CardModule,
+    ButtonModule,
+    TagModule,
+    TimelineModule,
+    AccordionModule,
+  ],
   templateUrl: './tutorial.html',
   styleUrl: './tutorial.scss',
 })

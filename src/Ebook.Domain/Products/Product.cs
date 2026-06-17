@@ -8,9 +8,19 @@ public enum ProductStatus
     AwaitingApproval,
     Reworking,
     Publishing,
-    Live,
+    Published,
+    Synchronized,
+    Unsynchronized,
+    Live, // legado (substituído por Synchronized no fluxo de publicação)
     Iterating,
     Retired
+}
+
+/// <summary>Plataforma onde o produto foi publicado manualmente (a criação não é via API).</summary>
+public enum PublicationPlatform
+{
+    Kiwify,
+    Hotmart
 }
 
 public enum ProductStage
@@ -56,6 +66,12 @@ public sealed class Product : AggregateRoot
     public string? CheckoutUrl { get; private set; }
     public string? LpUrl { get; private set; }
     public string SalesCopyJson { get; private set; }
+
+    // Dados de publicação (preenchidos no painel para a criação manual na plataforma).
+    public string? Description { get; private set; }
+    public string? EmailLanguage { get; private set; }
+    public string? Category { get; private set; }
+    public PublicationPlatform? PublicationPlatform { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime? PublishedAtUtc { get; private set; }
     public DateTime? RetiredAtUtc { get; private set; }
@@ -149,26 +165,91 @@ public sealed class Product : AggregateRoot
         return Result.Success();
     }
 
-    public Result MarkPublished(string kiwifyProductId, string checkoutUrl, string lpUrl, DateTime utcNow)
+    /// <summary>Dados de publicação (modal "Dados de Publicação"); só em Publishing. Descrição ≥ 100 chars.</summary>
+    public Result SetPublicationData(
+        string title, string description, decimal price, string currency,
+        string emailLanguage, string category, PublicationPlatform platform)
+    {
+        if (Status != ProductStatus.Publishing || Stage != ProductStage.Publishing)
+        {
+            return Result.Failure(ProductErrors.NotInPublishing(Status));
+        }
+
+        if (string.IsNullOrWhiteSpace(description) || description.Trim().Length < 100)
+        {
+            return Result.Failure(ProductErrors.DescriptionTooShort);
+        }
+
+        Title = title;
+        Description = description;
+        Price = price;
+        Currency = currency;
+        EmailLanguage = emailLanguage;
+        Category = category;
+        PublicationPlatform = platform;
+        return Result.Success();
+    }
+
+    /// <summary>Insere/atualiza o link de checkout; a LP o absorve em runtime via /go/{slug}.</summary>
+    public Result SetCheckoutLink(string checkoutUrl)
+    {
+        if (Status is not (ProductStatus.Publishing or ProductStatus.Published
+            or ProductStatus.Synchronized or ProductStatus.Unsynchronized))
+        {
+            return Result.Failure(ProductErrors.NotPublishable(Status));
+        }
+
+        CheckoutUrl = checkoutUrl;
+        return Result.Success();
+    }
+
+    /// <summary>Marca como publicado na plataforma escolhida (Publishing → Published) e dispara a sincronização.</summary>
+    public Result MarkPublished(PublicationPlatform platform, DateTime utcNow)
     {
         if (Status != ProductStatus.Publishing)
         {
-            return Result.Failure(ProductErrors.InvalidTransition(Status, ProductStatus.Live));
+            return Result.Failure(ProductErrors.InvalidTransition(Status, ProductStatus.Published));
+        }
+
+        PublicationPlatform = platform;
+        Status = ProductStatus.Published;
+        Stage = ProductStage.Publishing;
+        PublishedAtUtc = utcNow;
+        Raise(new ProductPublished(Id, platform.ToString()));
+        return Result.Success();
+    }
+
+    /// <summary>Sincronização confirmou o produto na plataforma (→ Synchronized, o estado vendendo).</summary>
+    public Result MarkSynchronized(string kiwifyProductId)
+    {
+        if (Status is not (ProductStatus.Published or ProductStatus.Synchronized or ProductStatus.Unsynchronized))
+        {
+            return Result.Failure(ProductErrors.InvalidTransition(Status, ProductStatus.Synchronized));
         }
 
         KiwifyProductId = kiwifyProductId;
-        CheckoutUrl = checkoutUrl;
-        LpUrl = lpUrl;
-        Status = ProductStatus.Live;
+        Status = ProductStatus.Synchronized;
         Stage = ProductStage.Live;
-        PublishedAtUtc = utcNow;
-        Raise(new ProductPublished(Id, kiwifyProductId, checkoutUrl));
+        Raise(new ProductSynchronized(Id));
+        return Result.Success();
+    }
+
+    /// <summary>Sincronização não encontrou o produto na plataforma (→ Unsynchronized; requer atenção).</summary>
+    public Result MarkUnsynchronized()
+    {
+        if (Status is not (ProductStatus.Published or ProductStatus.Synchronized or ProductStatus.Unsynchronized))
+        {
+            return Result.Failure(ProductErrors.InvalidTransition(Status, ProductStatus.Unsynchronized));
+        }
+
+        Status = ProductStatus.Unsynchronized;
+        Raise(new ProductUnsynchronized(Id));
         return Result.Success();
     }
 
     public Result StartIteration()
     {
-        if (Status != ProductStatus.Live)
+        if (Status != ProductStatus.Synchronized)
         {
             return Result.Failure(ProductErrors.InvalidTransition(Status, ProductStatus.Iterating));
         }
@@ -181,10 +262,10 @@ public sealed class Product : AggregateRoot
     {
         if (Status != ProductStatus.Iterating)
         {
-            return Result.Failure(ProductErrors.InvalidTransition(Status, ProductStatus.Live));
+            return Result.Failure(ProductErrors.InvalidTransition(Status, ProductStatus.Synchronized));
         }
 
-        Status = ProductStatus.Live;
+        Status = ProductStatus.Synchronized;
         return Result.Success();
     }
 
@@ -226,6 +307,15 @@ public static class ProductErrors
 
     public static Error InvalidTransition(ProductStatus from, ProductStatus to) =>
         new("Product.InvalidTransition", $"Transição inválida de {from} para {to}.");
+
+    public static Error NotInPublishing(ProductStatus status) =>
+        new("Product.NotInPublishing", $"Produto com status {status} não está em publicação.");
+
+    public static Error NotPublishable(ProductStatus status) =>
+        new("Product.NotPublishable", $"Produto com status {status} não aceita link de checkout.");
+
+    public static Error DescriptionTooShort =>
+        new("Product.DescriptionTooShort", "A descrição deve ter pelo menos 100 caracteres.");
 }
 
 public sealed record ProductCreated(Guid ProductId, Guid NicheId, string Slug) : DomainEvent;
@@ -233,5 +323,7 @@ public sealed record ProductStageAdvanced(Guid ProductId, ProductStage Stage) : 
 public sealed record ProductSubmittedForApproval(Guid ProductId) : DomainEvent;
 public sealed record ProductRejected(Guid ProductId, string Reason) : DomainEvent;
 public sealed record ProductPublishingStarted(Guid ProductId) : DomainEvent;
-public sealed record ProductPublished(Guid ProductId, string KiwifyProductId, string CheckoutUrl) : DomainEvent;
+public sealed record ProductPublished(Guid ProductId, string Platform) : DomainEvent;
+public sealed record ProductSynchronized(Guid ProductId) : DomainEvent;
+public sealed record ProductUnsynchronized(Guid ProductId) : DomainEvent;
 public sealed record ProductRetired(Guid ProductId, string Reason) : DomainEvent;

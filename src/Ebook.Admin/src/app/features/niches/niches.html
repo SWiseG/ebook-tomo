@@ -1,91 +1,93 @@
-<div class="page-head anim-in">
-  <div>
-    <h1>Nichos</h1>
-    <div class="sub">Descobertos pelo motor de tendências, pontuados e ranqueados.</div>
+<ng-container *transloco="let t">
+  <div class="page-head anim-in">
+    <div>
+      <h1>{{ t('niches.title') }}</h1>
+      <div class="sub">{{ t('niches.subtitle') }}</div>
+    </div>
+    <div class="actions">
+      <p-button [label]="t('niches.discover')" icon="pi pi-compass" (onClick)="discover()" />
+    </div>
   </div>
-  <div class="actions">
-    <p-button label="Descobrir nichos" icon="pi pi-compass" (onClick)="discover()" />
-  </div>
-</div>
 
-<p-selectButton
-  class="filter"
-  [options]="statusOptions"
-  [(ngModel)]="status"
-  optionLabel="label"
-  optionValue="value"
-  [allowEmpty]="false"
-  (onChange)="load()"
-/>
+  <p-selectButton
+    class="filter"
+    [options]="statusOptions()"
+    [(ngModel)]="status"
+    optionLabel="label"
+    optionValue="value"
+    [allowEmpty]="false"
+    (onChange)="load()"
+  />
 
-@if (niches(); as list) {
-  <p-table
-    class="anim-in"
-    [value]="list"
-    [paginator]="list.length > 12"
-    [rows]="12"
-    [rowHover]="true"
-    size="small"
-  >
-    <ng-template #header>
-      <tr>
-        <th>Nicho</th>
-        <th pSortableColumn="score">Score <p-sortIcon field="score" /></th>
-        <th>Ciclo</th>
-        <th>Status</th>
-        <th>Descoberto</th>
-        <th></th>
-      </tr>
-    </ng-template>
-    <ng-template #body let-n>
-      <tr>
-        <td>
-          <strong>{{ n.name }}</strong>
-          <div class="mono">{{ n.slug }}</div>
-        </td>
-        <td>{{ n.score | number: '1.2-2' }}</td>
-        <td>{{ n.cycleNumber }}</td>
-        <td><p-tag [value]="n.status" [severity]="severity(n.status)" /></td>
-        <td>{{ n.discoveredAtUtc | date: 'dd/MM/yy' }}</td>
-        <td>
-          <div class="row-actions">
-            @if (n.status === 'Candidate') {
+  @if (niches(); as list) {
+    <p-table
+      class="anim-in"
+      [value]="list"
+      [paginator]="list.length > 12"
+      [rows]="12"
+      [rowHover]="true"
+      size="small"
+    >
+      <ng-template #header>
+        <tr>
+          <th>{{ t('niches.col.niche') }}</th>
+          <th pSortableColumn="score">{{ t('niches.col.score') }} <p-sortIcon field="score" /></th>
+          <th>{{ t('niches.col.cycle') }}</th>
+          <th>{{ t('niches.col.status') }}</th>
+          <th>{{ t('niches.col.discovered') }}</th>
+          <th></th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-n>
+        <tr>
+          <td>
+            <strong>{{ n.name }}</strong>
+            <div class="mono">{{ n.slug }}</div>
+          </td>
+          <td>{{ n.score | number: '1.2-2' }}</td>
+          <td>{{ n.cycleNumber }}</td>
+          <td><p-tag [value]="t('status.niche.' + n.status)" [severity]="severity(n.status)" /></td>
+          <td>{{ n.discoveredAtUtc | date: 'dd/MM/yy' }}</td>
+          <td>
+            <div class="row-actions">
+              @if (n.status === 'Candidate') {
+                <p-button
+                  [label]="t('niches.approve')"
+                  size="small"
+                  [outlined]="true"
+                  [disabled]="busy() === n.id"
+                  (onClick)="approve(n)"
+                />
+              }
               <p-button
-                label="Aprovar"
+                [label]="t('niches.generate')"
+                icon="pi pi-sparkles"
                 size="small"
-                [outlined]="true"
                 [disabled]="busy() === n.id"
-                (onClick)="approve(n)"
+                [loading]="busy() === n.id"
+                (onClick)="generate(n)"
               />
-            }
-            <p-button
-              label="Gerar produto"
-              icon="pi pi-sparkles"
-              size="small"
-              [disabled]="busy() === n.id"
-              [loading]="busy() === n.id"
-              (onClick)="generate(n)"
-            />
-            @if (n.status !== 'Discarded' && n.status !== 'Active') {
-              <p-button
-                icon="pi pi-trash"
-                size="small"
-                severity="danger"
-                [text]="true"
-                [disabled]="busy() === n.id"
-                (onClick)="discard(n)"
-              />
-            }
-          </div>
-        </td>
-      </tr>
-    </ng-template>
-    <ng-template #emptymessage>
-      <tr>
-        <td colspan="6"><div class="empty">Nenhum nicho ainda. Clique em "Descobrir nichos".</div></td>
-      </tr>
-    </ng-template>
-  </p-table>
-} @else {
-  <app-loading variant="table" [rows]="6" />
-}
+              @if (n.status !== 'Discarded' && n.status !== 'Active') {
+                <p-button
+                  icon="pi pi-trash"
+                  size="small"
+                  severity="danger"
+                  [text]="true"
+                  [disabled]="busy() === n.id"
+                  (onClick)="discard(n)"
+                />
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="6"><div class="empty">{{ t('niches.empty') }}</div></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  } @else {
+    <app-loading variant="table" [rows]="6" />
+  }
+</ng-container>

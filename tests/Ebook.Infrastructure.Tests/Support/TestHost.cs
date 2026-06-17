@@ -1,3 +1,4 @@
+using Ebook.Application.Publishing;
 using Ebook.Domain.Abstractions;
 using Ebook.Infrastructure.FileStore;
 using Ebook.Infrastructure.Persistence;
@@ -30,6 +31,10 @@ public static class TestHost
         services.Configure<DataOptions>(o =>
             o.RootPath = Path.Combine(Path.GetTempPath(), "ebook-tests", Guid.NewGuid().ToString("N")));
         services.AddSingleton<IFileStore, JsonFileStore>();
+
+        // Catálogo Kiwify falso (sem rede): a sincronização usa-o em vez da API real.
+        services.AddSingleton<FakeKiwifyCatalog>();
+        services.AddSingleton<IKiwifyCatalog>(sp => sp.GetRequiredService<FakeKiwifyCatalog>());
 
         configure?.Invoke(services);
 

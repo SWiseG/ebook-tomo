@@ -54,12 +54,15 @@ public sealed class KiwifyPublishJobHandler(
             return Result.Failure(outcome.Error);
         }
 
-        var marked = product.MarkPublished(
-            outcome.Value.KiwifyProductId, outcome.Value.CheckoutUrl, product.LpUrl ?? string.Empty, clock.UtcNow);
+        product.SetCheckoutLink(outcome.Value.CheckoutUrl);
+        var marked = product.MarkPublished(Domain.Products.PublicationPlatform.Kiwify, clock.UtcNow);
         if (marked.IsFailure)
         {
             return Result.Failure(marked.Error);
         }
+
+        // a automação já confirmou o produto na plataforma → marca sincronizado direto
+        product.MarkSynchronized(outcome.Value.KiwifyProductId);
 
         await unitOfWork.SaveChangesAsync(ct);
         logger.LogInformation("Produto {Slug} publicado na Kiwify ({KiwifyId})",

@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
@@ -12,13 +13,14 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
 
 @Component({
   selector: 'app-optimizer',
-  imports: [DatePipe, TableModule, TagModule, ButtonModule, Loading],
+  imports: [DatePipe, TranslocoDirective, TableModule, TagModule, ButtonModule, Loading],
   templateUrl: './optimizer.html',
   styleUrl: './optimizer.scss',
 })
 export class Optimizer {
   private readonly http = inject(HttpClient);
   private readonly notify = inject(NotificationService);
+  private readonly t = inject(TranslocoService);
 
   readonly runs = signal<OptimizationRun[] | null>(null);
   readonly selected = signal<OptimizationRun | null>(null);
@@ -37,7 +39,7 @@ export class Optimizer {
           this.select(list[0]);
         }
       },
-      error: () => this.notify.error('Falha ao carregar execuções.'),
+      error: () => this.notify.error(this.t.translate('optimizer.loadError')),
     });
   }
 
@@ -45,13 +47,16 @@ export class Optimizer {
     this.busy.set(true);
     this.http.post('/api/v1/optimizer/run', {}).subscribe({
       next: () => {
-        this.notify.success('Ciclo executado', 'Decisões propostas para revisão.');
+        this.notify.success(
+          this.t.translate('optimizer.cycleRun'),
+          this.t.translate('optimizer.cycleRunDetail'),
+        );
         this.selected.set(null);
         this.loadRuns();
         this.busy.set(false);
       },
       error: () => {
-        this.notify.error('Falha ao rodar o ciclo.');
+        this.notify.error(this.t.translate('optimizer.runError'));
         this.busy.set(false);
       },
     });
@@ -65,11 +70,19 @@ export class Optimizer {
   }
 
   approve(d: OptimizationDecision): void {
-    this.act(d, this.http.post(`/api/v1/optimizer/decisions/${d.id}/approve`, {}), 'Decisão aprovada e executada.');
+    this.act(
+      d,
+      this.http.post(`/api/v1/optimizer/decisions/${d.id}/approve`, {}),
+      this.t.translate('optimizer.approved'),
+    );
   }
 
   veto(d: OptimizationDecision): void {
-    this.act(d, this.http.post(`/api/v1/optimizer/decisions/${d.id}/veto`, {}), 'Decisão vetada.');
+    this.act(
+      d,
+      this.http.post(`/api/v1/optimizer/decisions/${d.id}/veto`, {}),
+      this.t.translate('optimizer.vetoed'),
+    );
   }
 
   decisionSeverity(decision: string): Severity {
@@ -111,7 +124,10 @@ export class Optimizer {
         this.busy.set(false);
       },
       error: () => {
-        this.notify.error('Ação falhou', 'Transição inválida?');
+        this.notify.error(
+          this.t.translate('common.actionFailed'),
+          this.t.translate('common.actionFailedDetail'),
+        );
         this.busy.set(false);
       },
     });

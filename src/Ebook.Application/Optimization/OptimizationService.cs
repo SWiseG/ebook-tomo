@@ -44,7 +44,7 @@ public sealed class OptimizationService(
         var run = OptimizationRun.Start(cycle, now);
         optimization.AddRun(run);
 
-        var live = await products.ListByStatusAsync(ProductStatus.Live, ct);
+        var live = await products.ListByStatusAsync(ProductStatus.Synchronized, ct);
         var decisions = new List<OptimizationDecision>(live.Count);
 
         foreach (var product in live)

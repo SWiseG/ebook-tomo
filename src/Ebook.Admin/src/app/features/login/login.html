@@ -1,10 +1,10 @@
-<div class="login-page">
+<div class="login-page" *transloco="let t">
   <form class="login-card" (ngSubmit)="submit()">
     <tomo-logo />
-    <p class="subtitle">Fábrica autônoma de e-books</p>
+    <p class="subtitle">{{ t('login.subtitle') }}</p>
 
     <div class="field">
-      <label for="username">Usuário</label>
+      <label for="username">{{ t('login.username') }}</label>
       <input
         pInputText
         id="username"
@@ -17,7 +17,7 @@
     </div>
 
     <div class="field">
-      <label for="password">Senha</label>
+      <label for="password">{{ t('login.password') }}</label>
       <p-password
         inputId="password"
         name="password"
@@ -33,6 +33,6 @@
       <p-message severity="error">{{ message }}</p-message>
     }
 
-    <p-button type="submit" [loading]="loading()" label="Entrar" icon="pi pi-sign-in" />
+    <p-button type="submit" [loading]="loading()" [label]="t('login.submit')" icon="pi pi-sign-in" />
   </form>
 </div>

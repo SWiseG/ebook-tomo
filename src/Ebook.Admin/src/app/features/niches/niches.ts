@@ -1,14 +1,16 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { ConfirmationService } from 'primeng/api';
 import { NicheItem, NicheStatus } from '../../core/api.types';
+import { LanguageService } from '../../core/language.service';
 import { NotificationService } from '../../core/notification.service';
 import { Loading } from '../../shared/loading';
 
@@ -27,6 +29,7 @@ const SEVERITY: Record<NicheStatus, Severity> = {
     DatePipe,
     DecimalPipe,
     FormsModule,
+    TranslocoDirective,
     TableModule,
     TagModule,
     ButtonModule,
@@ -41,18 +44,24 @@ export class Niches {
   private readonly router = inject(Router);
   private readonly notify = inject(NotificationService);
   private readonly confirm = inject(ConfirmationService);
+  private readonly t = inject(TranslocoService);
+  private readonly language = inject(LanguageService);
 
   readonly niches = signal<NicheItem[] | null>(null);
   readonly busy = signal<string | null>(null);
 
   status = '';
-  readonly statusOptions = [
-    { label: 'Todos', value: '' },
-    { label: 'Candidatos', value: 'Candidate' },
-    { label: 'Selecionados', value: 'Selected' },
-    { label: 'Ativos', value: 'Active' },
-    { label: 'Descartados', value: 'Discarded' },
-  ];
+  // Recalcula os rótulos ao trocar de idioma (depende de `language.current()`).
+  readonly statusOptions = computed(() => {
+    this.language.current();
+    return [
+      { label: this.t.translate('niches.filter.all'), value: '' },
+      { label: this.t.translate('niches.filter.candidate'), value: 'Candidate' },
+      { label: this.t.translate('niches.filter.selected'), value: 'Selected' },
+      { label: this.t.translate('niches.filter.active'), value: 'Active' },
+      { label: this.t.translate('niches.filter.discarded'), value: 'Discarded' },
+    ];
+  });
 
   constructor() {
     this.load();
@@ -66,31 +75,43 @@ export class Niches {
     const query = this.status ? `?status=${this.status}` : '';
     this.http.get<NicheItem[]>(`/api/v1/niches${query}`).subscribe({
       next: (data) => this.niches.set(data),
-      error: () => this.notify.error('Falha ao carregar nichos.'),
+      error: () => this.notify.error(this.t.translate('niches.loadError')),
     });
   }
 
   discover(): void {
     this.http.post('/api/v1/niches/discover', {}).subscribe({
-      next: () => this.notify.success('Descoberta enfileirada', 'Atualize em instantes.'),
-      error: () => this.notify.error('Falha ao disparar a descoberta.'),
+      next: () =>
+        this.notify.success(
+          this.t.translate('niches.discoverQueued'),
+          this.t.translate('niches.discoverQueuedDetail'),
+        ),
+      error: () => this.notify.error(this.t.translate('niches.discoverError')),
     });
   }
 
   approve(n: NicheItem): void {
-    this.act(n.id, this.http.post(`/api/v1/niches/${n.id}/approve`, {}), 'Nicho aprovado.');
+    this.act(
+      n.id,
+      this.http.post(`/api/v1/niches/${n.id}/approve`, {}),
+      this.t.translate('niches.approved'),
+    );
   }
 
   discard(n: NicheItem): void {
     this.confirm.confirm({
-      header: 'Descartar nicho',
-      message: `Descartar "${n.name}"? Ele sairá do ranking de descoberta.`,
+      header: this.t.translate('niches.discardHeader'),
+      message: this.t.translate('niches.discardMessage', { name: n.name }),
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Descartar',
-      rejectLabel: 'Cancelar',
+      acceptLabel: this.t.translate('niches.discardConfirm'),
+      rejectLabel: this.t.translate('common.cancel'),
       acceptButtonStyleClass: 'p-button-danger',
       accept: () =>
-        this.act(n.id, this.http.post(`/api/v1/niches/${n.id}/discard`, {}), 'Nicho descartado.'),
+        this.act(
+          n.id,
+          this.http.post(`/api/v1/niches/${n.id}/discard`, {}),
+          this.t.translate('niches.discarded'),
+        ),
     });
   }
 
@@ -101,7 +122,7 @@ export class Niches {
       .subscribe({
         next: (r) => void this.router.navigate(['/products', r.productId]),
         error: () => {
-          this.notify.error('Falha ao gerar produto.');
+          this.notify.error(this.t.translate('niches.generateError'));
           this.busy.set(null);
         },
       });
@@ -117,7 +138,10 @@ export class Niches {
       },
       error: () => {
         this.busy.set(null);
-        this.notify.error('Ação falhou', 'Transição inválida?');
+        this.notify.error(
+          this.t.translate('common.actionFailed'),
+          this.t.translate('common.actionFailedDetail'),
+        );
       },
     });
   }

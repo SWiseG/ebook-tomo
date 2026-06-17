@@ -79,7 +79,9 @@ public class SocialTests
         product.AdvanceStage(); // → Lp
         product.SubmitForApproval();
         product.Approve(); // → Publishing
-        product.MarkPublished("kw-x", "https://pay.kiwify.com.br/x", $"/lp/{slug}", now); // → Live
+        product.SetCheckoutLink("https://pay.kiwify.com.br/x");
+        product.MarkPublished(PublicationPlatform.Kiwify, now); // → Published
+        product.MarkSynchronized("kw-x"); // → Synchronized
         db.Products.Add(product);
         await db.SaveChangesAsync();
         return product.Id;
@@ -187,7 +189,7 @@ public class SocialTests
 
         using var verify = provider.CreateScope();
         var vdb = verify.ServiceProvider.GetRequiredService<EbookDbContext>();
-        Assert.Equal(ProductStatus.Live, (await vdb.Products.AsNoTracking().SingleAsync()).Status);
+        Assert.Equal(ProductStatus.Synchronized, (await vdb.Products.AsNoTracking().SingleAsync()).Status);
         Assert.Equal(2, await vdb.SocialPosts.AsNoTracking().CountAsync()); // calendário gerado pelo evento
         Assert.Equal(1, ai.CallsFor("social.calendar"));
     }

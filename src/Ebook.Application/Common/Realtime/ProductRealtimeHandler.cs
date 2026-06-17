@@ -16,6 +16,8 @@ public sealed class ProductRealtimeHandler(IRealtimeNotifier notifier) :
     IDomainEventHandler<ProductRejected>,
     IDomainEventHandler<ProductPublishingStarted>,
     IDomainEventHandler<ProductPublished>,
+    IDomainEventHandler<ProductSynchronized>,
+    IDomainEventHandler<ProductUnsynchronized>,
     IDomainEventHandler<ProductRetired>
 {
     public Task HandleAsync(ProductCreated e, CancellationToken ct) =>
@@ -35,6 +37,12 @@ public sealed class ProductRealtimeHandler(IRealtimeNotifier notifier) :
 
     public Task HandleAsync(ProductPublished e, CancellationToken ct) =>
         notifier.ProductChangedAsync(new RealtimeProductChanged(e.ProductId, nameof(ProductPublished)), ct);
+
+    public Task HandleAsync(ProductSynchronized e, CancellationToken ct) =>
+        notifier.ProductChangedAsync(new RealtimeProductChanged(e.ProductId, nameof(ProductSynchronized)), ct);
+
+    public Task HandleAsync(ProductUnsynchronized e, CancellationToken ct) =>
+        notifier.ProductChangedAsync(new RealtimeProductChanged(e.ProductId, nameof(ProductUnsynchronized)), ct);
 
     public Task HandleAsync(ProductRetired e, CancellationToken ct) =>
         notifier.ProductChangedAsync(new RealtimeProductChanged(e.ProductId, nameof(ProductRetired)), ct);

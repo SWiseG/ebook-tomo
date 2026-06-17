@@ -74,7 +74,9 @@ public class VideoTests
         product.AdvanceStage();
         product.SubmitForApproval();
         product.Approve();
-        product.MarkPublished("kw-x", "https://pay/x", $"/lp/{slug}", now);
+        product.SetCheckoutLink("https://pay/x");
+        product.MarkPublished(PublicationPlatform.Kiwify, now);
+        product.MarkSynchronized("kw-x");
         db.Products.Add(product);
         await db.SaveChangesAsync();
         return product.Id;

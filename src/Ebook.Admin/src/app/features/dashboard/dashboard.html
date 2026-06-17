@@ -1,126 +1,128 @@
-<div class="page-head anim-in">
-  <div>
-    <h1>Dashboard</h1>
-    <div class="sub">Visão geral do portfólio, da operação e do consumo de IA.</div>
+<ng-container *transloco="let t">
+  <div class="page-head anim-in">
+    <div>
+      <h1>{{ t('dashboard.title') }}</h1>
+      <div class="sub">{{ t('dashboard.subtitle') }}</div>
+    </div>
+    <div class="actions">
+      <p-button [label]="t('dashboard.viewProducts')" icon="pi pi-book" [outlined]="true" routerLink="/products" />
+      <p-button [label]="t('dashboard.discoverNiches')" icon="pi pi-compass" (onClick)="discover()" />
+    </div>
   </div>
-  <div class="actions">
-    <p-button label="Ver produtos" icon="pi pi-book" [outlined]="true" routerLink="/products" />
-    <p-button label="Descobrir nichos" icon="pi pi-compass" (onClick)="discover()" />
-  </div>
-</div>
 
-@if (error(); as message) {
-  <p class="error">{{ message }}</p>
-}
+  @if (error(); as message) {
+    <p class="error">{{ message }}</p>
+  }
 
-@if (summary(); as s) {
-  <section class="block anim-in">
-    <div class="block__title">Portfólio</div>
-    <div class="kpi-grid anim-stagger">
-      <a class="kpi" routerLink="/products">
-        <i class="pi pi-box"></i>
-        <div class="body">
-          <span class="value">{{ s.productsActive | number }}</span>
-          <span class="label">Produtos ativos</span>
-        </div>
-      </a>
-      <a class="kpi" routerLink="/products">
-        <i class="pi pi-sync"></i>
-        <div class="body">
-          <span class="value">{{ s.productsInPipeline | number }}</span>
-          <span class="label">Em pipeline</span>
-        </div>
-      </a>
-      <a class="kpi" routerLink="/niches">
-        <i class="pi pi-compass"></i>
-        <div class="body">
-          <span class="value">{{ s.nichesCandidate | number }}</span>
-          <span class="label">Nichos candidatos</span>
-        </div>
-      </a>
-    </div>
-  </section>
+  @if (summary(); as s) {
+    <section class="block anim-in">
+      <div class="block__title">{{ t('dashboard.portfolio') }}</div>
+      <div class="kpi-grid anim-stagger">
+        <a class="kpi" routerLink="/products">
+          <i class="pi pi-box"></i>
+          <div class="body">
+            <span class="value">{{ s.productsActive | number }}</span>
+            <span class="label">{{ t('dashboard.productsActive') }}</span>
+          </div>
+        </a>
+        <a class="kpi" routerLink="/products">
+          <i class="pi pi-sync"></i>
+          <div class="body">
+            <span class="value">{{ s.productsInPipeline | number }}</span>
+            <span class="label">{{ t('dashboard.inPipeline') }}</span>
+          </div>
+        </a>
+        <a class="kpi" routerLink="/niches">
+          <i class="pi pi-compass"></i>
+          <div class="body">
+            <span class="value">{{ s.nichesCandidate | number }}</span>
+            <span class="label">{{ t('dashboard.nicheCandidates') }}</span>
+          </div>
+        </a>
+      </div>
+    </section>
 
-  <section class="block anim-in">
-    <div class="block__title">Operação</div>
-    <div class="kpi-grid anim-stagger">
-      <a class="kpi" routerLink="/jobs" [class.warn]="s.jobsFailed > 0">
-        <i class="pi pi-exclamation-triangle"></i>
-        <div class="body">
-          <span class="value">{{ s.jobsFailed | number }}</span>
-          <span class="label">Jobs em dead-letter</span>
-        </div>
-      </a>
-      <a class="kpi" routerLink="/jobs">
-        <i class="pi pi-clock"></i>
-        <div class="body">
-          <span class="value">{{ s.jobsPending | number }}</span>
-          <span class="label">Jobs pendentes</span>
-        </div>
-      </a>
-    </div>
-  </section>
+    <section class="block anim-in">
+      <div class="block__title">{{ t('dashboard.operation') }}</div>
+      <div class="kpi-grid anim-stagger">
+        <a class="kpi" routerLink="/jobs" [class.warn]="s.jobsFailed > 0">
+          <i class="pi pi-exclamation-triangle"></i>
+          <div class="body">
+            <span class="value">{{ s.jobsFailed | number }}</span>
+            <span class="label">{{ t('dashboard.jobsDeadLetter') }}</span>
+          </div>
+        </a>
+        <a class="kpi" routerLink="/jobs">
+          <i class="pi pi-clock"></i>
+          <div class="body">
+            <span class="value">{{ s.jobsPending | number }}</span>
+            <span class="label">{{ t('dashboard.jobsPending') }}</span>
+          </div>
+        </a>
+      </div>
+    </section>
 
-  <section class="block anim-in">
-    <div class="block__title">Resultados · últimos 30 dias</div>
-    <div class="kpi-grid anim-stagger">
-      <div class="kpi">
-        <i class="pi pi-eye"></i>
-        <div class="body">
-          <span class="value">{{ s.visits30d | number }}</span>
-          <span class="label">Visitas nas LPs</span>
+    <section class="block anim-in">
+      <div class="block__title">{{ t('dashboard.results30d') }}</div>
+      <div class="kpi-grid anim-stagger">
+        <div class="kpi">
+          <i class="pi pi-eye"></i>
+          <div class="body">
+            <span class="value">{{ s.visits30d | number }}</span>
+            <span class="label">{{ t('dashboard.lpVisits') }}</span>
+          </div>
+        </div>
+        <div class="kpi">
+          <i class="pi pi-arrow-up-right"></i>
+          <div class="body">
+            <span class="value">{{ s.checkoutClicks30d | number }}</span>
+            <span class="label">{{ t('dashboard.checkoutClicks') }}</span>
+          </div>
+        </div>
+        <div class="kpi">
+          <i class="pi pi-shopping-cart"></i>
+          <div class="body">
+            <span class="value">{{ s.sales30d | number }}</span>
+            <span class="label">{{ t('dashboard.sales') }}</span>
+          </div>
+        </div>
+        <div class="kpi">
+          <i class="pi pi-dollar"></i>
+          <div class="body">
+            <span class="value">{{ s.revenue30d | currency: 'BRL' }}</span>
+            <span class="label">{{ t('dashboard.revenue') }}</span>
+          </div>
+        </div>
+        <div class="kpi">
+          <i class="pi pi-percentage"></i>
+          <div class="body">
+            <span class="value">{{ s.conversionRate30d | percent: '1.0-2' }}</span>
+            <span class="label">{{ t('dashboard.conversion') }}</span>
+          </div>
         </div>
       </div>
-      <div class="kpi">
-        <i class="pi pi-arrow-up-right"></i>
-        <div class="body">
-          <span class="value">{{ s.checkoutClicks30d | number }}</span>
-          <span class="label">Cliques de checkout</span>
-        </div>
-      </div>
-      <div class="kpi">
-        <i class="pi pi-shopping-cart"></i>
-        <div class="body">
-          <span class="value">{{ s.sales30d | number }}</span>
-          <span class="label">Vendas</span>
-        </div>
-      </div>
-      <div class="kpi">
-        <i class="pi pi-dollar"></i>
-        <div class="body">
-          <span class="value">{{ s.revenue30d | currency: 'BRL' }}</span>
-          <span class="label">Receita</span>
-        </div>
-      </div>
-      <div class="kpi">
-        <i class="pi pi-percentage"></i>
-        <div class="body">
-          <span class="value">{{ s.conversionRate30d | percent: '1.0-2' }}</span>
-          <span class="label">Conversão (venda/visita)</span>
-        </div>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="block anim-in">
-    <div class="block__title">Inteligência</div>
-    <div class="kpi-grid anim-stagger">
-      <div class="kpi">
-        <i class="pi pi-bolt"></i>
-        <div class="body">
-          <span class="value">{{ s.aiCallsToday | number }}</span>
-          <span class="label">Chamadas de IA hoje</span>
+    <section class="block anim-in">
+      <div class="block__title">{{ t('dashboard.intelligence') }}</div>
+      <div class="kpi-grid anim-stagger">
+        <div class="kpi">
+          <i class="pi pi-bolt"></i>
+          <div class="body">
+            <span class="value">{{ s.aiCallsToday | number }}</span>
+            <span class="label">{{ t('dashboard.aiCallsToday') }}</span>
+          </div>
+        </div>
+        <div class="kpi">
+          <i class="pi pi-database"></i>
+          <div class="body">
+            <span class="value">{{ s.aiCacheHitRateToday | percent: '1.0-1' }}</span>
+            <span class="label">{{ t('dashboard.aiCacheHitToday') }}</span>
+          </div>
         </div>
       </div>
-      <div class="kpi">
-        <i class="pi pi-database"></i>
-        <div class="body">
-          <span class="value">{{ s.aiCacheHitRateToday | percent: '1.0-1' }}</span>
-          <span class="label">Cache hit de IA hoje</span>
-        </div>
-      </div>
-    </div>
-  </section>
-} @else if (!error()) {
-  <app-loading variant="kpi" [rows]="3" />
-}
+    </section>
+  } @else if (!error()) {
+    <app-loading variant="kpi" [rows]="3" />
+  }
+</ng-container>

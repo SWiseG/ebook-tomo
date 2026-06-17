@@ -13,6 +13,7 @@ public sealed record ProductListItemDto(
     string Stage,
     decimal Price,
     string Currency,
+    string? PublicationPlatform,
     DateTime CreatedAtUtc);
 
 public sealed record ProductDetailDto(
@@ -29,6 +30,10 @@ public sealed record ProductDetailDto(
     string? CheckoutUrl,
     string? KiwifyProductId,
     string SalesCopyJson,
+    string? Description,
+    string? EmailLanguage,
+    string? Category,
+    string? PublicationPlatform,
     DateTime CreatedAtUtc,
     DateTime? PublishedAtUtc);
 

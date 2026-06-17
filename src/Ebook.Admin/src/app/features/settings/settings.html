@@ -1,46 +1,48 @@
-<div class="page-head anim-in">
-  <div>
-    <h1>Configurações</h1>
-    <div class="sub">Valores dinâmicos da plataforma (JSON cru). Tetos de IA, descoberta, publicação.</div>
-  </div>
-</div>
-
-@if (rows(); as list) {
-  <div class="list anim-in">
-    @for (row of list; track row.key) {
-      <p-card>
-        <div class="setting">
-          <div class="field">
-            <label>{{ row.key }}</label>
-            <textarea pTextarea rows="2" [(ngModel)]="row.value" [name]="row.key" fluid></textarea>
-          </div>
-          <p-button label="Salvar" icon="pi pi-check" size="small" (onClick)="save(row)" />
-        </div>
-      </p-card>
-    } @empty {
-      <div class="empty">Nenhuma configuração gravada ainda.</div>
-    }
-  </div>
-
-  <p-card>
-    <ng-template #title>Nova configuração</ng-template>
-    <div class="new-grid">
-      <div class="field">
-        <label>Chave</label>
-        <input pInputText list="known-keys" [(ngModel)]="newKey" name="newKey" placeholder="discovery.topN" fluid />
-        <datalist id="known-keys">
-          @for (k of knownKeys; track k) {
-            <option [value]="k"></option>
-          }
-        </datalist>
-      </div>
-      <div class="field">
-        <label>Valor (JSON)</label>
-        <textarea pTextarea rows="2" [(ngModel)]="newValue" name="newValue" fluid></textarea>
-      </div>
+<ng-container *transloco="let t">
+  <div class="page-head anim-in">
+    <div>
+      <h1>{{ t('settings.title') }}</h1>
+      <div class="sub">{{ t('settings.subtitle') }}</div>
     </div>
-    <p-button label="Adicionar" icon="pi pi-plus" size="small" severity="secondary" (onClick)="add()" />
-  </p-card>
-} @else {
-  <app-loading variant="table" [rows]="4" />
-}
+  </div>
+
+  @if (rows(); as list) {
+    <div class="list anim-in">
+      @for (row of list; track row.key) {
+        <p-card>
+          <div class="setting">
+            <div class="field">
+              <label>{{ row.key }}</label>
+              <textarea pTextarea rows="2" [(ngModel)]="row.value" [name]="row.key" fluid></textarea>
+            </div>
+            <p-button [label]="t('common.save')" icon="pi pi-check" size="small" (onClick)="save(row)" />
+          </div>
+        </p-card>
+      } @empty {
+        <div class="empty">{{ t('settings.empty') }}</div>
+      }
+    </div>
+
+    <p-card>
+      <ng-template #title>{{ t('settings.new') }}</ng-template>
+      <div class="new-grid">
+        <div class="field">
+          <label>{{ t('settings.key') }}</label>
+          <input pInputText list="known-keys" [(ngModel)]="newKey" name="newKey" placeholder="discovery.topN" fluid />
+          <datalist id="known-keys">
+            @for (k of knownKeys; track k) {
+              <option [value]="k"></option>
+            }
+          </datalist>
+        </div>
+        <div class="field">
+          <label>{{ t('settings.valueJson') }}</label>
+          <textarea pTextarea rows="2" [(ngModel)]="newValue" name="newValue" fluid></textarea>
+        </div>
+      </div>
+      <p-button [label]="t('settings.add')" icon="pi pi-plus" size="small" severity="secondary" (onClick)="add()" />
+    </p-card>
+  } @else {
+    <app-loading variant="table" [rows]="4" />
+  }
+</ng-container>

@@ -13,7 +13,7 @@ public sealed class DashboardReader(EbookDbContext db, IClock clock) : IDashboar
     {
         var today = clock.UtcNow.Date;
 
-        var productsActive = await db.Products.CountAsync(p => p.Status == ProductStatus.Live, ct);
+        var productsActive = await db.Products.CountAsync(p => p.Status == ProductStatus.Synchronized, ct);
         var productsInPipeline = await db.Products.CountAsync(p =>
             p.Status == ProductStatus.Pipeline ||
             p.Status == ProductStatus.Reworking ||

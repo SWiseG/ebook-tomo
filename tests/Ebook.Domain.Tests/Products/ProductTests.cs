@@ -20,6 +20,15 @@ public class ProductTests
         return product;
     }
 
+    private static Product SynchronizedProduct()
+    {
+        var product = ProductAtLpStage();
+        product.BeginPublishing();
+        product.MarkPublished(PublicationPlatform.Kiwify, Now);
+        product.MarkSynchronized("kw");
+        return product;
+    }
+
     [Fact]
     public void Create_inicia_em_pipeline_outline_e_emite_evento()
     {
@@ -68,12 +77,16 @@ public class ProductTests
         Assert.True(product.Approve().IsSuccess);
         Assert.Equal(ProductStatus.Publishing, product.Status);
 
-        Assert.True(product.MarkPublished("kw-123", "https://kiwify/checkout", "https://lp/slug", Now).IsSuccess);
-        Assert.Equal(ProductStatus.Live, product.Status);
-        Assert.Equal(ProductStage.Live, product.Stage);
-        Assert.Equal("kw-123", product.KiwifyProductId);
+        Assert.True(product.MarkPublished(PublicationPlatform.Kiwify, Now).IsSuccess);
+        Assert.Equal(ProductStatus.Published, product.Status);
         Assert.NotNull(product.PublishedAtUtc);
         Assert.Single(product.DomainEvents.OfType<ProductPublished>());
+
+        Assert.True(product.MarkSynchronized("kw-123").IsSuccess);
+        Assert.Equal(ProductStatus.Synchronized, product.Status);
+        Assert.Equal(ProductStage.Live, product.Stage);
+        Assert.Equal("kw-123", product.KiwifyProductId);
+        Assert.Single(product.DomainEvents.OfType<ProductSynchronized>());
     }
 
     [Fact]
@@ -111,15 +124,13 @@ public class ProductTests
     {
         var product = ProductAtLpStage();
 
-        Assert.True(product.MarkPublished("kw", "url", "lp", Now).IsFailure);
+        Assert.True(product.MarkPublished(PublicationPlatform.Kiwify, Now).IsFailure);
     }
 
     [Fact]
-    public void Retire_de_live_funciona_e_segunda_vez_falha()
+    public void Retire_de_synchronized_funciona_e_segunda_vez_falha()
     {
-        var product = ProductAtLpStage();
-        product.BeginPublishing();
-        product.MarkPublished("kw", "url", "lp", Now);
+        var product = SynchronizedProduct();
 
         Assert.True(product.Retire("ROI negativo após 2 ciclos", Now).IsSuccess);
         Assert.Equal(ProductStatus.Retired, product.Status);
@@ -127,15 +138,13 @@ public class ProductTests
     }
 
     [Fact]
-    public void Iteracao_live_para_iterating_e_volta()
+    public void Iteracao_synchronized_para_iterating_e_volta()
     {
-        var product = ProductAtLpStage();
-        product.BeginPublishing();
-        product.MarkPublished("kw", "url", "lp", Now);
+        var product = SynchronizedProduct();
 
         Assert.True(product.StartIteration().IsSuccess);
         Assert.Equal(ProductStatus.Iterating, product.Status);
         Assert.True(product.CompleteIteration().IsSuccess);
-        Assert.Equal(ProductStatus.Live, product.Status);
+        Assert.Equal(ProductStatus.Synchronized, product.Status);
     }
 }

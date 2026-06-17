@@ -6,6 +6,7 @@ import {
   HubConnectionState,
   LogLevel,
 } from '@microsoft/signalr';
+import { TranslocoService } from '@jsverse/transloco';
 import { RealtimeJobChanged, RealtimeProductChanged } from './api.types';
 import { AuthService } from './auth.service';
 
@@ -30,6 +31,7 @@ const MAX_NOTIFICATIONS = 30;
 @Injectable({ providedIn: 'root' })
 export class RealtimeService {
   private readonly auth = inject(AuthService);
+  private readonly t = inject(TranslocoService);
   private connection?: HubConnection;
   private seq = 0;
 
@@ -94,26 +96,27 @@ export class RealtimeService {
     this.jobChanged$.next(c);
     // Só notifica os estados que importam ao operador: sucesso e dead-letter.
     if (c.status === 'Succeeded') {
-      this.push('job', 'success', 'Job concluído', this.jobLabel(c.type));
+      this.push('job', 'success', this.t.translate('realtime.job.succeeded'), this.jobLabel(c.type));
     } else if (c.status === 'Dead') {
-      this.push('job', 'danger', 'Job falhou', `${this.jobLabel(c.type)} — ${c.lastError ?? 'sem detalhe'}`);
+      const detail = c.lastError ?? this.t.translate('realtime.job.noDetail');
+      this.push('job', 'danger', this.t.translate('realtime.job.failed'), `${this.jobLabel(c.type)} — ${detail}`);
     }
   }
 
   private onProduct(c: RealtimeProductChanged): void {
     this.productChanged$.next(c);
-    const map: Record<string, { sev: RealtimeNotification['severity']; msg: string }> = {
-      ProductCreated: { sev: 'info', msg: 'Novo produto no pipeline' },
-      ProductStageAdvanced: { sev: 'info', msg: 'Produto avançou de etapa' },
-      ProductSubmittedForApproval: { sev: 'warn', msg: 'Produto aguardando aprovação' },
-      ProductRejected: { sev: 'warn', msg: 'Produto rejeitado para retrabalho' },
-      ProductPublishingStarted: { sev: 'info', msg: 'Publicação iniciada' },
-      ProductPublished: { sev: 'success', msg: 'Produto publicado' },
-      ProductRetired: { sev: 'warn', msg: 'Produto aposentado' },
+    const map: Record<string, { sev: RealtimeNotification['severity']; key: string }> = {
+      ProductCreated: { sev: 'info', key: 'realtime.product.created' },
+      ProductStageAdvanced: { sev: 'info', key: 'realtime.product.stageAdvanced' },
+      ProductSubmittedForApproval: { sev: 'warn', key: 'realtime.product.submittedForApproval' },
+      ProductRejected: { sev: 'warn', key: 'realtime.product.rejected' },
+      ProductPublishingStarted: { sev: 'info', key: 'realtime.product.publishingStarted' },
+      ProductPublished: { sev: 'success', key: 'realtime.product.published' },
+      ProductRetired: { sev: 'warn', key: 'realtime.product.retired' },
     };
     const entry = map[c.event];
     if (entry) {
-      this.push('product', entry.sev, entry.msg, '');
+      this.push('product', entry.sev, this.t.translate(entry.key), '');
     }
   }
 
@@ -135,19 +138,20 @@ export class RealtimeService {
     this.notifications.update((list) => [note, ...list].slice(0, MAX_NOTIFICATIONS));
   }
 
-  /** Converte "ebook.chapter" → "Capítulo" etc. para o texto da notificação. */
+  /** Converte "ebook.chapter" → "Capítulo" etc. (traduzido) para o texto da notificação. */
   private jobLabel(type: string): string {
-    const labels: Record<string, string> = {
-      'ebook.outline': 'Estrutura do ebook',
-      'ebook.chapter': 'Capítulo',
-      'ebook.review': 'Revisão',
-      'ebook.pdf': 'PDF',
-      'ebook.cover': 'Capa',
-      'lp.generate': 'Landing page',
-      'kiwify.publish': 'Publicação Kiwify',
-      'social.calendar': 'Calendário social',
-      'video.reel': 'Reel de vídeo',
+    const keys: Record<string, string> = {
+      'ebook.outline': 'realtime.jobType.ebookOutline',
+      'ebook.chapter': 'realtime.jobType.ebookChapter',
+      'ebook.review': 'realtime.jobType.ebookReview',
+      'ebook.pdf': 'realtime.jobType.ebookPdf',
+      'ebook.cover': 'realtime.jobType.ebookCover',
+      'lp.generate': 'realtime.jobType.lpGenerate',
+      'kiwify.publish': 'realtime.jobType.kiwifyPublish',
+      'social.calendar': 'realtime.jobType.socialCalendar',
+      'video.reel': 'realtime.jobType.videoReel',
     };
-    return labels[type] ?? type;
+    const key = keys[type];
+    return key ? this.t.translate(key) : type;
   }
 }

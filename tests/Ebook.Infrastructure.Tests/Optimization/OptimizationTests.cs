@@ -45,7 +45,9 @@ public class OptimizationTests
         product.AdvanceStage(); // → Lp
         product.SubmitForApproval();
         product.Approve(); // → Publishing
-        product.MarkPublished($"kw-{slug}", $"https://pay/{slug}", $"/lp/{slug}", now); // → Live
+        product.SetCheckoutLink($"https://pay/{slug}");
+        product.MarkPublished(PublicationPlatform.Kiwify, now); // → Published
+        product.MarkSynchronized($"kw-{slug}"); // → Synchronized
         db.Products.Add(product);
         await db.SaveChangesAsync();
         return product.Id;
@@ -114,7 +116,7 @@ public class OptimizationTests
         Assert.Equal(OptimizationDecisionKind.Iterate, (await DecisionForAsync(provider, iterate)).Decision);
 
         // nada executado ainda (veto humano por padrão): produtos seguem Live
-        Assert.All(await db.Products.AsNoTracking().ToListAsync(), p => Assert.Equal(ProductStatus.Live, p.Status));
+        Assert.All(await db.Products.AsNoTracking().ToListAsync(), p => Assert.Equal(ProductStatus.Synchronized, p.Status));
     }
 
     [Fact]
@@ -168,7 +170,7 @@ public class OptimizationTests
         using var verify = provider.CreateScope();
         var db = verify.ServiceProvider.GetRequiredService<EbookDbContext>();
         var product = await db.Products.AsNoTracking().SingleAsync(p => p.Id == id);
-        Assert.Equal(ProductStatus.Live, product.Status); // iterou e voltou
+        Assert.Equal(ProductStatus.Synchronized, product.Status); // iterou e voltou
         Assert.Equal(25.5m, product.Price); // 30 * 0.85
     }
 
@@ -185,7 +187,7 @@ public class OptimizationTests
 
         using var verify = provider.CreateScope();
         var db = verify.ServiceProvider.GetRequiredService<EbookDbContext>();
-        Assert.Equal(ProductStatus.Live, (await db.Products.AsNoTracking().SingleAsync()).Status);
+        Assert.Equal(ProductStatus.Synchronized, (await db.Products.AsNoTracking().SingleAsync()).Status);
         Assert.Equal(OptimizationDecisionStatus.Vetoed,
             (await db.OptimizationDecisions.AsNoTracking().SingleAsync()).Status);
     }

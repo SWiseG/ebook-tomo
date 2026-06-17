@@ -2,7 +2,12 @@
   <div class="tomo-loadbar"></div>
 }
 
-<div class="shell" [class.is-collapsed]="layout.collapsed()" [class.is-mobile-open]="layout.mobileOpen()">
+<div
+  class="shell"
+  *transloco="let t"
+  [class.is-collapsed]="layout.collapsed()"
+  [class.is-mobile-open]="layout.mobileOpen()"
+>
   <aside class="sidebar">
     <div class="sidebar__head">
       <a class="brand" routerLink="/dashboard"><tomo-logo [compact]="layout.collapsed()" /></a>
@@ -10,9 +15,9 @@
         type="button"
         class="rail-toggle"
         (click)="layout.toggleCollapsed()"
-        [pTooltip]="layout.collapsed() ? 'Expandir' : 'Recolher'"
+        [pTooltip]="layout.collapsed() ? t('shell.expand') : t('shell.collapse')"
         tooltipPosition="right"
-        aria-label="Recolher menu"
+        [attr.aria-label]="t('shell.collapseMenu')"
       >
         <i class="pi" [class.pi-angle-left]="!layout.collapsed()" [class.pi-angle-right]="layout.collapsed()"></i>
       </button>
@@ -21,16 +26,16 @@
     <nav>
       @for (group of groups; track group.title) {
         <div class="group">
-          <span class="group__title">{{ group.title }}</span>
+          <span class="group__title">{{ t(group.title) }}</span>
           @for (item of group.items; track item.path) {
             <a
               [routerLink]="item.path"
               routerLinkActive="active"
-              [pTooltip]="item.label"
+              [pTooltip]="t(item.label)"
               tooltipPosition="right"
               [tooltipDisabled]="!layout.collapsed()"
             >
-              <i [class]="item.icon"></i><span class="label">{{ item.label }}</span>
+              <i [class]="item.icon"></i><span class="label">{{ t(item.label) }}</span>
             </a>
           }
         </div>
@@ -42,22 +47,22 @@
         type="button"
         class="foot-btn"
         (click)="theme.toggle()"
-        [pTooltip]="theme.dark() ? 'Tema claro' : 'Tema escuro'"
+        [pTooltip]="theme.dark() ? t('shell.themeLight') : t('shell.themeDark')"
         tooltipPosition="right"
         [tooltipDisabled]="!layout.collapsed()"
       >
         <i class="pi" [class.pi-sun]="theme.dark()" [class.pi-moon]="!theme.dark()"></i>
-        <span class="label">{{ theme.dark() ? 'Tema claro' : 'Tema escuro' }}</span>
+        <span class="label">{{ theme.dark() ? t('shell.themeLight') : t('shell.themeDark') }}</span>
       </button>
       <button
         type="button"
         class="foot-btn foot-btn--danger"
         (click)="auth.logout()"
-        pTooltip="Sair"
+        [pTooltip]="t('shell.logout')"
         tooltipPosition="right"
         [tooltipDisabled]="!layout.collapsed()"
       >
-        <i class="pi pi-sign-out"></i><span class="label">Sair</span>
+        <i class="pi pi-sign-out"></i><span class="label">{{ t('shell.logout') }}</span>
       </button>
     </div>
   </aside>
@@ -68,7 +73,7 @@
         type="button"
         class="hamburger"
         (click)="layout.toggleMobile()"
-        aria-label="Abrir menu"
+        [attr.aria-label]="t('shell.openMenu')"
       >
         <i class="pi pi-bars"></i>
       </button>
@@ -78,17 +83,50 @@
       <span
         class="conn-dot"
         [class.online]="realtime.connected()"
-        [pTooltip]="realtime.connected() ? 'Tempo real conectado' : 'Tempo real desconectado'"
+        [pTooltip]="realtime.connected() ? t('shell.realtimeConnected') : t('shell.realtimeDisconnected')"
         tooltipPosition="bottom"
       ></span>
 
       <button
         type="button"
+        class="lang"
+        (click)="langMenu.toggle($event)"
+        [pTooltip]="t('shell.language')"
+        tooltipPosition="bottom"
+        [attr.aria-label]="t('shell.language')"
+      >
+        <span class="lang__flag">{{ currentLanguage().flag }}</span>
+        <i class="pi pi-angle-down lang__caret"></i>
+      </button>
+
+      <p-popover #langMenu>
+        <ul class="lang-list">
+          @for (l of language.languages; track l.code) {
+            <li>
+              <button
+                type="button"
+                class="lang-list__item"
+                [class.active]="l.code === language.current()"
+                (click)="language.set(l.code); langMenu.hide()"
+              >
+                <span class="lang-list__flag">{{ l.flag }}</span>
+                <span class="lang-list__label">{{ l.label }}</span>
+                @if (l.code === language.current()) {
+                  <i class="pi pi-check lang-list__check"></i>
+                }
+              </button>
+            </li>
+          }
+        </ul>
+      </p-popover>
+
+      <button
+        type="button"
         class="bell"
         (click)="bell.toggle($event)"
-        [pTooltip]="'Notificações'"
+        [pTooltip]="t('shell.notifications')"
         tooltipPosition="bottom"
-        aria-label="Notificações"
+        [attr.aria-label]="t('shell.notifications')"
       >
         <i class="pi pi-bell"></i>
         @if (realtime.unreadCount() > 0) {
@@ -99,13 +137,13 @@
       <p-popover #bell (onShow)="realtime.markAllRead()">
         <div class="notif">
           <div class="notif__head">
-            <strong>Notificações</strong>
+            <strong>{{ t('shell.notifications') }}</strong>
             @if (realtime.notifications().length > 0) {
-              <button type="button" class="notif__clear" (click)="realtime.clear()">Limpar</button>
+              <button type="button" class="notif__clear" (click)="realtime.clear()">{{ t('common.clear') }}</button>
             }
           </div>
           @if (realtime.notifications().length === 0) {
-            <p class="notif__empty">Sem novidades por aqui.</p>
+            <p class="notif__empty">{{ t('shell.noNews') }}</p>
           } @else {
             <ul class="notif__list">
               @for (n of realtime.notifications(); track n.id) {
@@ -130,7 +168,7 @@
         severity="secondary"
         size="small"
         icon="pi pi-question-circle"
-        label="Ajuda"
+        [label]="t('shell.help')"
         routerLink="/tutorial"
       />
       <p-button
@@ -139,7 +177,7 @@
         size="small"
         [icon]="theme.dark() ? 'pi pi-sun' : 'pi pi-moon'"
         (onClick)="theme.toggle()"
-        [pTooltip]="theme.dark() ? 'Tema claro' : 'Tema escuro'"
+        [pTooltip]="theme.dark() ? t('shell.themeLight') : t('shell.themeDark')"
         tooltipPosition="bottom"
       />
     </header>

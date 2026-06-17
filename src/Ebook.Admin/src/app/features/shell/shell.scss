@@ -314,6 +314,83 @@
   }
 }
 
+/* ── Seletor de idioma ── */
+.lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 38px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: t.$radius;
+  background: transparent;
+  color: var(--p-text-muted-color);
+  cursor: pointer;
+  transition:
+    background-color t.$dur-fast t.$ease-out,
+    color t.$dur-fast t.$ease-out;
+
+  &:hover {
+    background: var(--p-content-hover-background, color-mix(in srgb, var(--p-primary-color) 10%, transparent));
+    color: var(--p-text-color);
+  }
+
+  &__flag {
+    font-size: 1.15rem;
+    line-height: 1;
+  }
+
+  &__caret {
+    font-size: 0.7rem;
+  }
+}
+
+.lang-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 168px;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: t.$space-2;
+    width: 100%;
+    padding: t.$space-2 t.$space-3;
+    border: 0;
+    border-radius: t.$radius-sm;
+    background: transparent;
+    color: var(--p-text-color);
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: background-color t.$dur-fast t.$ease-out;
+
+    &:hover {
+      background: var(--p-content-hover-background, color-mix(in srgb, var(--p-primary-color) 10%, transparent));
+    }
+
+    &.active {
+      color: var(--p-primary-color);
+      font-weight: 600;
+    }
+  }
+
+  &__flag {
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
+  &__label {
+    flex: 1;
+    text-align: left;
+  }
+
+  &__check {
+    font-size: 0.8rem;
+    color: var(--p-primary-color);
+  }
+}
+
 /* ── Conteúdo do popover de notificações ── */
 .notif {
   width: min(320px, 86vw);

@@ -75,7 +75,7 @@ public sealed class OptimizationExecutor(
     private async Task ReplenishIfBelowMinimumAsync(CancellationToken ct)
     {
         var min = await settings.GetOrDefaultAsync(SettingKeys.MinActiveProducts, 10, ct);
-        var activeAfterRetire = await products.CountByStatusAsync(ProductStatus.Live, ct) - 1; // este ainda não foi salvo
+        var activeAfterRetire = await products.CountByStatusAsync(ProductStatus.Synchronized, ct) - 1; // este ainda não foi salvo
         if (activeAfterRetire >= min)
         {
             return;

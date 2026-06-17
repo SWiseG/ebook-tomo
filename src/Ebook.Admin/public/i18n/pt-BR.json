@@ -1,0 +1,355 @@
+{
+  "common": {
+    "clear": "Limpar",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "yes": "Sim",
+    "no": "Não",
+    "back": "Voltar",
+    "loading": "Carregando…",
+    "actionFailed": "Ação falhou",
+    "actionFailedDetail": "Transição inválida?"
+  },
+  "nav": {
+    "groups": {
+      "overview": "Visão geral",
+      "content": "Conteúdo",
+      "operation": "Operação",
+      "help": "Ajuda"
+    },
+    "dashboard": "Dashboard",
+    "niches": "Nichos",
+    "products": "Produtos",
+    "jobs": "Jobs",
+    "optimizer": "Otimizador",
+    "settings": "Configurações",
+    "tutorial": "Como usar"
+  },
+  "shell": {
+    "expand": "Expandir",
+    "collapse": "Recolher",
+    "collapseMenu": "Recolher menu",
+    "openMenu": "Abrir menu",
+    "themeLight": "Tema claro",
+    "themeDark": "Tema escuro",
+    "logout": "Sair",
+    "language": "Idioma",
+    "help": "Ajuda",
+    "notifications": "Notificações",
+    "noNews": "Sem novidades por aqui.",
+    "realtimeConnected": "Tempo real conectado",
+    "realtimeDisconnected": "Tempo real desconectado"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Visão geral do portfólio, da operação e do consumo de IA.",
+    "viewProducts": "Ver produtos",
+    "discoverNiches": "Descobrir nichos",
+    "portfolio": "Portfólio",
+    "productsActive": "Produtos ativos",
+    "inPipeline": "Em pipeline",
+    "nicheCandidates": "Nichos candidatos",
+    "operation": "Operação",
+    "jobsDeadLetter": "Jobs em dead-letter",
+    "jobsPending": "Jobs pendentes",
+    "results30d": "Resultados · últimos 30 dias",
+    "lpVisits": "Visitas nas LPs",
+    "checkoutClicks": "Cliques de checkout",
+    "sales": "Vendas",
+    "revenue": "Receita",
+    "conversion": "Conversão (venda/visita)",
+    "intelligence": "Inteligência",
+    "aiCallsToday": "Chamadas de IA hoje",
+    "aiCacheHitToday": "Cache hit de IA hoje",
+    "loadError": "Falha ao carregar o resumo.",
+    "discoverQueued": "Descoberta enfileirada",
+    "discoverQueuedDetail": "Os nichos aparecerão em instantes.",
+    "discoverError": "Falha ao disparar a descoberta."
+  },
+  "niches": {
+    "title": "Nichos",
+    "subtitle": "Descobertos pelo motor de tendências, pontuados e ranqueados.",
+    "discover": "Descobrir nichos",
+    "filter": {
+      "all": "Todos",
+      "candidate": "Candidatos",
+      "selected": "Selecionados",
+      "active": "Ativos",
+      "discarded": "Descartados"
+    },
+    "col": {
+      "niche": "Nicho",
+      "score": "Score",
+      "cycle": "Ciclo",
+      "status": "Status",
+      "discovered": "Descoberto"
+    },
+    "approve": "Aprovar",
+    "generate": "Gerar produto",
+    "empty": "Nenhum nicho ainda. Clique em \"Descobrir nichos\".",
+    "loadError": "Falha ao carregar nichos.",
+    "discoverQueued": "Descoberta enfileirada",
+    "discoverQueuedDetail": "Atualize em instantes.",
+    "discoverError": "Falha ao disparar a descoberta.",
+    "approved": "Nicho aprovado.",
+    "discardHeader": "Descartar nicho",
+    "discardMessage": "Descartar \"{{name}}\"? Ele sairá do ranking de descoberta.",
+    "discardConfirm": "Descartar",
+    "discarded": "Nicho descartado.",
+    "generateError": "Falha ao gerar produto."
+  },
+  "products": {
+    "title": "Produtos",
+    "subtitle": "Pipeline de conteúdo: do outline ao PDF, capa e landing page.",
+    "goToNiches": "Ir para nichos",
+    "col": {
+      "product": "Produto",
+      "stage": "Estágio",
+      "status": "Status",
+      "platform": "Local de publicação",
+      "price": "Preço",
+      "created": "Criado"
+    },
+    "empty": "Nenhum produto. Gere um a partir de um nicho.",
+    "loadError": "Falha ao carregar produtos.",
+    "actions": {
+      "menu": "Ações",
+      "publicationData": "Dados de Publicação",
+      "checkout": "Inserir link de checkout",
+      "markPublished": "Marcar como publicado",
+      "sync": "Sincronizar"
+    },
+    "pub": {
+      "title": "Dados de Publicação",
+      "platform": "Plataforma",
+      "name": "Nome do produto",
+      "description": "Descrição",
+      "salesPage": "Página de vendas",
+      "price": "Preço",
+      "currency": "Moeda",
+      "cover": "Imagem de capa",
+      "downloadCover": "Baixar capa",
+      "coverHint": "Tamanho recomendado: 300x250 pixels",
+      "emailLanguage": "Idioma dos emails",
+      "category": "Categoria",
+      "saved": "Dados de publicação salvos",
+      "descriptionTooShort": "A descrição deve ter pelo menos 100 caracteres."
+    },
+    "checkout": {
+      "title": "Inserir link de checkout",
+      "hint": "O link será usado nos botões da landing page automaticamente.",
+      "url": "Link de checkout",
+      "saved": "Link de checkout salvo"
+    },
+    "publish": {
+      "title": "Marcar como publicado",
+      "hint": "Onde este produto foi publicado?",
+      "where": "Plataforma",
+      "continue": "Continuar",
+      "done": "Produto marcado como publicado"
+    },
+    "sync": {
+      "queued": "Sincronização enfileirada"
+    }
+  },
+  "jobs": {
+    "title": "Jobs",
+    "subtitle": "Fila persistida: retry exponencial e dead-letter.",
+    "filter": {
+      "all": "Todos",
+      "pending": "Pendentes",
+      "running": "Rodando",
+      "succeeded": "Sucesso",
+      "dead": "Dead"
+    },
+    "count": "{{count}} job(s)",
+    "col": {
+      "type": "Tipo",
+      "status": "Status",
+      "attempts": "Tentativas",
+      "created": "Criado",
+      "error": "Erro"
+    },
+    "retry": "Reprocessar",
+    "empty": "Nenhum job.",
+    "retried": "Job reenfileirado",
+    "retryError": "Falha ao reprocessar o job."
+  },
+  "optimizer": {
+    "title": "Otimizador de ROI",
+    "subtitle": "Classifica produtos por desempenho (escalar / manter / iterar / matar).",
+    "run": "Rodar ciclo",
+    "noRuns": "Nenhum ciclo executado. Clique em \"Rodar ciclo\".",
+    "decisions": "Decisões",
+    "decisionsForCycle": "Decisões · ciclo {{n}}",
+    "col": {
+      "product": "Produto",
+      "decision": "Decisão",
+      "status": "Status"
+    },
+    "approve": "Aprovar",
+    "selectCycle": "Selecione um ciclo para ver as decisões.",
+    "runs": "Execuções",
+    "cycleLabel": "Ciclo {{n}}",
+    "decisionsCount": "{{count}} decisões",
+    "loadError": "Falha ao carregar execuções.",
+    "cycleRun": "Ciclo executado",
+    "cycleRunDetail": "Decisões propostas para revisão.",
+    "runError": "Falha ao rodar o ciclo.",
+    "approved": "Decisão aprovada e executada.",
+    "vetoed": "Decisão vetada."
+  },
+  "settings": {
+    "title": "Configurações",
+    "subtitle": "Valores dinâmicos da plataforma (JSON cru). Tetos de IA, descoberta, publicação.",
+    "empty": "Nenhuma configuração gravada ainda.",
+    "new": "Nova configuração",
+    "key": "Chave",
+    "valueJson": "Valor (JSON)",
+    "add": "Adicionar",
+    "loadError": "Falha ao carregar configurações.",
+    "saved": "Configuração salva",
+    "saveError": "Falha ao salvar \"{{key}}\"."
+  },
+  "login": {
+    "subtitle": "Fábrica autônoma de e-books",
+    "username": "Usuário",
+    "password": "Senha",
+    "submit": "Entrar",
+    "invalid": "Usuário ou senha inválidos."
+  },
+  "tutorial": {
+    "title": "Como usar o Tomo"
+  },
+  "productDetail": {
+    "back": "Produtos",
+    "stage": "estágio: {{stage}}",
+    "approvePublish": "Aprovar publicação",
+    "reject": "Rejeitar",
+    "openLp": "Abrir LP",
+    "downloadPdf": "Baixar PDF",
+    "manuscript": "Manuscrito",
+    "manuscriptPending": "Manuscrito ainda não gerado.",
+    "cover": "Capa",
+    "coverAlt": "Capa do e-book",
+    "coverPending": "Capa ainda não gerada.",
+    "landingPage": "Landing page",
+    "openLandingPage": "Abrir landing page",
+    "completePublishing": "Concluir publicação",
+    "publishHint": "Crie o produto na Kiwify e informe o id e a URL de checkout para colocá-lo no ar.",
+    "kiwifyIdPlaceholder": "ID do produto Kiwify",
+    "markPublished": "Marcar como publicado",
+    "publishedKiwify": "Publicado · Kiwify",
+    "funnel30d": "Funil · 30 dias",
+    "visits": "Visitas",
+    "clicks": "Cliques",
+    "sales": "Vendas",
+    "revenue": "Receita",
+    "conversion": "Conversão",
+    "socialCalendar": "Calendário social · {{count}} posts",
+    "salesCopy": "Copy de venda",
+    "outline": "Outline · {{count}} capítulos",
+    "notFound": "Produto não encontrado.",
+    "approveHeader": "Publicar produto",
+    "approveMessage": "Aprovar a publicação deste produto?",
+    "approveConfirm": "Aprovar",
+    "approved": "Produto aprovado para publicação.",
+    "rejectHeader": "Rejeitar produto",
+    "rejectMessage": "Devolver para retrabalho? O produto volta ao estágio de escrita.",
+    "rejectConfirm": "Rejeitar",
+    "rejectReason": "Rejeitado no painel",
+    "rejected": "Produto devolvido para retrabalho.",
+    "publishMissing": "Informe o id Kiwify e a URL de checkout.",
+    "published": "Produto publicado.",
+    "fetchFromKiwify": "Buscar da Kiwify",
+    "kiwifyFound": "Produto encontrado na Kiwify",
+    "kiwifyNotFound": "Não foi possível buscar o produto na Kiwify."
+  },
+  "realtime": {
+    "job": {
+      "succeeded": "Job concluído",
+      "failed": "Job falhou",
+      "noDetail": "sem detalhe"
+    },
+    "jobType": {
+      "ebookOutline": "Estrutura do ebook",
+      "ebookChapter": "Capítulo",
+      "ebookReview": "Revisão",
+      "ebookPdf": "PDF",
+      "ebookCover": "Capa",
+      "lpGenerate": "Landing page",
+      "kiwifyPublish": "Publicação Kiwify",
+      "socialCalendar": "Calendário social",
+      "videoReel": "Reel de vídeo"
+    },
+    "product": {
+      "created": "Novo produto no pipeline",
+      "stageAdvanced": "Produto avançou de etapa",
+      "submittedForApproval": "Produto aguardando aprovação",
+      "rejected": "Produto rejeitado para retrabalho",
+      "publishingStarted": "Publicação iniciada",
+      "published": "Produto publicado",
+      "retired": "Produto aposentado"
+    }
+  },
+  "status": {
+    "niche": {
+      "Candidate": "Candidato",
+      "Selected": "Selecionado",
+      "Active": "Ativo",
+      "Discarded": "Descartado"
+    },
+    "product": {
+      "Pipeline": "Pipeline",
+      "AwaitingApproval": "Aguardando aprovação",
+      "Reworking": "Em retrabalho",
+      "Publishing": "Publicando",
+      "Published": "Publicado",
+      "Synchronized": "Sincronizado",
+      "Unsynchronized": "Não sincronizado",
+      "Live": "No ar",
+      "Iterating": "Iterando",
+      "Retired": "Aposentado"
+    },
+    "platform": {
+      "Kiwify": "Kiwify",
+      "Hotmart": "Hotmart"
+    },
+    "job": {
+      "Pending": "Pendente",
+      "Running": "Rodando",
+      "Succeeded": "Sucesso",
+      "Dead": "Dead"
+    },
+    "decision": {
+      "Scale": "Escalar",
+      "Keep": "Manter",
+      "Iterate": "Iterar",
+      "Kill": "Matar"
+    },
+    "decisionStatus": {
+      "Proposed": "Proposta",
+      "Approved": "Aprovada",
+      "Executed": "Executada",
+      "Vetoed": "Vetada"
+    },
+    "stage": {
+      "Outline": "Esboço",
+      "Writing": "Escrita",
+      "Review": "Revisão",
+      "Pdf": "PDF",
+      "Lp": "LP",
+      "Publishing": "Publicação",
+      "Live": "No ar"
+    },
+    "social": {
+      "Planned": "Planejado",
+      "Queued": "Na fila",
+      "Published": "Publicado",
+      "Failed": "Falhou",
+      "Skipped": "Pulado"
+    }
+  }
+}

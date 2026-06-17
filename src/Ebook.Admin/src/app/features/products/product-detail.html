@@ -1,185 +1,196 @@
-<a class="back" routerLink="/products"><i class="pi pi-arrow-left"></i> Produtos</a>
+<ng-container *transloco="let t">
+  <a class="back" routerLink="/products"><i class="pi pi-arrow-left"></i> {{ t('productDetail.back') }}</a>
 
-@if (error(); as message) {
-  <p class="error">{{ message }}</p>
-}
+  @if (error(); as message) {
+    <p class="error">{{ message }}</p>
+  }
 
-@if (detail(); as d) {
-  <div class="page-head anim-in">
-    <div>
-      <h1>{{ d.title }}</h1>
-      <div class="sub"><span class="mono">{{ d.slug }}</span> · {{ d.qualityTier }}</div>
+  @if (detail(); as d) {
+    <div class="page-head anim-in">
+      <div>
+        <h1>{{ d.title }}</h1>
+        <div class="sub"><span class="mono">{{ d.slug }}</span> · {{ d.qualityTier }}</div>
+      </div>
+      <div class="actions">
+        @if (d.status === 'AwaitingApproval') {
+          <p-button
+            [label]="t('productDetail.approvePublish')"
+            icon="pi pi-send"
+            [disabled]="busy()"
+            (onClick)="approve()"
+          />
+          <p-button
+            [label]="t('productDetail.reject')"
+            icon="pi pi-times"
+            severity="danger"
+            [outlined]="true"
+            [disabled]="busy()"
+            (onClick)="reject()"
+          />
+        }
+        @if (d.lpUrl) {
+          <p-button [label]="t('productDetail.openLp')" icon="pi pi-external-link" [outlined]="true" (onClick)="openLp()" />
+        }
+        <p-button [label]="t('productDetail.downloadPdf')" icon="pi pi-download" [outlined]="true" (onClick)="downloadPdf()" />
+      </div>
     </div>
-    <div class="actions">
-      @if (d.status === 'AwaitingApproval') {
-        <p-button
-          label="Aprovar publicação"
-          icon="pi pi-send"
-          [disabled]="busy()"
-          (onClick)="approve()"
-        />
-        <p-button
-          label="Rejeitar"
-          icon="pi pi-times"
-          severity="danger"
-          [outlined]="true"
-          [disabled]="busy()"
-          (onClick)="reject()"
-        />
+
+    <div class="chips">
+      <p-tag [value]="t('status.product.' + d.status)" />
+      <p-tag [value]="t('productDetail.stage', { stage: t('status.stage.' + d.stage) })" severity="secondary" />
+      @if (d.price > 0) {
+        <p-tag [value]="(d.price | currency: d.currency) ?? ''" severity="warn" />
       }
-      @if (d.lpUrl) {
-        <p-button label="Abrir LP" icon="pi pi-external-link" [outlined]="true" (onClick)="openLp()" />
-      }
-      <p-button label="Baixar PDF" icon="pi pi-download" [outlined]="true" (onClick)="downloadPdf()" />
     </div>
-  </div>
 
-  <div class="chips">
-    <p-tag [value]="d.status" />
-    <p-tag [value]="'estágio: ' + d.stage" severity="secondary" />
-    @if (d.price > 0) {
-      <p-tag [value]="(d.price | currency: d.currency) ?? ''" severity="warn" />
-    }
-  </div>
-
-  <div class="stepper">
-    @for (step of steps; track step) {
-      <span class="step" [class]="stepClass(step)">
-        <span class="dot"></span>{{ step }}
-      </span>
-    }
-  </div>
-
-  <div class="grid-2 anim-in">
-    <p-card>
-      <ng-template #title>Manuscrito</ng-template>
-      @if (manuscriptHtml(); as html) {
-        <div class="prose" [innerHTML]="html"></div>
-      } @else {
-        <p class="muted">Manuscrito ainda não gerado.</p>
+    <div class="stepper">
+      @for (step of steps; track step) {
+        <span class="step" [class]="stepClass(step)">
+          <span class="dot"></span>{{ t('status.stage.' + step) }}
+        </span>
       }
-    </p-card>
+    </div>
 
-    <aside class="side">
+    <div class="grid-2 anim-in">
       <p-card>
-        <ng-template #title>Capa</ng-template>
-        @if (coverUrl(); as url) {
-          <img class="cover" [src]="url" alt="Capa do e-book" />
+        <ng-template #title>{{ t('productDetail.manuscript') }}</ng-template>
+        @if (manuscriptHtml(); as html) {
+          <div class="prose" [innerHTML]="html"></div>
         } @else {
-          <p class="muted">Capa ainda não gerada.</p>
+          <p class="muted">{{ t('productDetail.manuscriptPending') }}</p>
         }
       </p-card>
 
-      @if (d.lpUrl) {
+      <aside class="side">
         <p-card>
-          <ng-template #title>Landing page</ng-template>
-          <a class="mono lp-link" [href]="d.lpUrl" target="_blank" rel="noopener">{{ d.lpUrl }}</a>
-          <p-button
-            label="Abrir landing page"
-            icon="pi pi-external-link"
-            size="small"
-            [outlined]="true"
-            (onClick)="openLp()" />
-        </p-card>
-      }
-
-      @if (d.status === 'Publishing') {
-        <p-card>
-          <ng-template #title>Concluir publicação</ng-template>
-          <p class="muted publish-hint">
-            Crie o produto na Kiwify e informe o id e a URL de checkout para colocá-lo no ar.
-          </p>
-          <div class="publish-form">
-            <input pInputText [(ngModel)]="kiwifyProductId" name="kiwifyId" placeholder="ID do produto Kiwify" fluid />
-            <input pInputText [(ngModel)]="checkoutUrl" name="checkoutUrl" placeholder="https://pay.kiwify.com.br/…" fluid />
-            <p-button
-              label="Marcar como publicado"
-              icon="pi pi-check"
-              size="small"
-              [disabled]="busy()"
-              (onClick)="completePublishing()" />
-          </div>
-        </p-card>
-      }
-
-      @if (d.status === 'Live' && d.checkoutUrl) {
-        <p-card>
-          <ng-template #title>Publicado · Kiwify</ng-template>
-          <a class="mono lp-link" [href]="d.checkoutUrl" target="_blank" rel="noopener">{{ d.checkoutUrl }}</a>
-          @if (d.kiwifyProductId) {
-            <div class="mono">id: {{ d.kiwifyProductId }}</div>
+          <ng-template #title>{{ t('productDetail.cover') }}</ng-template>
+          @if (coverUrl(); as url) {
+            <img class="cover" [src]="url" [alt]="t('productDetail.coverAlt')" />
+          } @else {
+            <p class="muted">{{ t('productDetail.coverPending') }}</p>
           }
         </p-card>
-      }
 
-      @if (metrics(); as m) {
-        @if (m.total.visits > 0 || m.total.sales > 0) {
+        @if (d.lpUrl) {
           <p-card>
-            <ng-template #title>Funil · 30 dias</ng-template>
-            <div class="funnel">
-              <div class="funnel-row">
-                <span class="funnel-label"><i class="pi pi-eye"></i> Visitas</span>
-                <span class="funnel-value">{{ m.total.visits | number }}</span>
-              </div>
-              <div class="funnel-row">
-                <span class="funnel-label"><i class="pi pi-arrow-up-right"></i> Cliques</span>
-                <span class="funnel-value">{{ m.total.checkoutClicks | number }}</span>
-              </div>
-              <div class="funnel-row">
-                <span class="funnel-label"><i class="pi pi-shopping-cart"></i> Vendas</span>
-                <span class="funnel-value">{{ m.total.sales | number }}</span>
-              </div>
-              <div class="funnel-row funnel-row--strong">
-                <span class="funnel-label"><i class="pi pi-dollar"></i> Receita</span>
-                <span class="funnel-value">{{ m.total.revenue | currency: 'BRL' }}</span>
-              </div>
-              <div class="funnel-row">
-                <span class="funnel-label"><i class="pi pi-percentage"></i> Conversão</span>
-                <span class="funnel-value">{{ m.total.conversionRate | percent: '1.0-2' }}</span>
-              </div>
+            <ng-template #title>{{ t('productDetail.landingPage') }}</ng-template>
+            <a class="mono lp-link" [href]="d.lpUrl" target="_blank" rel="noopener">{{ d.lpUrl }}</a>
+            <p-button
+              [label]="t('productDetail.openLandingPage')"
+              icon="pi pi-external-link"
+              size="small"
+              [outlined]="true"
+              (onClick)="openLp()" />
+          </p-card>
+        }
+
+        @if (d.status === 'Publishing') {
+          <p-card>
+            <ng-template #title>{{ t('productDetail.completePublishing') }}</ng-template>
+            <p class="muted publish-hint">
+              {{ t('productDetail.publishHint') }}
+            </p>
+            <div class="publish-form">
+              <p-button
+                [label]="t('productDetail.fetchFromKiwify')"
+                icon="pi pi-search"
+                size="small"
+                severity="secondary"
+                [outlined]="true"
+                [loading]="matching()"
+                [disabled]="busy()"
+                (onClick)="fetchKiwifyMatch()" />
+              <input pInputText [(ngModel)]="kiwifyProductId" name="kiwifyId" [placeholder]="t('productDetail.kiwifyIdPlaceholder')" fluid />
+              <input pInputText [(ngModel)]="checkoutUrl" name="checkoutUrl" placeholder="https://pay.kiwify.com.br/…" fluid />
+              <p-button
+                [label]="t('productDetail.markPublished')"
+                icon="pi pi-check"
+                size="small"
+                [disabled]="busy()"
+                (onClick)="completePublishing()" />
             </div>
           </p-card>
         }
-      }
 
-      @if (social().length) {
-        <p-card>
-          <ng-template #title>Calendário social · {{ social().length }} posts</ng-template>
-          <ul class="social-list">
-            @for (post of social(); track post.id) {
-              <li class="social-item">
-                <span class="social-day">D{{ post.day }}</span>
-                <div class="social-body">
-                  <span class="social-meta">{{ post.network }} · {{ post.postType }}</span>
-                  <span class="social-caption">{{ post.caption }}</span>
+        @if (d.status === 'Live' && d.checkoutUrl) {
+          <p-card>
+            <ng-template #title>{{ t('productDetail.publishedKiwify') }}</ng-template>
+            <a class="mono lp-link" [href]="d.checkoutUrl" target="_blank" rel="noopener">{{ d.checkoutUrl }}</a>
+            @if (d.kiwifyProductId) {
+              <div class="mono">id: {{ d.kiwifyProductId }}</div>
+            }
+          </p-card>
+        }
+
+        @if (metrics(); as m) {
+          @if (m.total.visits > 0 || m.total.sales > 0) {
+            <p-card>
+              <ng-template #title>{{ t('productDetail.funnel30d') }}</ng-template>
+              <div class="funnel">
+                <div class="funnel-row">
+                  <span class="funnel-label"><i class="pi pi-eye"></i> {{ t('productDetail.visits') }}</span>
+                  <span class="funnel-value">{{ m.total.visits | number }}</span>
                 </div>
-                <p-tag [value]="post.status" [severity]="socialSeverity(post.status)" />
-              </li>
-            }
-          </ul>
-        </p-card>
-      }
+                <div class="funnel-row">
+                  <span class="funnel-label"><i class="pi pi-arrow-up-right"></i> {{ t('productDetail.clicks') }}</span>
+                  <span class="funnel-value">{{ m.total.checkoutClicks | number }}</span>
+                </div>
+                <div class="funnel-row">
+                  <span class="funnel-label"><i class="pi pi-shopping-cart"></i> {{ t('productDetail.sales') }}</span>
+                  <span class="funnel-value">{{ m.total.sales | number }}</span>
+                </div>
+                <div class="funnel-row funnel-row--strong">
+                  <span class="funnel-label"><i class="pi pi-dollar"></i> {{ t('productDetail.revenue') }}</span>
+                  <span class="funnel-value">{{ m.total.revenue | currency: 'BRL' }}</span>
+                </div>
+                <div class="funnel-row">
+                  <span class="funnel-label"><i class="pi pi-percentage"></i> {{ t('productDetail.conversion') }}</span>
+                  <span class="funnel-value">{{ m.total.conversionRate | percent: '1.0-2' }}</span>
+                </div>
+              </div>
+            </p-card>
+          }
+        }
 
-      @if (salesHeadline(); as headline) {
-        <p-card>
-          <ng-template #title>Copy de venda</ng-template>
-          <p class="headline">{{ headline }}</p>
-        </p-card>
-      }
+        @if (social().length) {
+          <p-card>
+            <ng-template #title>{{ t('productDetail.socialCalendar', { count: social().length }) }}</ng-template>
+            <ul class="social-list">
+              @for (post of social(); track post.id) {
+                <li class="social-item">
+                  <span class="social-day">D{{ post.day }}</span>
+                  <div class="social-body">
+                    <span class="social-meta">{{ post.network }} · {{ post.postType }}</span>
+                    <span class="social-caption">{{ post.caption }}</span>
+                  </div>
+                  <p-tag [value]="t('status.social.' + post.status)" [severity]="socialSeverity(post.status)" />
+                </li>
+              }
+            </ul>
+          </p-card>
+        }
 
-      @if (outline(); as o) {
-        <p-card>
-          <ng-template #title>Outline · {{ o.chapters.length }} capítulos</ng-template>
-          <p class="promise">{{ o.promise }}</p>
-          <ol class="chapters">
-            @for (c of o.chapters; track c.n) {
-              <li>{{ c.title }}</li>
-            }
-          </ol>
-        </p-card>
-      }
-    </aside>
-  </div>
-} @else if (!error()) {
-  <app-loading variant="detail" />
-}
+        @if (salesHeadline(); as headline) {
+          <p-card>
+            <ng-template #title>{{ t('productDetail.salesCopy') }}</ng-template>
+            <p class="headline">{{ headline }}</p>
+          </p-card>
+        }
+
+        @if (outline(); as o) {
+          <p-card>
+            <ng-template #title>{{ t('productDetail.outline', { count: o.chapters.length }) }}</ng-template>
+            <p class="promise">{{ o.promise }}</p>
+            <ol class="chapters">
+              @for (c of o.chapters; track c.n) {
+                <li>{{ c.title }}</li>
+              }
+            </ol>
+          </p-card>
+        }
+      </aside>
+    </div>
+  } @else if (!error()) {
+    <app-loading variant="detail" />
+  }
+</ng-container>

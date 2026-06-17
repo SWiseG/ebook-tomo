@@ -1,3 +1,61 @@
+@use '../../../styles/tokens' as t;
+
 .clickable {
   cursor: pointer;
+}
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-3;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-1;
+
+  label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--p-text-muted-color);
+  }
+
+  small {
+    font-size: 0.74rem;
+    color: var(--p-text-muted-color);
+
+    &.invalid {
+      color: var(--p-red-500, #ef4444);
+    }
+  }
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: t.$space-3;
+}
+
+.lp-link {
+  word-break: break-all;
+  color: var(--p-primary-color);
+}
+
+.cover-box {
+  display: flex;
+  align-items: center;
+  gap: t.$space-3;
+}
+
+.cover-thumb {
+  width: 150px;
+  height: 125px;
+  object-fit: cover;
+  border-radius: t.$radius-sm;
+  border: 1px solid var(--p-content-border-color);
+}
+
+.muted {
+  color: var(--p-text-muted-color);
 }

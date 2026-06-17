@@ -1,46 +1,174 @@
-<div class="page-head anim-in">
-  <div>
-    <h1>Produtos</h1>
-    <div class="sub">Pipeline de conteúdo: do outline ao PDF, capa e landing page.</div>
+<ng-container *transloco="let t">
+  <div class="page-head anim-in">
+    <div>
+      <h1>{{ t('products.title') }}</h1>
+      <div class="sub">{{ t('products.subtitle') }}</div>
+    </div>
+    <div class="actions">
+      <p-button [label]="t('products.goToNiches')" icon="pi pi-compass" [outlined]="true" routerLink="/niches" />
+    </div>
   </div>
-  <div class="actions">
-    <p-button label="Ir para nichos" icon="pi pi-compass" [outlined]="true" routerLink="/niches" />
-  </div>
-</div>
 
-@if (error(); as message) {
-  <p class="error">{{ message }}</p>
-}
+  @if (error(); as message) {
+    <p class="error">{{ message }}</p>
+  }
 
-@if (products(); as list) {
-  <p-table class="anim-in" [value]="list" [paginator]="list.length > 12" [rows]="12" [rowHover]="true" size="small">
-    <ng-template #header>
-      <tr>
-        <th>Produto</th>
-        <th>Estágio</th>
-        <th>Status</th>
-        <th>Preço</th>
-        <th>Criado</th>
-      </tr>
+  @if (products(); as list) {
+    <p-table class="anim-in" [value]="list" [paginator]="list.length > 12" [rows]="12" [rowHover]="true" size="small">
+      <ng-template #header>
+        <tr>
+          <th>{{ t('products.col.product') }}</th>
+          <th>{{ t('products.col.stage') }}</th>
+          <th>{{ t('products.col.status') }}</th>
+          <th>{{ t('products.col.platform') }}</th>
+          <th>{{ t('products.col.price') }}</th>
+          <th>{{ t('products.col.created') }}</th>
+          <th></th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-p>
+        <tr class="clickable" (click)="open(p)">
+          <td>
+            <strong>{{ p.title }}</strong>
+            <div class="mono">{{ p.slug }}</div>
+          </td>
+          <td><p-tag [value]="t('status.stage.' + p.stage)" severity="secondary" /></td>
+          <td><p-tag [value]="t('status.product.' + p.status)" [severity]="severity(p.status)" /></td>
+          <td>{{ p.publicationPlatform ? t('status.platform.' + p.publicationPlatform) : '—' }}</td>
+          <td>{{ p.price > 0 ? (p.price | currency: p.currency) : '—' }}</td>
+          <td>{{ p.createdAtUtc | date: 'dd/MM/yy HH:mm' }}</td>
+          <td>
+            <p-button
+              icon="pi pi-ellipsis-v"
+              [text]="true"
+              severity="secondary"
+              size="small"
+              [attr.aria-label]="t('products.actions.menu')"
+              (click)="$event.stopPropagation(); openMenu($event, p, actionsMenu)"
+            />
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="7"><div class="empty">{{ t('products.empty') }}</div></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  } @else if (!error()) {
+    <app-loading variant="table" [rows]="6" />
+  }
+
+  <p-menu #actionsMenu [popup]="true" [model]="menuModel()" appendTo="body" />
+
+  <!-- Modal: Dados de Publicação -->
+  <p-dialog
+    [visible]="pubDialog()"
+    (visibleChange)="pubDialog.set($event)"
+    [modal]="true"
+    [style]="{ width: '560px' }"
+    [header]="t('products.pub.title')"
+  >
+    <div class="form-grid">
+      <div class="field">
+        <label>{{ t('products.pub.platform') }}</label>
+        <p-select [options]="platformOptions" [(ngModel)]="pubPlatform" optionLabel="label" optionValue="value" appendTo="body" fluid />
+      </div>
+      <div class="field">
+        <label>{{ t('products.pub.name') }}</label>
+        <input pInputText [(ngModel)]="pubTitle" fluid />
+      </div>
+      <div class="field">
+        <label>{{ t('products.pub.description') }}</label>
+        <textarea pTextarea rows="4" [(ngModel)]="pubDescription" fluid></textarea>
+        <small [class.invalid]="pubDescription.length < 100">{{ pubDescription.length }} / 100</small>
+      </div>
+      <div class="field">
+        <label>{{ t('products.pub.salesPage') }}</label>
+        @if (pubLpUrl) {
+          <a class="mono lp-link" [href]="pubLpUrl" target="_blank" rel="noopener">{{ pubLpUrl }}</a>
+        } @else {
+          <span class="muted">—</span>
+        }
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>{{ t('products.pub.price') }}</label>
+          <input pInputText type="number" [(ngModel)]="pubPrice" fluid />
+        </div>
+        <div class="field">
+          <label>{{ t('products.pub.currency') }}</label>
+          <input pInputText [(ngModel)]="pubCurrency" fluid />
+        </div>
+      </div>
+      <div class="field">
+        <label>{{ t('products.pub.cover') }}</label>
+        <div class="cover-box">
+          @if (coverUrl(); as url) {
+            <img class="cover-thumb" [src]="url" [alt]="t('products.pub.cover')" />
+          } @else {
+            <span class="muted">—</span>
+          }
+          <p-button [label]="t('products.pub.downloadCover')" icon="pi pi-download" size="small" [outlined]="true" (onClick)="downloadCover()" />
+        </div>
+        <small class="muted">{{ t('products.pub.coverHint') }}</small>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>{{ t('products.pub.emailLanguage') }}</label>
+          <p-select [options]="emailLanguageOptions" [(ngModel)]="pubEmailLanguage" optionLabel="label" optionValue="value" appendTo="body" fluid />
+        </div>
+        <div class="field">
+          <label>{{ t('products.pub.category') }}</label>
+          <input pInputText [(ngModel)]="pubCategory" fluid />
+        </div>
+      </div>
+    </div>
+    <ng-template #footer>
+      <p-button [label]="t('common.cancel')" [text]="true" severity="secondary" (onClick)="pubDialog.set(false)" />
+      <p-button [label]="t('common.save')" icon="pi pi-check" [loading]="saving()" (onClick)="savePublicationData()" />
     </ng-template>
-    <ng-template #body let-p>
-      <tr class="clickable" (click)="open(p)">
-        <td>
-          <strong>{{ p.title }}</strong>
-          <div class="mono">{{ p.slug }}</div>
-        </td>
-        <td><p-tag [value]="p.stage" severity="secondary" /></td>
-        <td><p-tag [value]="p.status" [severity]="severity(p.status)" /></td>
-        <td>{{ p.price > 0 ? (p.price | currency: p.currency) : '—' }}</td>
-        <td>{{ p.createdAtUtc | date: 'dd/MM/yy HH:mm' }}</td>
-      </tr>
+  </p-dialog>
+
+  <!-- Modal: Inserir link de checkout -->
+  <p-dialog
+    [visible]="checkoutDialog()"
+    (visibleChange)="checkoutDialog.set($event)"
+    [modal]="true"
+    [style]="{ width: '480px' }"
+    [header]="t('products.checkout.title')"
+  >
+    <div class="form-grid">
+      <p class="muted">{{ t('products.checkout.hint') }}</p>
+      <div class="field">
+        <label>{{ t('products.checkout.url') }}</label>
+        <input pInputText [(ngModel)]="checkoutUrl" placeholder="https://pay.kiwify.com.br/…" fluid />
+      </div>
+    </div>
+    <ng-template #footer>
+      <p-button [label]="t('common.cancel')" [text]="true" severity="secondary" (onClick)="checkoutDialog.set(false)" />
+      <p-button [label]="t('common.save')" icon="pi pi-check" [loading]="saving()" (onClick)="saveCheckout()" />
     </ng-template>
-    <ng-template #emptymessage>
-      <tr>
-        <td colspan="5"><div class="empty">Nenhum produto. Gere um a partir de um nicho.</div></td>
-      </tr>
+  </p-dialog>
+
+  <!-- Modal: Marcar como publicado -->
+  <p-dialog
+    [visible]="publishDialog()"
+    (visibleChange)="publishDialog.set($event)"
+    [modal]="true"
+    [style]="{ width: '440px' }"
+    [header]="t('products.publish.title')"
+  >
+    <div class="form-grid">
+      <p class="muted">{{ t('products.publish.hint') }}</p>
+      <div class="field">
+        <label>{{ t('products.publish.where') }}</label>
+        <p-select [options]="platformOptions" [(ngModel)]="publishPlatform" optionLabel="label" optionValue="value" appendTo="body" fluid />
+      </div>
+    </div>
+    <ng-template #footer>
+      <p-button [label]="t('common.cancel')" [text]="true" severity="secondary" (onClick)="publishDialog.set(false)" />
+      <p-button [label]="t('products.publish.continue')" icon="pi pi-send" [loading]="saving()" (onClick)="confirmMarkPublished()" />
     </ng-template>
-  </p-table>
-} @else if (!error()) {
-  <app-loading variant="table" [rows]="6" />
-}
+  </p-dialog>
+</ng-container>

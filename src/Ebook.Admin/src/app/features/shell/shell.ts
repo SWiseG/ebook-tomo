@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
@@ -11,6 +11,7 @@ import {
   RouterLinkActive,
   RouterOutlet,
 } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
@@ -19,6 +20,7 @@ import { PopoverModule } from 'primeng/popover';
 import { AuthService } from '../../core/auth.service';
 import { ThemeService } from '../../core/theme.service';
 import { LayoutService } from '../../core/layout.service';
+import { LanguageService } from '../../core/language.service';
 import { RealtimeService } from '../../core/realtime.service';
 import { TomoLogo } from '../../shared/tomo-logo';
 
@@ -39,6 +41,7 @@ interface NavGroup {
     RouterLink,
     RouterLinkActive,
     DatePipe,
+    TranslocoDirective,
     TomoLogo,
     ButtonModule,
     ToastModule,
@@ -53,30 +56,37 @@ export class Shell {
   readonly auth = inject(AuthService);
   readonly theme = inject(ThemeService);
   readonly layout = inject(LayoutService);
+  readonly language = inject(LanguageService);
   readonly realtime = inject(RealtimeService);
   private readonly router = inject(Router);
 
   /** true enquanto uma navegação (incl. carregamento lazy) está em andamento → barra de progresso. */
   readonly navigating = signal(false);
 
+  /** Idioma ativo (objeto), para mostrar a bandeira no botão do seletor. */
+  readonly currentLanguage = computed(
+    () => this.language.languages.find((l) => l.code === this.language.current()) ?? this.language.languages[0],
+  );
+
+  // Labels e títulos são chaves i18n (traduzidas no template via `t(...)`).
   readonly groups: NavGroup[] = [
-    { title: 'Visão geral', items: [{ path: '/dashboard', label: 'Dashboard', icon: 'pi pi-th-large' }] },
+    { title: 'nav.groups.overview', items: [{ path: '/dashboard', label: 'nav.dashboard', icon: 'pi pi-th-large' }] },
     {
-      title: 'Conteúdo',
+      title: 'nav.groups.content',
       items: [
-        { path: '/niches', label: 'Nichos', icon: 'pi pi-compass' },
-        { path: '/products', label: 'Produtos', icon: 'pi pi-book' },
+        { path: '/niches', label: 'nav.niches', icon: 'pi pi-compass' },
+        { path: '/products', label: 'nav.products', icon: 'pi pi-book' },
       ],
     },
     {
-      title: 'Operação',
+      title: 'nav.groups.operation',
       items: [
-        { path: '/jobs', label: 'Jobs', icon: 'pi pi-bolt' },
-        { path: '/optimizer', label: 'Otimizador', icon: 'pi pi-bullseye' },
-        { path: '/settings', label: 'Configurações', icon: 'pi pi-sliders-h' },
+        { path: '/jobs', label: 'nav.jobs', icon: 'pi pi-bolt' },
+        { path: '/optimizer', label: 'nav.optimizer', icon: 'pi pi-bullseye' },
+        { path: '/settings', label: 'nav.settings', icon: 'pi pi-sliders-h' },
       ],
     },
-    { title: 'Ajuda', items: [{ path: '/tutorial', label: 'Como usar', icon: 'pi pi-question-circle' }] },
+    { title: 'nav.groups.help', items: [{ path: '/tutorial', label: 'nav.tutorial', icon: 'pi pi-question-circle' }] },
   ];
 
   constructor() {

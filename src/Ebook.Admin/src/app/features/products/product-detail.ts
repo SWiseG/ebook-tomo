@@ -6,12 +6,14 @@ import { debounceTime, filter, merge } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { ConfirmationService } from 'primeng/api';
 import {
+  KiwifyMatch,
   Outline,
   ProductDetail as ProductDetailDto,
   ProductMetrics,
@@ -32,6 +34,7 @@ const STAGES = ['Outline', 'Writing', 'Review', 'Pdf', 'Lp'] as const;
     PercentPipe,
     FormsModule,
     RouterLink,
+    TranslocoDirective,
     CardModule,
     TagModule,
     ButtonModule,
@@ -47,6 +50,7 @@ export class ProductDetail implements OnDestroy {
   private readonly notify = inject(NotificationService);
   private readonly confirm = inject(ConfirmationService);
   private readonly realtime = inject(RealtimeService);
+  private readonly t = inject(TranslocoService);
   private readonly id = inject(ActivatedRoute).snapshot.paramMap.get('id')!;
 
   readonly steps = STAGES;
@@ -61,6 +65,7 @@ export class ProductDetail implements OnDestroy {
 
   kiwifyProductId = '';
   checkoutUrl = '';
+  readonly matching = signal(false);
 
   private objectUrl: string | null = null;
 
@@ -140,44 +145,63 @@ export class ProductDetail implements OnDestroy {
   private loadDetail(): void {
     this.http.get<ProductDetailDto>(`/api/v1/products/${this.id}`).subscribe({
       next: (d) => this.detail.set(d),
-      error: () => this.error.set('Produto não encontrado.'),
+      error: () => this.error.set(this.t.translate('productDetail.notFound')),
     });
   }
 
   approve(): void {
     this.confirm.confirm({
-      header: 'Publicar produto',
-      message: 'Aprovar a publicação deste produto?',
+      header: this.t.translate('productDetail.approveHeader'),
+      message: this.t.translate('productDetail.approveMessage'),
       icon: 'pi pi-send',
-      acceptLabel: 'Aprovar',
-      rejectLabel: 'Cancelar',
+      acceptLabel: this.t.translate('productDetail.approveConfirm'),
+      rejectLabel: this.t.translate('common.cancel'),
       accept: () =>
         this.act(
           this.http.post(`/api/v1/products/${this.id}/approve`, {}),
-          'Produto aprovado para publicação.',
+          this.t.translate('productDetail.approved'),
         ),
     });
   }
 
   reject(): void {
     this.confirm.confirm({
-      header: 'Rejeitar produto',
-      message: 'Devolver para retrabalho? O produto volta ao estágio de escrita.',
+      header: this.t.translate('productDetail.rejectHeader'),
+      message: this.t.translate('productDetail.rejectMessage'),
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Rejeitar',
-      rejectLabel: 'Cancelar',
+      acceptLabel: this.t.translate('productDetail.rejectConfirm'),
+      rejectLabel: this.t.translate('common.cancel'),
       acceptButtonStyleClass: 'p-button-danger',
       accept: () =>
         this.act(
-          this.http.post(`/api/v1/products/${this.id}/reject`, { reason: 'Rejeitado no painel' }),
-          'Produto devolvido para retrabalho.',
+          this.http.post(`/api/v1/products/${this.id}/reject`, {
+            reason: this.t.translate('productDetail.rejectReason'),
+          }),
+          this.t.translate('productDetail.rejected'),
         ),
+    });
+  }
+
+  /** Busca o produto na API da Kiwify (por nome) e pré-preenche id + URL de checkout. */
+  fetchKiwifyMatch(): void {
+    this.matching.set(true);
+    this.http.get<KiwifyMatch>(`/api/v1/products/${this.id}/kiwify-match`).subscribe({
+      next: (m) => {
+        this.kiwifyProductId = m.kiwifyProductId;
+        this.checkoutUrl = m.checkoutUrl;
+        this.notify.success(this.t.translate('productDetail.kiwifyFound'), m.name);
+        this.matching.set(false);
+      },
+      error: (e: { error?: { detail?: string } }) => {
+        this.notify.error(e.error?.detail ?? this.t.translate('productDetail.kiwifyNotFound'));
+        this.matching.set(false);
+      },
     });
   }
 
   completePublishing(): void {
     if (!this.kiwifyProductId.trim() || !this.checkoutUrl.trim()) {
-      this.notify.warn('Informe o id Kiwify e a URL de checkout.');
+      this.notify.warn(this.t.translate('productDetail.publishMissing'));
       return;
     }
     this.act(
@@ -185,7 +209,7 @@ export class ProductDetail implements OnDestroy {
         kiwifyProductId: this.kiwifyProductId.trim(),
         checkoutUrl: this.checkoutUrl.trim(),
       }),
-      'Produto publicado.',
+      this.t.translate('productDetail.published'),
     );
   }
 
@@ -199,7 +223,10 @@ export class ProductDetail implements OnDestroy {
         this.busy.set(false);
       },
       error: () => {
-        this.notify.error('Ação falhou', 'Transição inválida?');
+        this.notify.error(
+          this.t.translate('common.actionFailed'),
+          this.t.translate('common.actionFailedDetail'),
+        );
         this.busy.set(false);
       },
     });

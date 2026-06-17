@@ -130,7 +130,7 @@ public class PublishingTests
         await DrainAsync(provider); // outbox enfileira kiwify.publish → worker publica → Live
 
         var product = await LoadAsync(provider, id);
-        Assert.Equal(ProductStatus.Live, product.Status);
+        Assert.Equal(ProductStatus.Synchronized, product.Status);
         Assert.Equal(ProductStage.Live, product.Stage);
         Assert.Equal("kw-guia-x", product.KiwifyProductId);
         Assert.Equal("https://pay.kiwify.com.br/guia-x", product.CheckoutUrl);
@@ -161,7 +161,7 @@ public class PublishingTests
         await SendAsync(provider, new CompletePublishingCommand(id, "kw-manual", "https://pay.kiwify.com.br/manual"));
 
         var live = await LoadAsync(provider, id);
-        Assert.Equal(ProductStatus.Live, live.Status);
+        Assert.Equal(ProductStatus.Synchronized, live.Status);
         Assert.Equal("kw-manual", live.KiwifyProductId);
         Assert.Equal("https://pay.kiwify.com.br/manual", live.CheckoutUrl);
     }

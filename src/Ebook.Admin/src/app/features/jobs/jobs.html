@@ -1,53 +1,55 @@
-<div class="page-head anim-in">
-  <div>
-    <h1>Jobs</h1>
-    <div class="sub">Fila persistida: retry exponencial e dead-letter.</div>
+<ng-container *transloco="let t">
+  <div class="page-head anim-in">
+    <div>
+      <h1>{{ t('jobs.title') }}</h1>
+      <div class="sub">{{ t('jobs.subtitle') }}</div>
+    </div>
   </div>
-</div>
 
-<p-selectButton
-  class="filter"
-  [options]="statusOptions"
-  [(ngModel)]="status"
-  optionLabel="label"
-  optionValue="value"
-  [allowEmpty]="false"
-  (onChange)="load()"
-/>
+  <p-selectButton
+    class="filter"
+    [options]="statusOptions()"
+    [(ngModel)]="status"
+    optionLabel="label"
+    optionValue="value"
+    [allowEmpty]="false"
+    (onChange)="load()"
+  />
 
-@if (page(); as p) {
-  <p class="muted count">{{ p.total }} job(s)</p>
-  <p-table class="anim-in" [value]="p.items" [paginator]="p.items.length > 15" [rows]="15" [rowHover]="true" size="small">
-    <ng-template #header>
-      <tr>
-        <th>Tipo</th>
-        <th>Status</th>
-        <th>Tentativas</th>
-        <th>Criado</th>
-        <th>Erro</th>
-        <th></th>
-      </tr>
-    </ng-template>
-    <ng-template #body let-job>
-      <tr>
-        <td class="mono">{{ job.type }}</td>
-        <td><p-tag [value]="job.status" [severity]="severity(job.status)" /></td>
-        <td>{{ job.attempts }}</td>
-        <td>{{ job.createdAtUtc | date: 'dd/MM HH:mm' }}</td>
-        <td class="error-cell">{{ job.lastError ?? '—' }}</td>
-        <td>
-          @if (job.status === 'Dead') {
-            <p-button label="Reprocessar" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="retry(job)" />
-          }
-        </td>
-      </tr>
-    </ng-template>
-    <ng-template #emptymessage>
-      <tr>
-        <td colspan="6"><div class="empty">Nenhum job.</div></td>
-      </tr>
-    </ng-template>
-  </p-table>
-} @else {
-  <app-loading variant="table" [rows]="8" />
-}
+  @if (page(); as p) {
+    <p class="muted count">{{ t('jobs.count', { count: p.total }) }}</p>
+    <p-table class="anim-in" [value]="p.items" [paginator]="p.items.length > 15" [rows]="15" [rowHover]="true" size="small">
+      <ng-template #header>
+        <tr>
+          <th>{{ t('jobs.col.type') }}</th>
+          <th>{{ t('jobs.col.status') }}</th>
+          <th>{{ t('jobs.col.attempts') }}</th>
+          <th>{{ t('jobs.col.created') }}</th>
+          <th>{{ t('jobs.col.error') }}</th>
+          <th></th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-job>
+        <tr>
+          <td class="mono">{{ job.type }}</td>
+          <td><p-tag [value]="t('status.job.' + job.status)" [severity]="severity(job.status)" /></td>
+          <td>{{ job.attempts }}</td>
+          <td>{{ job.createdAtUtc | date: 'dd/MM HH:mm' }}</td>
+          <td class="error-cell">{{ job.lastError ?? '—' }}</td>
+          <td>
+            @if (job.status === 'Dead') {
+              <p-button [label]="t('jobs.retry')" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="retry(job)" />
+            }
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="6"><div class="empty">{{ t('jobs.empty') }}</div></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  } @else {
+    <app-loading variant="table" [rows]="8" />
+  }
+</ng-container>

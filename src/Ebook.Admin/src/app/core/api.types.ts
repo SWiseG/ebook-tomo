@@ -54,11 +54,16 @@ export type ProductStatus =
   | 'AwaitingApproval'
   | 'Reworking'
   | 'Publishing'
+  | 'Published'
+  | 'Synchronized'
+  | 'Unsynchronized'
   | 'Live'
   | 'Iterating'
   | 'Retired';
 
 export type ProductStage = 'Outline' | 'Writing' | 'Review' | 'Pdf' | 'Lp' | 'Publishing' | 'Live';
+
+export type PublicationPlatform = 'Kiwify' | 'Hotmart';
 
 export interface ProductItem {
   id: string;
@@ -68,6 +73,7 @@ export interface ProductItem {
   stage: ProductStage;
   price: number;
   currency: string;
+  publicationPlatform: string | null;
   createdAtUtc: string;
 }
 
@@ -78,6 +84,9 @@ export interface ProductDetail extends ProductItem {
   checkoutUrl: string | null;
   kiwifyProductId: string | null;
   salesCopyJson: string;
+  description: string | null;
+  emailLanguage: string | null;
+  category: string | null;
   publishedAtUtc: string | null;
 }
 
@@ -148,6 +157,13 @@ export interface OptimizationDecision {
   status: 'Proposed' | 'Approved' | 'Executed' | 'Vetoed';
   rationale: string;
   actionsJson: string;
+}
+
+/** Correspondência do produto na Kiwify (id + URL de checkout), resolvida via API pública. */
+export interface KiwifyMatch {
+  kiwifyProductId: string;
+  checkoutUrl: string;
+  name: string;
 }
 
 export type SettingMap = Record<string, string>;

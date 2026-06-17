@@ -1,0 +1,355 @@
+{
+  "common": {
+    "clear": "Clear",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "back": "Back",
+    "loading": "Loading…",
+    "actionFailed": "Action failed",
+    "actionFailedDetail": "Invalid transition?"
+  },
+  "nav": {
+    "groups": {
+      "overview": "Overview",
+      "content": "Content",
+      "operation": "Operations",
+      "help": "Help"
+    },
+    "dashboard": "Dashboard",
+    "niches": "Niches",
+    "products": "Products",
+    "jobs": "Jobs",
+    "optimizer": "Optimizer",
+    "settings": "Settings",
+    "tutorial": "How to use"
+  },
+  "shell": {
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "collapseMenu": "Collapse menu",
+    "openMenu": "Open menu",
+    "themeLight": "Light theme",
+    "themeDark": "Dark theme",
+    "logout": "Log out",
+    "language": "Language",
+    "help": "Help",
+    "notifications": "Notifications",
+    "noNews": "Nothing new here.",
+    "realtimeConnected": "Realtime connected",
+    "realtimeDisconnected": "Realtime disconnected"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Overview of the portfolio, operations and AI usage.",
+    "viewProducts": "View products",
+    "discoverNiches": "Discover niches",
+    "portfolio": "Portfolio",
+    "productsActive": "Active products",
+    "inPipeline": "In pipeline",
+    "nicheCandidates": "Niche candidates",
+    "operation": "Operations",
+    "jobsDeadLetter": "Jobs in dead-letter",
+    "jobsPending": "Pending jobs",
+    "results30d": "Results · last 30 days",
+    "lpVisits": "Landing page visits",
+    "checkoutClicks": "Checkout clicks",
+    "sales": "Sales",
+    "revenue": "Revenue",
+    "conversion": "Conversion (sale/visit)",
+    "intelligence": "Intelligence",
+    "aiCallsToday": "AI calls today",
+    "aiCacheHitToday": "AI cache hit today",
+    "loadError": "Failed to load the summary.",
+    "discoverQueued": "Discovery queued",
+    "discoverQueuedDetail": "Niches will appear shortly.",
+    "discoverError": "Failed to trigger discovery."
+  },
+  "niches": {
+    "title": "Niches",
+    "subtitle": "Discovered by the trend engine, scored and ranked.",
+    "discover": "Discover niches",
+    "filter": {
+      "all": "All",
+      "candidate": "Candidates",
+      "selected": "Selected",
+      "active": "Active",
+      "discarded": "Discarded"
+    },
+    "col": {
+      "niche": "Niche",
+      "score": "Score",
+      "cycle": "Cycle",
+      "status": "Status",
+      "discovered": "Discovered"
+    },
+    "approve": "Approve",
+    "generate": "Generate product",
+    "empty": "No niches yet. Click \"Discover niches\".",
+    "loadError": "Failed to load niches.",
+    "discoverQueued": "Discovery queued",
+    "discoverQueuedDetail": "Refresh shortly.",
+    "discoverError": "Failed to trigger discovery.",
+    "approved": "Niche approved.",
+    "discardHeader": "Discard niche",
+    "discardMessage": "Discard \"{{name}}\"? It will leave the discovery ranking.",
+    "discardConfirm": "Discard",
+    "discarded": "Niche discarded.",
+    "generateError": "Failed to generate product."
+  },
+  "products": {
+    "title": "Products",
+    "subtitle": "Content pipeline: from outline to PDF, cover and landing page.",
+    "goToNiches": "Go to niches",
+    "col": {
+      "product": "Product",
+      "stage": "Stage",
+      "status": "Status",
+      "platform": "Publication location",
+      "price": "Price",
+      "created": "Created"
+    },
+    "empty": "No products. Generate one from a niche.",
+    "loadError": "Failed to load products.",
+    "actions": {
+      "menu": "Actions",
+      "publicationData": "Publication data",
+      "checkout": "Insert checkout link",
+      "markPublished": "Mark as published",
+      "sync": "Synchronize"
+    },
+    "pub": {
+      "title": "Publication data",
+      "platform": "Platform",
+      "name": "Product name",
+      "description": "Description",
+      "salesPage": "Sales page",
+      "price": "Price",
+      "currency": "Currency",
+      "cover": "Cover image",
+      "downloadCover": "Download cover",
+      "coverHint": "Recommended size: 300x250 pixels",
+      "emailLanguage": "Email language",
+      "category": "Category",
+      "saved": "Publication data saved",
+      "descriptionTooShort": "The description must be at least 100 characters."
+    },
+    "checkout": {
+      "title": "Insert checkout link",
+      "hint": "The link is used in the landing page buttons automatically.",
+      "url": "Checkout link",
+      "saved": "Checkout link saved"
+    },
+    "publish": {
+      "title": "Mark as published",
+      "hint": "Where was this product published?",
+      "where": "Platform",
+      "continue": "Continue",
+      "done": "Product marked as published"
+    },
+    "sync": {
+      "queued": "Synchronization queued"
+    }
+  },
+  "jobs": {
+    "title": "Jobs",
+    "subtitle": "Persisted queue: exponential retry and dead-letter.",
+    "filter": {
+      "all": "All",
+      "pending": "Pending",
+      "running": "Running",
+      "succeeded": "Succeeded",
+      "dead": "Dead"
+    },
+    "count": "{{count}} job(s)",
+    "col": {
+      "type": "Type",
+      "status": "Status",
+      "attempts": "Attempts",
+      "created": "Created",
+      "error": "Error"
+    },
+    "retry": "Reprocess",
+    "empty": "No jobs.",
+    "retried": "Job re-queued",
+    "retryError": "Failed to reprocess the job."
+  },
+  "optimizer": {
+    "title": "ROI Optimizer",
+    "subtitle": "Classifies products by performance (scale / keep / iterate / kill).",
+    "run": "Run cycle",
+    "noRuns": "No cycle run yet. Click \"Run cycle\".",
+    "decisions": "Decisions",
+    "decisionsForCycle": "Decisions · cycle {{n}}",
+    "col": {
+      "product": "Product",
+      "decision": "Decision",
+      "status": "Status"
+    },
+    "approve": "Approve",
+    "selectCycle": "Select a cycle to see its decisions.",
+    "runs": "Runs",
+    "cycleLabel": "Cycle {{n}}",
+    "decisionsCount": "{{count}} decisions",
+    "loadError": "Failed to load runs.",
+    "cycleRun": "Cycle executed",
+    "cycleRunDetail": "Decisions proposed for review.",
+    "runError": "Failed to run the cycle.",
+    "approved": "Decision approved and executed.",
+    "vetoed": "Decision vetoed."
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Dynamic platform values (raw JSON). AI caps, discovery, publishing.",
+    "empty": "No settings saved yet.",
+    "new": "New setting",
+    "key": "Key",
+    "valueJson": "Value (JSON)",
+    "add": "Add",
+    "loadError": "Failed to load settings.",
+    "saved": "Setting saved",
+    "saveError": "Failed to save \"{{key}}\"."
+  },
+  "login": {
+    "subtitle": "Autonomous e-book factory",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Sign in",
+    "invalid": "Invalid username or password."
+  },
+  "tutorial": {
+    "title": "How to use Tomo"
+  },
+  "productDetail": {
+    "back": "Products",
+    "stage": "stage: {{stage}}",
+    "approvePublish": "Approve publishing",
+    "reject": "Reject",
+    "openLp": "Open LP",
+    "downloadPdf": "Download PDF",
+    "manuscript": "Manuscript",
+    "manuscriptPending": "Manuscript not generated yet.",
+    "cover": "Cover",
+    "coverAlt": "E-book cover",
+    "coverPending": "Cover not generated yet.",
+    "landingPage": "Landing page",
+    "openLandingPage": "Open landing page",
+    "completePublishing": "Complete publishing",
+    "publishHint": "Create the product on Kiwify and enter the id and checkout URL to put it live.",
+    "kiwifyIdPlaceholder": "Kiwify product ID",
+    "markPublished": "Mark as published",
+    "publishedKiwify": "Published · Kiwify",
+    "funnel30d": "Funnel · 30 days",
+    "visits": "Visits",
+    "clicks": "Clicks",
+    "sales": "Sales",
+    "revenue": "Revenue",
+    "conversion": "Conversion",
+    "socialCalendar": "Social calendar · {{count}} posts",
+    "salesCopy": "Sales copy",
+    "outline": "Outline · {{count}} chapters",
+    "notFound": "Product not found.",
+    "approveHeader": "Publish product",
+    "approveMessage": "Approve publishing of this product?",
+    "approveConfirm": "Approve",
+    "approved": "Product approved for publishing.",
+    "rejectHeader": "Reject product",
+    "rejectMessage": "Send back for rework? The product returns to the writing stage.",
+    "rejectConfirm": "Reject",
+    "rejectReason": "Rejected in the panel",
+    "rejected": "Product sent back for rework.",
+    "publishMissing": "Enter the Kiwify id and the checkout URL.",
+    "published": "Product published.",
+    "fetchFromKiwify": "Fetch from Kiwify",
+    "kiwifyFound": "Product found on Kiwify",
+    "kiwifyNotFound": "Could not fetch the product from Kiwify."
+  },
+  "realtime": {
+    "job": {
+      "succeeded": "Job completed",
+      "failed": "Job failed",
+      "noDetail": "no detail"
+    },
+    "jobType": {
+      "ebookOutline": "Ebook outline",
+      "ebookChapter": "Chapter",
+      "ebookReview": "Review",
+      "ebookPdf": "PDF",
+      "ebookCover": "Cover",
+      "lpGenerate": "Landing page",
+      "kiwifyPublish": "Kiwify publishing",
+      "socialCalendar": "Social calendar",
+      "videoReel": "Video reel"
+    },
+    "product": {
+      "created": "New product in the pipeline",
+      "stageAdvanced": "Product advanced a stage",
+      "submittedForApproval": "Product awaiting approval",
+      "rejected": "Product rejected for rework",
+      "publishingStarted": "Publishing started",
+      "published": "Product published",
+      "retired": "Product retired"
+    }
+  },
+  "status": {
+    "niche": {
+      "Candidate": "Candidate",
+      "Selected": "Selected",
+      "Active": "Active",
+      "Discarded": "Discarded"
+    },
+    "product": {
+      "Pipeline": "Pipeline",
+      "AwaitingApproval": "Awaiting approval",
+      "Reworking": "Reworking",
+      "Publishing": "Publishing",
+      "Published": "Published",
+      "Synchronized": "Synchronized",
+      "Unsynchronized": "Unsynchronized",
+      "Live": "Live",
+      "Iterating": "Iterating",
+      "Retired": "Retired"
+    },
+    "platform": {
+      "Kiwify": "Kiwify",
+      "Hotmart": "Hotmart"
+    },
+    "job": {
+      "Pending": "Pending",
+      "Running": "Running",
+      "Succeeded": "Succeeded",
+      "Dead": "Dead"
+    },
+    "decision": {
+      "Scale": "Scale",
+      "Keep": "Keep",
+      "Iterate": "Iterate",
+      "Kill": "Kill"
+    },
+    "decisionStatus": {
+      "Proposed": "Proposed",
+      "Approved": "Approved",
+      "Executed": "Executed",
+      "Vetoed": "Vetoed"
+    },
+    "stage": {
+      "Outline": "Outline",
+      "Writing": "Writing",
+      "Review": "Review",
+      "Pdf": "PDF",
+      "Lp": "LP",
+      "Publishing": "Publishing",
+      "Live": "Live"
+    },
+    "social": {
+      "Planned": "Planned",
+      "Queued": "Queued",
+      "Published": "Published",
+      "Failed": "Failed",
+      "Skipped": "Skipped"
+    }
+  }
+}

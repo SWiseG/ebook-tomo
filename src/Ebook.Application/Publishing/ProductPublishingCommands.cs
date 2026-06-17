@@ -76,11 +76,24 @@ public sealed class CompletePublishingCommandHandler(
             return Result.Failure<bool>(PublishingErrors.ProductNotFound(command.ProductId));
         }
 
-        var result = product.MarkPublished(
-            command.KiwifyProductId, command.CheckoutUrl, product.LpUrl ?? string.Empty, clock.UtcNow);
+        // Caminho legado (detalhe): grava o checkout e marca publicado na Kiwify; a sincronização
+        // (disparada por ProductPublished) confirma o produto na plataforma → Synchronized.
+        var checkout = product.SetCheckoutLink(command.CheckoutUrl);
+        if (checkout.IsFailure)
+        {
+            return Result.Failure<bool>(checkout.Error);
+        }
+
+        var result = product.MarkPublished(Domain.Products.PublicationPlatform.Kiwify, clock.UtcNow);
         if (result.IsFailure)
         {
             return Result.Failure<bool>(result.Error);
+        }
+
+        // O operador informou o id Kiwify manualmente (confirmação) → marca sincronizado direto.
+        if (!string.IsNullOrWhiteSpace(command.KiwifyProductId))
+        {
+            product.MarkSynchronized(command.KiwifyProductId);
         }
 
         await unitOfWork.SaveChangesAsync(ct);

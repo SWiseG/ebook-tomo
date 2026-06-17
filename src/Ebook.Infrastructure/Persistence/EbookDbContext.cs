@@ -60,6 +60,10 @@ public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : D
             e.Property(x => x.KiwifyProductId).HasMaxLength(120);
             e.Property(x => x.CheckoutUrl).HasMaxLength(500);
             e.Property(x => x.LpUrl).HasMaxLength(500);
+            e.Property(x => x.Description).HasMaxLength(4000);
+            e.Property(x => x.EmailLanguage).HasMaxLength(20);
+            e.Property(x => x.Category).HasMaxLength(120);
+            e.Property(x => x.PublicationPlatform).HasConversion<string>().HasMaxLength(20);
             e.HasIndex(x => x.Status);
             e.HasIndex(x => x.KiwifyProductId);
             e.Ignore(x => x.DomainEvents);
