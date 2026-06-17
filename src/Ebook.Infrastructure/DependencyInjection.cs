@@ -87,6 +87,7 @@ public static class DependencyInjection
         services.AddScoped<ITrendSnapshotRepository, TrendSnapshotRepository>();
         services.AddScoped<ISaleRepository, SaleRepository>();
         services.AddScoped<ISocialPostRepository, SocialPostRepository>();
+        services.AddScoped<IChannelRepository, ChannelRepository>();
         services.AddScoped<INicheReader, NicheReader>();
         services.AddScoped<IAnalyticsRecorder, AnalyticsRecorder>();
         services.AddScoped<IMetricsAggregator, MetricsAggregator>();

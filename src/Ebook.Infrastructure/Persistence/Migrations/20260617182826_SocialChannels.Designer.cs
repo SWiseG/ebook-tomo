@@ -3,6 +3,7 @@ using System;
 using Ebook.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Ebook.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(EbookDbContext))]
-    partial class EbookDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260617182826_SocialChannels")]
+    partial class SocialChannels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.9");
@@ -544,10 +547,6 @@ namespace Ebook.Infrastructure.Persistence.Migrations
                     b.Property<string>("Caption")
                         .IsRequired()
                         .HasMaxLength(3000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CarouselPaths")
-                        .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ContentPath")

@@ -51,12 +51,18 @@ public sealed class SocialPost : Entity
     public string Hashtags { get; private set; }
     public string ContentPath { get; private set; }
     public string? MediaPath { get; private set; }
+
+    /// <summary>Slides do carrossel (CSV de caminhos relativos), incluindo a capa; nulo = imagem única.</summary>
+    public string? CarouselPaths { get; private set; }
     public string Utm { get; private set; }
     public DateTime ScheduledAtUtc { get; private set; }
     public DateTime? PublishedAtUtc { get; private set; }
     public string? ExternalId { get; private set; }
     public SocialPostStatus Status { get; private set; }
     public string MetricsJson { get; private set; }
+
+    /// <summary>Aprovado para publicação (gate). Nulo = aguardando revisão no painel.</summary>
+    public DateTime? ApprovedAtUtc { get; private set; }
 
     public static SocialPost Plan(
         Guid productId,
@@ -83,6 +89,37 @@ public sealed class SocialPost : Entity
         };
 
     public void SetMedia(string mediaPath) => MediaPath = mediaPath;
+
+    /// <summary>Define os slides do carrossel (CSV de caminhos; o primeiro é a capa).</summary>
+    public void SetCarousel(string carouselPathsCsv) => CarouselPaths = carouselPathsCsv;
+
+    /// <summary>Aprova o post para publicação (gate). Idempotente; só faz sentido enquanto Planned.</summary>
+    public Result Approve(DateTime utcNow)
+    {
+        if (Status != SocialPostStatus.Planned)
+        {
+            return Result.Failure(SocialErrors.InvalidTransition(Status, SocialPostStatus.Queued));
+        }
+
+        ApprovedAtUtc = utcNow;
+        return Result.Success();
+    }
+
+    /// <summary>Remove a aprovação (volta ao gate). Só enquanto ainda não publicado.</summary>
+    public void Unapprove() => ApprovedAtUtc = null;
+
+    /// <summary>Edição de copy no painel antes de publicar (só enquanto Planned).</summary>
+    public Result EditContent(string caption, string hashtags)
+    {
+        if (Status != SocialPostStatus.Planned)
+        {
+            return Result.Failure(SocialErrors.InvalidTransition(Status, SocialPostStatus.Planned));
+        }
+
+        Caption = caption;
+        Hashtags = hashtags;
+        return Result.Success();
+    }
 
     public Result Queue()
     {

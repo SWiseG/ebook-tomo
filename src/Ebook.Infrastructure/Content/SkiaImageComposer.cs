@@ -93,6 +93,80 @@ public sealed class SkiaImageComposer : IImageComposer
         return Encode(surface);
     }
 
+    public IReadOnlyList<byte[]> RenderCarousel(CarouselArt art, byte[]? backgroundPhoto = null)
+    {
+        const int w = 1080;
+        const int h = 1080;
+        var images = new List<byte[]>
+        {
+            RenderCarouselSlide(w, h, art.Palette, backgroundPhoto, cover: true, number: 0, text: art.Headline, brand: art.Brand),
+        };
+
+        var n = 1;
+        foreach (var slide in art.Slides)
+        {
+            images.Add(RenderCarouselSlide(w, h, art.Palette, backgroundPhoto, cover: false, number: n, text: slide, brand: null));
+            n++;
+        }
+
+        return images;
+    }
+
+    private static byte[] RenderCarouselSlide(
+        int w, int h, NichePalette palette, byte[]? photo, bool cover, int number, string text, string? brand)
+    {
+        using var surface = SKSurface.Create(new SKImageInfo(w, h));
+        var canvas = surface.Canvas;
+        FillBackground(canvas, w, h, palette, photo);
+
+        if (!cover)
+        {
+            using var badgeFace = Typeface(palette.HeadingFont, SKFontStyleWeight.Bold);
+            using var badgePaint = new SKPaint
+            {
+                Color = SKColor.Parse(palette.Accent), IsAntialias = true,
+                TextSize = 72, Typeface = badgeFace, TextAlign = SKTextAlign.Left,
+            };
+            canvas.DrawText($"{number:00}", 90, 170, badgePaint);
+        }
+
+        using var headFace = Typeface(palette.HeadingFont, cover ? SKFontStyleWeight.Bold : SKFontStyleWeight.SemiBold);
+        using var headPaint = new SKPaint
+        {
+            Color = SKColor.Parse(palette.OnDark), IsAntialias = true,
+            TextSize = cover ? 90 : 62, Typeface = headFace, TextAlign = SKTextAlign.Center,
+        };
+        var y = DrawWrapped(canvas, text, headPaint, w / 2f, cover ? h * 0.40f : h * 0.34f, w - 160, cover ? 110 : 82);
+
+        using (var accent = new SKPaint { Color = SKColor.Parse(palette.Accent), IsAntialias = true })
+        {
+            canvas.DrawRect(SKRect.Create(w / 2f - 90, y + 18, 180, 10), accent);
+        }
+
+        using var bodyFace = Typeface(palette.BodyFont, SKFontStyleWeight.Normal);
+        if (cover)
+        {
+            using var hintPaint = new SKPaint
+            {
+                Color = SKColor.Parse(palette.OnDark).WithAlpha(210), IsAntialias = true,
+                TextSize = 40, Typeface = bodyFace, TextAlign = SKTextAlign.Center,
+            };
+            canvas.DrawText("arraste →", w / 2f, h - 110, hintPaint);
+
+            if (!string.IsNullOrWhiteSpace(brand))
+            {
+                using var brandPaint = new SKPaint
+                {
+                    Color = SKColor.Parse(palette.OnDark).WithAlpha(180), IsAntialias = true,
+                    TextSize = 34, Typeface = bodyFace, TextAlign = SKTextAlign.Center,
+                };
+                canvas.DrawText(brand, w / 2f, 120, brandPaint);
+            }
+        }
+
+        return Encode(surface);
+    }
+
     public byte[] RenderMockup(byte[] coverPng, NichePalette palette)
     {
         const int w = 1600;

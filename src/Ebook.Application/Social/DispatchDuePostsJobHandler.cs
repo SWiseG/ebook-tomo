@@ -9,9 +9,9 @@ using Microsoft.Extensions.Logging;
 namespace Ebook.Application.Social;
 
 /// <summary>
-/// Cron diário (E08-03): pega os posts vencidos e ainda planejados, marca-os como Queued
-/// e enfileira a publicação de cada um — desde que <c>social.autoPublish</c> esteja ligado.
-/// Caso contrário, não faz nada (os posts ficam agendados e visíveis no painel).
+/// Cron diário (E08-03): pega os posts vencidos, marca-os como Queued e enfileira a publicação.
+/// Gate de aprovação: por padrão só despacha posts <b>aprovados</b> no painel; com
+/// <c>social.autoPublish</c> ligado (auto-aprovar) despacha todos os vencidos sem revisão.
 /// </summary>
 public sealed class DispatchDuePostsJobHandler(
     ISocialPostRepository posts,
@@ -28,14 +28,9 @@ public sealed class DispatchDuePostsJobHandler(
 
     public async Task<Result> ExecuteAsync(string payloadJson, CancellationToken ct)
     {
-        var autoPublish = await settings.GetOrDefaultAsync(SettingKeys.SocialAutoPublish, false, ct);
-        if (!autoPublish)
-        {
-            logger.LogInformation("Dispatch social ignorado (social.autoPublish=false); posts permanecem agendados.");
-            return Result.Success();
-        }
-
-        var due = await posts.GetDueAsync(clock.UtcNow, BatchSize, ct);
+        // auto-aprovar (social.autoPublish) pula o gate; senão só despacha os aprovados no painel.
+        var autoApprove = await settings.GetOrDefaultAsync(SettingKeys.SocialAutoPublish, false, ct);
+        var due = await posts.GetDueAsync(clock.UtcNow, BatchSize, approvedOnly: !autoApprove, ct);
         var dispatched = 0;
         foreach (var post in due)
         {

@@ -34,6 +34,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/jobs/jobs').then((m) => m.Jobs),
       },
       {
+        path: 'channels',
+        loadComponent: () => import('./features/channels/channels').then((m) => m.Channels),
+      },
+      {
         path: 'optimizer',
         loadComponent: () => import('./features/optimizer/optimizer').then((m) => m.Optimizer),
       },

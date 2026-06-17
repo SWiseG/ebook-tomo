@@ -1,0 +1,139 @@
+<ng-container *transloco="let t">
+  <div class="page-head anim-in">
+    <div>
+      <h1>{{ t('channels.title') }}</h1>
+      <div class="sub">{{ t('channels.subtitle') }}</div>
+    </div>
+    <div class="actions">
+      <p-button
+        [label]="t('channels.new')"
+        icon="pi pi-plus"
+        [disabled]="availableNiches().length === 0"
+        (onClick)="openCreate()"
+      />
+    </div>
+  </div>
+
+  @if (channels(); as list) {
+    <p-table class="anim-in cards-sm" [value]="list" [rowHover]="true" size="small">
+      <ng-template #header>
+        <tr>
+          <th>{{ t('channels.col.niche') }}</th>
+          <th>{{ t('channels.col.name') }}</th>
+          <th>{{ t('channels.col.platform') }}</th>
+          <th>{{ t('channels.col.status') }}</th>
+          <th></th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-c>
+        <tr>
+          <td [attr.data-label]="t('channels.col.niche')"><strong>{{ c.nicheName }}</strong></td>
+          <td [attr.data-label]="t('channels.col.name')">{{ c.name }}</td>
+          <td [attr.data-label]="t('channels.col.platform')">{{ c.platform }}</td>
+          <td [attr.data-label]="t('channels.col.status')">
+            <p-tag
+              [value]="c.connected ? t('channels.connectedTag') : t('channels.disconnectedTag')"
+              [severity]="c.connected ? 'success' : 'warn'"
+            />
+          </td>
+          <td>
+            <p-button
+              [label]="c.connected ? t('channels.edit') : t('channels.connect')"
+              [icon]="c.connected ? 'pi pi-pencil' : 'pi pi-link'"
+              size="small"
+              [outlined]="true"
+              (onClick)="openConnect(c)"
+            />
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="5"><div class="empty">{{ t('channels.empty') }}</div></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  } @else {
+    <app-loading variant="table" [rows]="4" />
+  }
+
+  <!-- Criar canal -->
+  <p-dialog
+    [visible]="createDialog()"
+    (visibleChange)="createDialog.set($event)"
+    [modal]="true"
+    [style]="{ width: '440px' }"
+    [header]="t('channels.new')"
+  >
+    <div class="form-grid">
+      @if (availableNiches().length === 0) {
+        <p class="muted">{{ t('channels.allNichesHaveChannel') }}</p>
+      } @else {
+        <div class="field">
+          <label>{{ t('channels.col.niche') }}</label>
+          <p-select
+            [options]="availableNiches()"
+            [(ngModel)]="newNicheId"
+            optionLabel="name"
+            optionValue="id"
+            appendTo="body"
+            fluid
+          />
+        </div>
+        <div class="field">
+          <label>{{ t('channels.col.name') }}</label>
+          <input pInputText [(ngModel)]="newName" [placeholder]="t('channels.namePlaceholder')" fluid />
+        </div>
+      }
+    </div>
+    <ng-template #footer>
+      <p-button [label]="t('common.cancel')" [text]="true" severity="secondary" (onClick)="createDialog.set(false)" />
+      <p-button
+        [label]="t('common.save')"
+        icon="pi pi-check"
+        [loading]="saving()"
+        [disabled]="!newNicheId"
+        (onClick)="create()"
+      />
+    </ng-template>
+  </p-dialog>
+
+  <!-- Conectar Meta -->
+  <p-dialog
+    [visible]="connectDialog()"
+    (visibleChange)="connectDialog.set($event)"
+    [modal]="true"
+    [style]="{ width: '520px' }"
+    [header]="t('channels.connectTitle')"
+  >
+    <div class="form-grid">
+      <p class="muted">{{ t('channels.connectHint') }}</p>
+      <div class="field">
+        <label>{{ t('channels.col.name') }}</label>
+        <input pInputText [(ngModel)]="connName" fluid />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>{{ t('channels.pageId') }}</label>
+          <input pInputText [(ngModel)]="connPageId" fluid />
+        </div>
+        <div class="field">
+          <label>{{ t('channels.igUserId') }}</label>
+          <input pInputText [(ngModel)]="connIgUserId" fluid />
+        </div>
+      </div>
+      <div class="field">
+        <label>{{ t('channels.accessToken') }}</label>
+        <input pInputText type="password" [(ngModel)]="connAccessToken" autocomplete="off" [placeholder]="t('channels.tokenPlaceholder')" fluid />
+      </div>
+      <div class="field">
+        <label>{{ t('channels.mediaBaseUrl') }}</label>
+        <input pInputText [(ngModel)]="connMediaBaseUrl" placeholder="https://app.tomolibrary.com.br" fluid />
+      </div>
+    </div>
+    <ng-template #footer>
+      <p-button [label]="t('common.cancel')" [text]="true" severity="secondary" (onClick)="connectDialog.set(false)" />
+      <p-button [label]="t('channels.saveConnection')" icon="pi pi-check" [loading]="saving()" (onClick)="saveConnect()" />
+    </ng-template>
+  </p-dialog>
+</ng-container>

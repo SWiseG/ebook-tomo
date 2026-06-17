@@ -22,37 +22,48 @@ public sealed class MetaGraphPublisher(
     public async Task<Result<SocialPublishOutcome>> PublishAsync(SocialPublishRequest request, CancellationToken ct)
     {
         var o = options.Value;
-        if (!o.HasCredentials)
+        // credenciais do canal (por nicho) têm prioridade; sem canal, cai no Meta global (legado).
+        var c = request.Channel is not null
+            ? new MetaCreds(request.Channel.PageId, request.Channel.IgUserId, request.Channel.AccessToken, request.Channel.PublicMediaBaseUrl)
+            : new MetaCreds(o.PageId, o.IgUserId, o.AccessToken, o.PublicMediaBaseUrl);
+
+        if (!c.HasCredentials)
         {
             logger.LogWarning("Meta sem credenciais; publicação em {Network} indisponível", request.Network);
             return Result.Failure<SocialPublishOutcome>(SocialErrorsApp.NotConfigured);
         }
 
-        if (string.IsNullOrWhiteSpace(request.MediaPath) || !o.MediaConfigured)
+        if (string.IsNullOrWhiteSpace(request.MediaPath) || string.IsNullOrWhiteSpace(c.MediaBase))
         {
             return Result.Failure<SocialPublishOutcome>(SocialErrorsApp.NotConfigured);
         }
 
-        var mediaUrl = $"{o.PublicMediaBaseUrl.TrimEnd('/')}/media/{request.MediaPath}";
+        var mediaUrl = $"{c.MediaBase.TrimEnd('/')}/media/{request.MediaPath}";
         var isVideo = request.MediaPath.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase);
 
         return request.Network switch
         {
-            SocialNetwork.Facebook => await PublishFacebookAsync(o, request, mediaUrl, isVideo, ct),
-            SocialNetwork.Instagram => await PublishInstagramAsync(o, request, mediaUrl, isVideo, ct),
+            SocialNetwork.Facebook => await PublishFacebookAsync(o, c, request, mediaUrl, isVideo, ct),
+            SocialNetwork.Instagram => await PublishInstagramAsync(o, c, request, mediaUrl, isVideo, ct),
             _ => Result.Failure<SocialPublishOutcome>(SocialErrorsApp.AutomationPending) // X em P1
         };
     }
 
     private async Task<Result<SocialPublishOutcome>> PublishInstagramAsync(
-        MetaOptions o, SocialPublishRequest request, string mediaUrl, bool isVideo, CancellationToken ct)
+        MetaOptions o, MetaCreds c, SocialPublishRequest request, string mediaUrl, bool isVideo, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(o.IgUserId))
+        if (string.IsNullOrWhiteSpace(c.IgUserId))
         {
             return Result.Failure<SocialPublishOutcome>(SocialErrorsApp.NotConfigured);
         }
 
-        var container = new Dictionary<string, string> { ["caption"] = request.Caption, ["access_token"] = o.AccessToken };
+        // carrossel (E09): múltiplas imagens → containers filhos + container pai CAROUSEL.
+        if (request.CarouselPaths is { Count: > 1 } && !isVideo)
+        {
+            return await PublishInstagramCarouselAsync(o, c, request, ct);
+        }
+
+        var container = new Dictionary<string, string> { ["caption"] = request.Caption, ["access_token"] = c.AccessToken };
         if (isVideo)
         {
             container["media_type"] = "REELS";
@@ -63,7 +74,7 @@ public sealed class MetaGraphPublisher(
             container["image_url"] = mediaUrl;
         }
 
-        var created = await PostAsync(Url(o, o.IgUserId, "media"), container, ct);
+        var created = await PostAsync(Url(o, c.IgUserId!, "media"), container, ct);
         if (created.IsFailure)
         {
             return Result.Failure<SocialPublishOutcome>(created.Error);
@@ -77,7 +88,7 @@ public sealed class MetaGraphPublisher(
 
         if (isVideo)
         {
-            var ready = await WaitForContainerAsync(o, creationId, ct);
+            var ready = await WaitForContainerAsync(o, c, creationId, ct);
             if (ready.IsFailure)
             {
                 return Result.Failure<SocialPublishOutcome>(ready.Error);
@@ -85,8 +96,8 @@ public sealed class MetaGraphPublisher(
         }
 
         var published = await PostAsync(
-            Url(o, o.IgUserId, "media_publish"),
-            new Dictionary<string, string> { ["creation_id"] = creationId, ["access_token"] = o.AccessToken },
+            Url(o, c.IgUserId!, "media_publish"),
+            new Dictionary<string, string> { ["creation_id"] = creationId, ["access_token"] = c.AccessToken },
             ct);
         if (published.IsFailure)
         {
@@ -98,16 +109,76 @@ public sealed class MetaGraphPublisher(
         return Result.Success(new SocialPublishOutcome(id));
     }
 
-    private async Task<Result<SocialPublishOutcome>> PublishFacebookAsync(
-        MetaOptions o, SocialPublishRequest request, string mediaUrl, bool isVideo, CancellationToken ct)
+    private async Task<Result<SocialPublishOutcome>> PublishInstagramCarouselAsync(
+        MetaOptions o, MetaCreds c, SocialPublishRequest request, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(o.PageId))
+        var childIds = new List<string>();
+        foreach (var path in request.CarouselPaths!)
+        {
+            var url = $"{c.MediaBase!.TrimEnd('/')}/media/{path}";
+            var child = await PostAsync(Url(o, c.IgUserId!, "media"), new Dictionary<string, string>
+            {
+                ["image_url"] = url,
+                ["is_carousel_item"] = "true",
+                ["access_token"] = c.AccessToken,
+            }, ct);
+            if (child.IsFailure)
+            {
+                return Result.Failure<SocialPublishOutcome>(child.Error);
+            }
+
+            var childId = GetString(child.Value, "id");
+            if (childId is null)
+            {
+                return Result.Failure<SocialPublishOutcome>(SocialErrorsApp.AutomationPending);
+            }
+
+            childIds.Add(childId);
+        }
+
+        var parent = await PostAsync(Url(o, c.IgUserId!, "media"), new Dictionary<string, string>
+        {
+            ["media_type"] = "CAROUSEL",
+            ["children"] = string.Join(',', childIds),
+            ["caption"] = request.Caption,
+            ["access_token"] = c.AccessToken,
+        }, ct);
+        if (parent.IsFailure)
+        {
+            return Result.Failure<SocialPublishOutcome>(parent.Error);
+        }
+
+        var creationId = GetString(parent.Value, "id");
+        if (creationId is null)
+        {
+            return Result.Failure<SocialPublishOutcome>(SocialErrorsApp.AutomationPending);
+        }
+
+        var published = await PostAsync(Url(o, c.IgUserId!, "media_publish"), new Dictionary<string, string>
+        {
+            ["creation_id"] = creationId,
+            ["access_token"] = c.AccessToken,
+        }, ct);
+        if (published.IsFailure)
+        {
+            return Result.Failure<SocialPublishOutcome>(published.Error);
+        }
+
+        var id = GetString(published.Value, "id") ?? creationId;
+        logger.LogInformation("Carrossel publicado no Instagram ({Id}, {Count} slides)", id, childIds.Count);
+        return Result.Success(new SocialPublishOutcome(id));
+    }
+
+    private async Task<Result<SocialPublishOutcome>> PublishFacebookAsync(
+        MetaOptions o, MetaCreds c, SocialPublishRequest request, string mediaUrl, bool isVideo, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(c.PageId))
         {
             return Result.Failure<SocialPublishOutcome>(SocialErrorsApp.NotConfigured);
         }
 
         var edge = isVideo ? "videos" : "photos";
-        var body = new Dictionary<string, string> { ["access_token"] = o.AccessToken };
+        var body = new Dictionary<string, string> { ["access_token"] = c.AccessToken };
         if (isVideo)
         {
             body["file_url"] = mediaUrl;
@@ -119,7 +190,7 @@ public sealed class MetaGraphPublisher(
             body["caption"] = request.Caption;
         }
 
-        var posted = await PostAsync(Url(o, o.PageId, edge), body, ct);
+        var posted = await PostAsync(Url(o, c.PageId!, edge), body, ct);
         if (posted.IsFailure)
         {
             return Result.Failure<SocialPublishOutcome>(posted.Error);
@@ -135,9 +206,9 @@ public sealed class MetaGraphPublisher(
         return Result.Success(new SocialPublishOutcome(id));
     }
 
-    private async Task<Result> WaitForContainerAsync(MetaOptions o, string creationId, CancellationToken ct)
+    private async Task<Result> WaitForContainerAsync(MetaOptions o, MetaCreds c, string creationId, CancellationToken ct)
     {
-        var statusUrl = $"{o.ApiBase}/{o.GraphApiVersion}/{creationId}?fields=status_code&access_token={o.AccessToken}";
+        var statusUrl = $"{o.ApiBase}/{o.GraphApiVersion}/{creationId}?fields=status_code&access_token={c.AccessToken}";
         for (var attempt = 0; attempt < o.ReelPollAttempts; attempt++)
         {
             using var response = await http.GetAsync(statusUrl, ct);
@@ -204,4 +275,12 @@ public sealed class MetaGraphPublisher(
 
     private static readonly Error VideoContainerError =
         new("Social.Meta.ContainerFailed", "O container de Reel não ficou pronto a tempo.");
+
+    /// <summary>Credenciais efetivas da publicação (do canal do nicho ou do Meta global).</summary>
+    private sealed record MetaCreds(string? PageId, string? IgUserId, string AccessToken, string? MediaBase)
+    {
+        public bool HasCredentials =>
+            !string.IsNullOrWhiteSpace(AccessToken)
+            && (!string.IsNullOrWhiteSpace(IgUserId) || !string.IsNullOrWhiteSpace(PageId));
+    }
 }

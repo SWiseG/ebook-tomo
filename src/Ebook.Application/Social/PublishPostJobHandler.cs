@@ -16,6 +16,7 @@ namespace Ebook.Application.Social;
 public sealed class PublishPostJobHandler(
     ISocialPostRepository posts,
     IProductRepository products,
+    IChannelRepository channels,
     ISocialPublisher publisher,
     IUnitOfWork unitOfWork,
     IClock clock,
@@ -43,8 +44,24 @@ public sealed class PublishPostJobHandler(
         var caption = string.IsNullOrWhiteSpace(post.Hashtags) ? post.Caption : $"{post.Caption}\n\n{post.Hashtags}";
         var link = product?.CheckoutUrl ?? product?.LpUrl;
 
+        // roteia pelo canal do nicho (1 conta por nicho); sem canal conectado, cai no Meta global.
+        ChannelCredentials? channelCreds = null;
+        if (product is not null)
+        {
+            var channel = await channels.GetByNicheAsync(product.NicheId, ct);
+            if (channel is { IsConnected: true })
+            {
+                channelCreds = new ChannelCredentials(
+                    channel.PageId, channel.IgUserId, channel.AccessToken!, channel.PublicMediaBaseUrl);
+            }
+        }
+
+        var carousel = string.IsNullOrWhiteSpace(post.CarouselPaths)
+            ? null
+            : post.CarouselPaths.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
         var outcome = await publisher.PublishAsync(
-            new SocialPublishRequest(post.Network, caption, post.MediaPath, link), ct);
+            new SocialPublishRequest(post.Network, caption, post.MediaPath, link, channelCreds, carousel), ct);
 
         if (outcome.IsFailure)
         {

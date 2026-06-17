@@ -84,6 +84,10 @@ export class Shell {
       ],
     },
     {
+      title: 'nav.groups.distribution',
+      items: [{ path: '/channels', label: 'nav.channels', icon: 'pi pi-megaphone' }],
+    },
+    {
       title: 'nav.groups.operation',
       items: [
         { path: '/jobs', label: 'nav.jobs', icon: 'pi pi-bolt' },

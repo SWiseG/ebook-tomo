@@ -142,6 +142,46 @@
   gap: t.$space-3;
 }
 
+.social-thumb {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: t.$radius-sm;
+  border: 1px solid var(--p-content-border-color);
+}
+
+.social-approved {
+  color: var(--p-green-500, #22c55e);
+  font-size: 0.8rem;
+  margin-left: t.$space-1;
+}
+
+.social-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.$space-1;
+  margin-top: t.$space-1;
+}
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-3;
+}
+
+.form-grid .field {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-1;
+
+  label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--p-text-muted-color);
+  }
+}
+
 .social-day {
   flex: none;
   font-family: t.$font-mono;

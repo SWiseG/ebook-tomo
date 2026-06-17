@@ -16,12 +16,14 @@
     "groups": {
       "overview": "Vista general",
       "content": "Contenido",
+      "distribution": "Distribución",
       "operation": "Operación",
       "help": "Ayuda"
     },
     "dashboard": "Panel",
     "niches": "Nichos",
     "products": "Productos",
+    "channels": "Canales",
     "jobs": "Jobs",
     "optimizer": "Optimizador",
     "settings": "Configuración",
@@ -213,6 +215,36 @@
     "saved": "Configuración guardada",
     "saveError": "Error al guardar \"{{key}}\"."
   },
+  "channels": {
+    "title": "Canales",
+    "subtitle": "Cuentas sociales por nicho (1 cuenta por nicho).",
+    "new": "Nuevo canal",
+    "loadError": "Error al cargar canales.",
+    "created": "Canal creado",
+    "connected": "Canal conectado",
+    "empty": "Aún no hay canales.",
+    "namePlaceholder": "Ej.: Finanzas en Instagram",
+    "allNichesHaveChannel": "Todos los nichos ya tienen canal.",
+    "edit": "Editar",
+    "connect": "Conectar",
+    "connectedTag": "Conectado",
+    "disconnectedTag": "Desconectado",
+    "connectTitle": "Conectar Meta",
+    "connectHint": "Pega el token de larga duración y los ids de Meta (Página/Instagram).",
+    "pageId": "ID de la Página (Facebook)",
+    "igUserId": "ID de Instagram Business",
+    "accessToken": "Token de acceso",
+    "tokenPlaceholder": "Token de larga duración",
+    "tokenRequired": "Introduce el token de acceso.",
+    "mediaBaseUrl": "URL base de medios",
+    "saveConnection": "Guardar conexión",
+    "col": {
+      "niche": "Nicho",
+      "name": "Canal",
+      "platform": "Plataforma",
+      "status": "Estado"
+    }
+  },
   "login": {
     "subtitle": "Fábrica autónoma de e-books",
     "username": "Usuario",
@@ -265,7 +297,18 @@
     "published": "Producto publicado.",
     "fetchFromKiwify": "Buscar en Kiwify",
     "kiwifyFound": "Producto encontrado en Kiwify",
-    "kiwifyNotFound": "No se pudo buscar el producto en Kiwify."
+    "kiwifyNotFound": "No se pudo buscar el producto en Kiwify.",
+    "approve": "Aprobar",
+    "unapprove": "Quitar aprobación",
+    "approved2": "Aprobado",
+    "editPost": "Editar post",
+    "publishNow": "Publicar ahora",
+    "postCaption": "Leyenda",
+    "postHashtags": "Hashtags",
+    "postApproved": "Post aprobado",
+    "postUnapproved": "Aprobación quitada",
+    "postSaved": "Post actualizado",
+    "postPublishing": "Publicación encolada"
   },
   "realtime": {
     "job": {

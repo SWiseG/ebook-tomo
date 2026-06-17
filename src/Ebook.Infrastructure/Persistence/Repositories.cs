@@ -67,9 +67,10 @@ public sealed class SocialPostRepository(EbookDbContext db) : ISocialPostReposit
     public Task<bool> ExistsForProductAsync(Guid productId, CancellationToken ct = default) =>
         db.SocialPosts.AsNoTracking().AnyAsync(p => p.ProductId == productId, ct);
 
-    public async Task<IReadOnlyList<SocialPost>> GetDueAsync(DateTime nowUtc, int take, CancellationToken ct = default) =>
+    public async Task<IReadOnlyList<SocialPost>> GetDueAsync(DateTime nowUtc, int take, bool approvedOnly, CancellationToken ct = default) =>
         await db.SocialPosts
-            .Where(p => p.Status == SocialPostStatus.Planned && p.ScheduledAtUtc <= nowUtc)
+            .Where(p => p.Status == SocialPostStatus.Planned && p.ScheduledAtUtc <= nowUtc
+                && (!approvedOnly || p.ApprovedAtUtc != null))
             .OrderBy(p => p.ScheduledAtUtc)
             .Take(take)
             .ToListAsync(ct);
@@ -79,6 +80,20 @@ public sealed class SocialPostRepository(EbookDbContext db) : ISocialPostReposit
             .Where(p => p.ProductId == productId)
             .OrderBy(p => p.Day)
             .ToListAsync(ct);
+}
+
+public sealed class ChannelRepository(EbookDbContext db) : IChannelRepository
+{
+    public void Add(Channel channel) => db.Channels.Add(channel);
+
+    public Task<Channel?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
+        db.Channels.FirstOrDefaultAsync(c => c.Id == id, ct);
+
+    public Task<Channel?> GetByNicheAsync(Guid nicheId, CancellationToken ct = default) =>
+        db.Channels.FirstOrDefaultAsync(c => c.NicheId == nicheId, ct);
+
+    public async Task<IReadOnlyList<Channel>> ListAsync(CancellationToken ct = default) =>
+        await db.Channels.AsNoTracking().OrderBy(c => c.Name).ToListAsync(ct);
 }
 
 public sealed class KnowledgeRepository(EbookDbContext db) : IKnowledgeRepository

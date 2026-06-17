@@ -35,6 +35,16 @@ public sealed record CheckoutLinkRequest(string CheckoutUrl);
 
 public sealed record MarkPublishedRequest(string Platform);
 
+public sealed record CreateChannelRequest(Guid NicheId, string Name);
+
+public sealed record ConnectChannelRequest(
+    string? Name, string? PageId, string? IgUserId, string AccessToken,
+    string? PublicMediaBaseUrl, DateTime? TokenExpiresAtUtc);
+
+public sealed record SetApprovalRequest(bool Approved);
+
+public sealed record EditPostRequest(string Caption, string Hashtags);
+
 public static class Endpoints
 {
     public static void MapApiEndpoints(this WebApplication app)
@@ -218,6 +228,40 @@ public static class Endpoints
             (await dispatcher.QueryAsync(new GetProductSocialQuery(id), ct)).ToHttp())
             .WithTags("Products")
             .WithSummary("Agenda de conteúdo social do produto (calendário de 30 dias)");
+
+        // ── Distribuição: canais (1 por nicho) ──
+        secured.MapGet("/channels", async (IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.QueryAsync(new GetChannelsQuery(), ct)).ToHttp())
+            .WithTags("Distribution")
+            .WithSummary("Lista os canais sociais (por nicho)");
+
+        secured.MapPost("/channels", async (CreateChannelRequest request, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(new CreateChannelCommand(request.NicheId, request.Name), ct)).ToHttp())
+            .WithTags("Distribution")
+            .WithSummary("Cria um canal para um nicho");
+
+        secured.MapPut("/channels/{id:guid}/connect", async (Guid id, ConnectChannelRequest request, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(new ConnectChannelCommand(
+                id, request.Name, request.PageId, request.IgUserId, request.AccessToken,
+                request.PublicMediaBaseUrl, request.TokenExpiresAtUtc), ct)).ToHttp())
+            .WithTags("Distribution")
+            .WithSummary("Conecta/atualiza as credenciais do Meta no canal");
+
+        // ── Distribuição: gestão de posts (gate de aprovação / edição / publicar agora) ──
+        secured.MapPost("/social/posts/{id:guid}/approval", async (Guid id, SetApprovalRequest request, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(new SetPostApprovalCommand(id, request.Approved), ct)).ToHttp())
+            .WithTags("Distribution")
+            .WithSummary("Aprova/desaprova um post para publicação (gate)");
+
+        secured.MapPut("/social/posts/{id:guid}/content", async (Guid id, EditPostRequest request, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(new EditPostContentCommand(id, request.Caption, request.Hashtags), ct)).ToHttp())
+            .WithTags("Distribution")
+            .WithSummary("Edita a copy/hashtags de um post (antes de publicar)");
+
+        secured.MapPost("/social/posts/{id:guid}/publish-now", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(new PublishPostNowCommand(id), ct)).ToHttp())
+            .WithTags("Distribution")
+            .WithSummary("Publica o post imediatamente (aprova, enfileira e publica)");
 
         secured.MapGet("/products/{id:guid}/metrics", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
             (await dispatcher.QueryAsync(new GetProductMetricsQuery(id), ct)).ToHttp())

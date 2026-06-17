@@ -93,11 +93,32 @@ public sealed class GenerateCalendarJobHandler(
                 product.Id, network, postType, item.Day, item.Copy, hashtags,
                 ContentPaths.SocialCalendar(product.Slug), utm, scheduledAt);
 
-            var card = composer.RenderSocial(
-                new SocialArt(item.Headline, product.Title, ImageTemplate.SocialCard, palette));
-            var stored = await artifactStore.WriteBytesAsync(
-                ContentPaths.SocialCard(product.Slug, item.Day), card, ct);
-            post.SetMedia(stored.RelativePath);
+            var slides = item.Slides?.Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.Trim()).ToList() ?? [];
+            if (slides.Count >= 2)
+            {
+                // carrossel (E09): capa com headline + 1 slide por texto; o primeiro caminho é a capa.
+                var images = composer.RenderCarousel(new CarouselArt(item.Headline, product.Title, slides, palette));
+                var paths = new List<string>(images.Count);
+                for (var i = 0; i < images.Count; i++)
+                {
+                    var path = i == 0
+                        ? ContentPaths.SocialCard(product.Slug, item.Day)
+                        : ContentPaths.SocialSlide(product.Slug, item.Day, i);
+                    var stored = await artifactStore.WriteBytesAsync(path, images[i], ct);
+                    paths.Add(stored.RelativePath);
+                }
+
+                post.SetMedia(paths[0]);
+                post.SetCarousel(string.Join(',', paths));
+            }
+            else
+            {
+                var card = composer.RenderSocial(
+                    new SocialArt(item.Headline, product.Title, ImageTemplate.SocialCard, palette));
+                var stored = await artifactStore.WriteBytesAsync(
+                    ContentPaths.SocialCard(product.Slug, item.Day), card, ct);
+                post.SetMedia(stored.RelativePath);
+            }
 
             posts.Add(post);
             created++;

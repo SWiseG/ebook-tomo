@@ -11,6 +11,8 @@ import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
+import { DialogModule } from 'primeng/dialog';
 import { ConfirmationService } from 'primeng/api';
 import {
   KiwifyMatch,
@@ -39,6 +41,8 @@ const STAGES = ['Outline', 'Writing', 'Review', 'Pdf', 'Lp'] as const;
     TagModule,
     ButtonModule,
     InputTextModule,
+    TextareaModule,
+    DialogModule,
     Loading,
   ],
   templateUrl: './product-detail.html',
@@ -66,6 +70,13 @@ export class ProductDetail implements OnDestroy {
   kiwifyProductId = '';
   checkoutUrl = '';
   readonly matching = signal(false);
+
+  // Calendário social: edição de copy (dialog) + ações do gate.
+  readonly editPostDialog = signal(false);
+  readonly savingPost = signal(false);
+  private editingPostId: string | null = null;
+  editCaption = '';
+  editHashtags = '';
 
   private objectUrl: string | null = null;
 
@@ -140,6 +151,64 @@ export class ProductDetail implements OnDestroy {
       default:
         return 'info';
     }
+  }
+
+  /** URL pública do criativo do post (rota anônima /media/*). */
+  mediaUrl(post: SocialPostItem): string | null {
+    return post.mediaPath ? `/media/${post.mediaPath}` : null;
+  }
+
+  /** Aprova/desaprova o post (gate). */
+  setPostApproval(post: SocialPostItem, approved: boolean): void {
+    this.http.post(`/api/v1/social/posts/${post.id}/approval`, { approved }).subscribe({
+      next: () => {
+        this.notify.success(
+          this.t.translate(approved ? 'productDetail.postApproved' : 'productDetail.postUnapproved'));
+        this.loadSocial();
+      },
+      error: (e: { error?: { detail?: string } }) =>
+        this.notify.error(e.error?.detail ?? this.t.translate('common.actionFailed')),
+    });
+  }
+
+  openEditPost(post: SocialPostItem): void {
+    this.editingPostId = post.id;
+    this.editCaption = post.caption;
+    this.editHashtags = post.hashtags;
+    this.editPostDialog.set(true);
+  }
+
+  saveEditPost(): void {
+    if (!this.editingPostId) return;
+    this.savingPost.set(true);
+    this.http
+      .put(`/api/v1/social/posts/${this.editingPostId}/content`, {
+        caption: this.editCaption,
+        hashtags: this.editHashtags,
+      })
+      .subscribe({
+        next: () => {
+          this.notify.success(this.t.translate('productDetail.postSaved'));
+          this.editPostDialog.set(false);
+          this.savingPost.set(false);
+          this.loadSocial();
+        },
+        error: (e: { error?: { detail?: string } }) => {
+          this.notify.error(e.error?.detail ?? this.t.translate('common.actionFailed'));
+          this.savingPost.set(false);
+        },
+      });
+  }
+
+  publishPostNow(post: SocialPostItem): void {
+    this.http.post(`/api/v1/social/posts/${post.id}/publish-now`, {}).subscribe({
+      next: () => {
+        this.notify.success(this.t.translate('productDetail.postPublishing'));
+        this.loadSocial();
+      },
+      error: (e: { error?: { detail?: string } }) =>
+        this.notify.error(e.error?.detail ?? this.t.translate('common.actionFailed')),
+    });
   }
 
   private loadDetail(): void {

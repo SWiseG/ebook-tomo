@@ -10,12 +10,15 @@ public sealed record SocialPostDto(
     string Network,
     string PostType,
     string Caption,
+    string Hashtags,
     string Status,
+    string? MediaPath,
     DateTime ScheduledAtUtc,
+    DateTime? ApprovedAtUtc,
     DateTime? PublishedAtUtc,
     string? ExternalId);
 
-/// <summary>Agenda social de um produto, ordenada por dia (para o painel).</summary>
+/// <summary>Agenda social de um produto, ordenada por dia (para o painel/calendário).</summary>
 public sealed record GetProductSocialQuery(Guid ProductId) : IQuery<IReadOnlyList<SocialPostDto>>;
 
 public sealed class GetProductSocialQueryHandler(ISocialPostRepository posts)
@@ -26,8 +29,8 @@ public sealed class GetProductSocialQueryHandler(ISocialPostRepository posts)
         var list = await posts.GetByProductAsync(query.ProductId, ct);
         IReadOnlyList<SocialPostDto> dtos = list
             .Select(p => new SocialPostDto(
-                p.Id, p.Day, p.Network.ToString(), p.PostType.ToString(), p.Caption,
-                p.Status.ToString(), p.ScheduledAtUtc, p.PublishedAtUtc, p.ExternalId))
+                p.Id, p.Day, p.Network.ToString(), p.PostType.ToString(), p.Caption, p.Hashtags,
+                p.Status.ToString(), p.MediaPath, p.ScheduledAtUtc, p.ApprovedAtUtc, p.PublishedAtUtc, p.ExternalId))
             .ToList();
         return Result.Success(dtos);
     }

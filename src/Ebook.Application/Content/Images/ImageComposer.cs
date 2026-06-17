@@ -13,6 +13,9 @@ public sealed record CoverArt(string Title, string? Subtitle, string? Brand, Nic
 /// <summary>Conteúdo de um card social (feed 1080×1080 ou story 1080×1920).</summary>
 public sealed record SocialArt(string Headline, string? Subtext, ImageTemplate Template, NichePalette Palette);
 
+/// <summary>Conteúdo de um carrossel (capa com headline + 1 slide por texto), feed 1080×1080.</summary>
+public sealed record CarouselArt(string Headline, string? Brand, IReadOnlyList<string> Slides, NichePalette Palette);
+
 /// <summary>
 /// Composição programática de imagens (E09-01). Implementado na Infrastructure (SkiaSharp).
 /// A foto de fundo é opcional; sem ela, usa-se gradiente da paleta.
@@ -25,6 +28,9 @@ public interface IImageComposer
     byte[] RenderMockup(byte[] coverPng, NichePalette palette);
 
     byte[] RenderSocial(SocialArt art, byte[]? backgroundPhoto = null);
+
+    /// <summary>Renderiza um carrossel: capa (headline) + 1 slide por texto. Todos 1080×1080.</summary>
+    IReadOnlyList<byte[]> RenderCarousel(CarouselArt art, byte[]? backgroundPhoto = null);
 }
 
 /// <summary>

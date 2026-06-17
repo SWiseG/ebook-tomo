@@ -31,9 +31,15 @@ public sealed record CalendarPostDto(
     string Headline,
     string Copy,
     IReadOnlyList<string>? Hashtags,
-    string? TimeSlot);
+    string? TimeSlot,
+    IReadOnlyList<string>? Slides);
 
-public sealed record SocialPublishRequest(SocialNetwork Network, string Caption, string? MediaPath, string? LinkUrl);
+/// <summary>Credenciais do canal (por nicho) que publica o post; nulo → usa o Meta global (legado).</summary>
+public sealed record ChannelCredentials(string? PageId, string? IgUserId, string AccessToken, string? PublicMediaBaseUrl);
+
+public sealed record SocialPublishRequest(
+    SocialNetwork Network, string Caption, string? MediaPath, string? LinkUrl,
+    ChannelCredentials? Channel = null, IReadOnlyList<string>? CarouselPaths = null);
 
 public sealed record SocialPublishOutcome(string ExternalId);
 
@@ -56,4 +62,19 @@ public static class SocialErrorsApp
 
     public static Error AutomationPending =>
         new("Social.AutomationPending", "Publicação automática no Meta ainda não implementada.");
+
+    public static Error NicheNotFound(Guid id) =>
+        new("Social.Niche.NotFound", $"Nicho {id} não encontrado.");
+
+    public static Error ChannelNotFound(Guid id) =>
+        new("Social.Channel.NotFound", $"Canal {id} não encontrado.");
+
+    public static Error ChannelExists =>
+        new("Social.Channel.Exists", "Este nicho já possui um canal.");
+
+    public static Error PostNotFound(Guid id) =>
+        new("Social.Post.NotFound", $"Post {id} não encontrado.");
+
+    public static Error PostNotEditable =>
+        new("Social.Post.NotEditable", "O post não pode ser alterado/publicado neste estado.");
 }

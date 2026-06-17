@@ -16,12 +16,14 @@
     "groups": {
       "overview": "Overview",
       "content": "Content",
+      "distribution": "Distribution",
       "operation": "Operations",
       "help": "Help"
     },
     "dashboard": "Dashboard",
     "niches": "Niches",
     "products": "Products",
+    "channels": "Channels",
     "jobs": "Jobs",
     "optimizer": "Optimizer",
     "settings": "Settings",
@@ -213,6 +215,36 @@
     "saved": "Setting saved",
     "saveError": "Failed to save \"{{key}}\"."
   },
+  "channels": {
+    "title": "Channels",
+    "subtitle": "Social accounts per niche (1 account per niche).",
+    "new": "New channel",
+    "loadError": "Failed to load channels.",
+    "created": "Channel created",
+    "connected": "Channel connected",
+    "empty": "No channels yet.",
+    "namePlaceholder": "e.g., Finance on Instagram",
+    "allNichesHaveChannel": "All niches already have a channel.",
+    "edit": "Edit",
+    "connect": "Connect",
+    "connectedTag": "Connected",
+    "disconnectedTag": "Disconnected",
+    "connectTitle": "Connect Meta",
+    "connectHint": "Paste the long-lived token and the Meta ids (Page/Instagram).",
+    "pageId": "Page ID (Facebook)",
+    "igUserId": "Instagram Business ID",
+    "accessToken": "Access token",
+    "tokenPlaceholder": "Long-lived token",
+    "tokenRequired": "Enter the access token.",
+    "mediaBaseUrl": "Media base URL",
+    "saveConnection": "Save connection",
+    "col": {
+      "niche": "Niche",
+      "name": "Channel",
+      "platform": "Platform",
+      "status": "Status"
+    }
+  },
   "login": {
     "subtitle": "Autonomous e-book factory",
     "username": "Username",
@@ -265,7 +297,18 @@
     "published": "Product published.",
     "fetchFromKiwify": "Fetch from Kiwify",
     "kiwifyFound": "Product found on Kiwify",
-    "kiwifyNotFound": "Could not fetch the product from Kiwify."
+    "kiwifyNotFound": "Could not fetch the product from Kiwify.",
+    "approve": "Approve",
+    "unapprove": "Unapprove",
+    "approved2": "Approved",
+    "editPost": "Edit post",
+    "publishNow": "Publish now",
+    "postCaption": "Caption",
+    "postHashtags": "Hashtags",
+    "postApproved": "Post approved",
+    "postUnapproved": "Approval removed",
+    "postSaved": "Post updated",
+    "postPublishing": "Publishing queued"
   },
   "realtime": {
     "job": {

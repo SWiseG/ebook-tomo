@@ -112,10 +112,29 @@ export interface SocialPostItem {
   network: string;
   postType: string;
   caption: string;
+  hashtags: string;
   status: string;
+  mediaPath: string | null;
   scheduledAtUtc: string;
+  approvedAtUtc: string | null;
   publishedAtUtc: string | null;
   externalId: string | null;
+}
+
+/** Canal social de um nicho (1 por nicho). Não traz o token (só sinaliza presença). */
+export interface Channel {
+  id: string;
+  nicheId: string;
+  nicheName: string;
+  name: string;
+  platform: string;
+  connected: boolean;
+  pageId: string | null;
+  igUserId: string | null;
+  hasToken: boolean;
+  publicMediaBaseUrl: string | null;
+  tokenExpiresAtUtc: string | null;
+  createdAtUtc: string;
 }
 
 export interface Funnel {

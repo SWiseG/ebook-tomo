@@ -159,9 +159,28 @@
               @for (post of social(); track post.id) {
                 <li class="social-item">
                   <span class="social-day">D{{ post.day }}</span>
+                  @if (mediaUrl(post); as m) {
+                    <img class="social-thumb" [src]="m" alt="" loading="lazy" />
+                  }
                   <div class="social-body">
-                    <span class="social-meta">{{ post.network }} · {{ post.postType }}</span>
+                    <span class="social-meta">
+                      {{ post.network }} · {{ post.postType }}
+                      @if (post.approvedAtUtc) {
+                        <i class="pi pi-check-circle social-approved" [title]="t('productDetail.approved2')"></i>
+                      }
+                    </span>
                     <span class="social-caption">{{ post.caption }}</span>
+                    @if (post.status === 'Planned') {
+                      <div class="social-actions">
+                        @if (post.approvedAtUtc) {
+                          <p-button [label]="t('productDetail.unapprove')" size="small" [text]="true" severity="secondary" (onClick)="setPostApproval(post, false)" />
+                        } @else {
+                          <p-button [label]="t('productDetail.approve')" icon="pi pi-check" size="small" [outlined]="true" (onClick)="setPostApproval(post, true)" />
+                        }
+                        <p-button [label]="t('productDetail.editPost')" icon="pi pi-pencil" size="small" [text]="true" severity="secondary" (onClick)="openEditPost(post)" />
+                        <p-button [label]="t('productDetail.publishNow')" icon="pi pi-send" size="small" [text]="true" (onClick)="publishPostNow(post)" />
+                      </div>
+                    }
                   </div>
                   <p-tag [value]="t('status.social.' + post.status)" [severity]="socialSeverity(post.status)" />
                 </li>
@@ -193,4 +212,28 @@
   } @else if (!error()) {
     <app-loading variant="detail" />
   }
+
+  <!-- Editar copy do post social -->
+  <p-dialog
+    [visible]="editPostDialog()"
+    (visibleChange)="editPostDialog.set($event)"
+    [modal]="true"
+    [style]="{ width: '520px' }"
+    [header]="t('productDetail.editPost')"
+  >
+    <div class="form-grid">
+      <div class="field">
+        <label>{{ t('productDetail.postCaption') }}</label>
+        <textarea pTextarea rows="4" [(ngModel)]="editCaption" fluid></textarea>
+      </div>
+      <div class="field">
+        <label>{{ t('productDetail.postHashtags') }}</label>
+        <input pInputText [(ngModel)]="editHashtags" fluid />
+      </div>
+    </div>
+    <ng-template #footer>
+      <p-button [label]="t('common.cancel')" [text]="true" severity="secondary" (onClick)="editPostDialog.set(false)" />
+      <p-button [label]="t('common.save')" icon="pi pi-check" [loading]="savingPost()" (onClick)="saveEditPost()" />
+    </ng-template>
+  </p-dialog>
 </ng-container>

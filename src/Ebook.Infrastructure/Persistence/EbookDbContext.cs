@@ -19,6 +19,7 @@ public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : D
     public DbSet<Artifact> Artifacts => Set<Artifact>();
     public DbSet<SaleEvent> SaleEvents => Set<SaleEvent>();
     public DbSet<SocialPost> SocialPosts => Set<SocialPost>();
+    public DbSet<Channel> Channels => Set<Channel>();
     public DbSet<AnalyticsEvent> AnalyticsEvents => Set<AnalyticsEvent>();
     public DbSet<MetricDaily> MetricDailies => Set<MetricDaily>();
     public DbSet<OptimizationRun> OptimizationRuns => Set<OptimizationRun>();
@@ -127,10 +128,25 @@ public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : D
             e.Property(x => x.Hashtags).HasMaxLength(600);
             e.Property(x => x.ContentPath).HasMaxLength(400);
             e.Property(x => x.MediaPath).HasMaxLength(400);
+            e.Property(x => x.CarouselPaths).HasMaxLength(2000);
             e.Property(x => x.Utm).HasMaxLength(300);
             e.Property(x => x.ExternalId).HasMaxLength(120);
             e.HasIndex(x => x.ProductId);
             e.HasIndex(x => new { x.Status, x.ScheduledAtUtc });
+        });
+
+        modelBuilder.Entity<Channel>(e =>
+        {
+            e.ToTable("Channel");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(120);
+            e.Property(x => x.Platform).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.PageId).HasMaxLength(120);
+            e.Property(x => x.IgUserId).HasMaxLength(120);
+            e.Property(x => x.AccessToken).HasMaxLength(800);
+            e.Property(x => x.PublicMediaBaseUrl).HasMaxLength(300);
+            e.HasIndex(x => x.NicheId).IsUnique();
+            e.Ignore(x => x.DomainEvents);
         });
 
         modelBuilder.Entity<AnalyticsEvent>(e =>

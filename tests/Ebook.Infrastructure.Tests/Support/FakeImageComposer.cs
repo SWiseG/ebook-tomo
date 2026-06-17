@@ -28,6 +28,13 @@ public sealed class FakeImageComposer : IImageComposer
         SocialCount++;
         return [.. Png];
     }
+
+    public IReadOnlyList<byte[]> RenderCarousel(CarouselArt art, byte[]? backgroundPhoto = null)
+    {
+        SocialCount++;
+        // capa + 1 imagem por slide
+        return Enumerable.Range(0, art.Slides.Count + 1).Select(_ => (byte[])[.. Png]).ToList();
+    }
 }
 
 /// <summary>Photo provider fake: sem foto (composer cai no gradiente da paleta).</summary>

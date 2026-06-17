@@ -1,0 +1,31 @@
+@use '../../../styles/tokens' as t;
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-3;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-1;
+
+  label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--p-text-muted-color);
+  }
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: t.$space-3;
+}
+
+@media (max-width: 860px) {
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+}

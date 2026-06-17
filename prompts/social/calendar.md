@@ -12,6 +12,7 @@ Diretrizes:
 - "hashtags": 3 a 6 hashtags relevantes (sem o caractere #, apenas a palavra).
 - "timeSlot": horário sugerido em formato "HH:mm" (horário de Brasília).
 - "day": número do dia (1 a 30) em que o post deve sair.
+- "slides": OPCIONAL. Para posts de "Value" e "Proof", forneça de 3 a 5 textos curtos (máx. ~90 caracteres cada) que viram um CARROSSEL (a headline é a capa; cada texto é um slide). Para "Launch"/"Offer", deixe a lista vazia (imagem única).
 
 Responda APENAS com JSON válido (sem cercas de markdown, sem texto extra), exatamente neste formato:
 
@@ -24,7 +25,8 @@ Responda APENAS com JSON válido (sem cercas de markdown, sem texto extra), exat
       "headline": "",
       "copy": "",
       "hashtags": ["", ""],
-      "timeSlot": "19:00"
+      "timeSlot": "19:00",
+      "slides": []
     }
   ]
 }

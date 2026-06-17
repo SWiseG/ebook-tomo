@@ -1,5 +1,6 @@
 using Ebook.Application.Publishing;
 using Ebook.Domain.Abstractions;
+using Ebook.Domain.Social;
 using Ebook.Infrastructure.FileStore;
 using Ebook.Infrastructure.Persistence;
 using Microsoft.Data.Sqlite;
@@ -35,6 +36,7 @@ public static class TestHost
         // Catálogo Kiwify falso (sem rede): a sincronização usa-o em vez da API real.
         services.AddSingleton<FakeKiwifyCatalog>();
         services.AddSingleton<IKiwifyCatalog>(sp => sp.GetRequiredService<FakeKiwifyCatalog>());
+        services.AddScoped<IChannelRepository, Infrastructure.Persistence.ChannelRepository>();
 
         configure?.Invoke(services);
 

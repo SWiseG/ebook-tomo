@@ -32,6 +32,9 @@ public static class ContentPaths
     /// <summary>Card social de um post no <c>IArtifactStore</c> (/data/artifacts).</summary>
     public static string SocialCard(string slug, int day) => $"products/{slug}/images/card-{day:D2}.png";
 
+    /// <summary>Slide n de um carrossel social no <c>IArtifactStore</c> (/data/artifacts).</summary>
+    public static string SocialSlide(string slug, int day, int n) => $"products/{slug}/images/card-{day:D2}-{n}.png";
+
     /// <summary>Reel (vídeo 9:16) no <c>IArtifactStore</c> (/data/artifacts).</summary>
     public static string VideoReel(string slug, int n) => $"products/{slug}/video/reel-{n}.mp4";
 
