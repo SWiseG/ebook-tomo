@@ -28,6 +28,7 @@ Após criar migration, **rebuild antes de rodar** (`Migrate()` usa o assembly co
 - SQLite guarda estado/índice/métricas; conteúdo (capítulos, packs, posts) vai para `IFileStore` (`/data/content`), caminho+hash indexados no banco.
 - Transições de estado de `Product`/`Niche` só por métodos do agregado (emitem eventos). Nunca setar Status direto.
 - Datas sempre UTC via `IClock`. Enums persistidos como string. Código/identificadores em inglês; conteúdo gerado e UI em pt-BR.
+- **Geração de conteúdo** (e-book, PDF, capa, imagem, LP, fontes, cores, copy) segue o **padrão editorial inegociável** em `docs/11-padrao-editorial.md` (ex.: nunca Times/Arial; fontes/cores por nicho; ≥1 imagem a cada 2-3 páginas; PAS por capítulo; micro-CTA no fim de cada capítulo).
 
 ## Testes
 
