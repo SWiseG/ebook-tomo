@@ -9,7 +9,9 @@
 - Resolvers: **Pollinations** (generativo grátis, sem chave, ligado por padrão) + **Pexels** (banco de fotos, último elo).
 - Integração sem custo de mudança: `MediaGatewayPhotoProvider : IPhotoProvider` — capa/cards/vídeo passam a usar IA generativa de fundo (Pollinations) com fallback Pexels → gradiente; o Skia segue sobrepondo o texto.
 
-**⏳ Incremento 2 — provedores com chave:** `GeminiImageResolver`, `CloudflareImageResolver`, `HuggingFaceImageResolver` (entram ANTES do Pollinations na cadeia; ligam quando a chave é configurada em `Media:*` no Railway). Depois: API rica `GenerateAsync(MediaBrief)` consumida direto para **ilustrações no corpo** (Frente D) e frames de vídeo (E14-09).
+**✅ Incremento 2 — provedores com chave (166 testes):** `GeminiImageResolver` (Imagen `:predict`), `CloudflareImageResolver` (Flux/SDXL, trata JSON base64 e PNG binário), `HuggingFaceImageResolver` (Inference, binário) — registrados ANTES do Pollinations (cadeia: Gemini → Cloudflare → HuggingFace → Pollinations → Pexels). Gated: desligam sem chave (`Enabled=false` → gateway pula). Parse defensivo, qualquer falha → null. Contrato é best-effort (não testável sem chave/rede); testes cobrem o gating.
+
+**⏳ Próximo — Incremento 3:** API rica `GenerateAsync(MediaBrief)` consumida direto para **ilustrações no corpo** (Frente D) e frames de vídeo (E14-09); painel de telemetria de mídia (E14-08).
 
 Config (env/appsettings, seção `Media`): `Media:Gemini:ApiKey`, `Media:Cloudflare:AccountId`/`ApiKey`, `Media:HuggingFace:ApiKey`, `Media:Pollinations:Enabled` (true), `*:DailyLimit`.
 

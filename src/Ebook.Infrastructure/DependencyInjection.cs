@@ -73,6 +73,10 @@ public static class DependencyInjection
         // Media Gateway (E14): cadeia free-first de geração de imagem por trás do seam IPhotoProvider.
         // Pexels deixa de ser o IPhotoProvider direto e vira o último elo da cadeia (banco de fotos).
         services.AddHttpClient<PexelsPhotoProvider>(c => c.Timeout = TimeSpan.FromSeconds(15));
+        // ordem de registro = ordem da cadeia: generativos com chave → Pollinations (grátis) → Pexels (fotos)
+        services.AddHttpClient<IMediaResolver, Media.GeminiImageResolver>(c => c.Timeout = TimeSpan.FromSeconds(90));
+        services.AddHttpClient<IMediaResolver, Media.CloudflareImageResolver>(c => c.Timeout = TimeSpan.FromSeconds(90));
+        services.AddHttpClient<IMediaResolver, Media.HuggingFaceImageResolver>(c => c.Timeout = TimeSpan.FromSeconds(90));
         services.AddHttpClient<IMediaResolver, Media.PollinationsMediaResolver>(c => c.Timeout = TimeSpan.FromSeconds(60));
         services.AddScoped<IMediaResolver, Media.PexelsMediaResolver>();
         services.AddScoped<IMediaGateway, Media.MediaGateway>();
