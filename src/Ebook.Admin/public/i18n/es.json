@@ -26,6 +26,7 @@
     "channels": "Canales",
     "jobs": "Jobs",
     "optimizer": "Optimizador",
+    "media": "Medios IA",
     "settings": "Configuración",
     "tutorial": "Cómo usar"
   },
@@ -243,6 +244,31 @@
       "name": "Canal",
       "platform": "Plataforma",
       "status": "Estado"
+    }
+  },
+  "media": {
+    "title": "Medios IA",
+    "subtitle": "Telemetría del Media Gateway: uso por proveedor, caché de imágenes y cuotas diarias.",
+    "refresh": "Actualizar",
+    "loadError": "Error al cargar la telemetría de medios.",
+    "providers": "Proveedores",
+    "noUsage": "Ninguna imagen generada aún. Ejecuta un job de portada o PDF para ver datos aquí.",
+    "cacheHitsToday": "Hits de caché hoy",
+    "cacheEntriesTotal": "Entradas en caché",
+    "cacheSizeTotal": "Volumen total generado",
+    "col": {
+      "provider": "Proveedor",
+      "today": "Generadas hoy",
+      "month": "Generadas este mes",
+      "avgMs": "Tiempo promedio",
+      "bytes": "Volumen hoy",
+      "status": "Estado"
+    },
+    "quotaOf": "Cuota diaria: {{limit}} imágenes",
+    "status": {
+      "active": "Activo",
+      "idle": "Inactivo",
+      "quotaExhausted": "Cuota agotada"
     }
   },
   "login": {

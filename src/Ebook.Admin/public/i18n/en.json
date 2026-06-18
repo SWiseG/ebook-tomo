@@ -26,6 +26,7 @@
     "channels": "Channels",
     "jobs": "Jobs",
     "optimizer": "Optimizer",
+    "media": "AI Media",
     "settings": "Settings",
     "tutorial": "How to use"
   },
@@ -243,6 +244,31 @@
       "name": "Channel",
       "platform": "Platform",
       "status": "Status"
+    }
+  },
+  "media": {
+    "title": "AI Media",
+    "subtitle": "Media Gateway telemetry: usage per provider, image cache and daily quotas.",
+    "refresh": "Refresh",
+    "loadError": "Failed to load media telemetry.",
+    "providers": "Providers",
+    "noUsage": "No images generated yet. Run a cover or PDF job to see data here.",
+    "cacheHitsToday": "Cache hits today",
+    "cacheEntriesTotal": "Cache entries",
+    "cacheSizeTotal": "Total volume generated",
+    "col": {
+      "provider": "Provider",
+      "today": "Generated today",
+      "month": "Generated this month",
+      "avgMs": "Avg time",
+      "bytes": "Volume today",
+      "status": "Status"
+    },
+    "quotaOf": "Daily quota: {{limit}} images",
+    "status": {
+      "active": "Active",
+      "idle": "Idle",
+      "quotaExhausted": "Quota exhausted"
     }
   },
   "login": {

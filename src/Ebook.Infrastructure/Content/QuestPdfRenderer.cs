@@ -179,6 +179,14 @@ public sealed class QuestPdfRenderer : IPdfRenderer
                     });
                 break;
 
+            case MarkdownBlockKind.Image:
+                if (block.ImageBytes is { Length: > 256 } img)
+                {
+                    col.Item().PaddingVertical(14).MaxHeight(190).Image(img).FitWidth();
+                }
+
+                break;
+
             case MarkdownBlockKind.Paragraph:
             default:
                 col.Item().PaddingBottom(8).Text(block.Text).Justify();

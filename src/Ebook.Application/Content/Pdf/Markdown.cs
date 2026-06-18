@@ -6,10 +6,11 @@ public enum MarkdownBlockKind
     Paragraph,
     Bullets,
     PullQuote,
-    Callout
+    Callout,
+    Image   // ilustração gerada por IA (Frente D): 1 por capítulo via IMediaGateway
 }
 
-/// <summary>Bloco estrutural de Markdown (nível para Heading, itens para Bullets, rótulo para Callout).</summary>
+/// <summary>Bloco estrutural de Markdown (nível para Heading, itens para Bullets, rótulo para Callout, bytes para Image).</summary>
 public sealed record MarkdownBlock
 {
     public required MarkdownBlockKind Kind { get; init; }
@@ -17,6 +18,7 @@ public sealed record MarkdownBlock
     public string Text { get; init; } = string.Empty;
     public string Label { get; init; } = string.Empty;
     public IReadOnlyList<string> Items { get; init; } = [];
+    public byte[]? ImageBytes { get; init; }   // preenchido para Kind=Image
 
     public static MarkdownBlock Heading(int level, string text) =>
         new() { Kind = MarkdownBlockKind.Heading, Level = level, Text = text };
@@ -32,6 +34,9 @@ public sealed record MarkdownBlock
 
     public static MarkdownBlock Callout(string label, string text) =>
         new() { Kind = MarkdownBlockKind.Callout, Label = label, Text = text };
+
+    public static MarkdownBlock Image(byte[] bytes) =>
+        new() { Kind = MarkdownBlockKind.Image, ImageBytes = bytes };
 }
 
 /// <summary>

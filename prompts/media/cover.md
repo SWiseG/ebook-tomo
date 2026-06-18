@@ -1,0 +1,1 @@
+Abstract editorial background for an ebook about {{nicheSlug}} titled "{{title}}". No text, no words, no letters. Soft gradient, subtle textures, professional, high quality, uncluttered, cinematic depth. Style: premium publishing cover background, {{nicheSlug}} aesthetic. Full bleed, portrait 2:3 ratio.

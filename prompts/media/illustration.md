@@ -1,0 +1,1 @@
+Minimalist editorial illustration for an ebook chapter titled "{{chapterTitle}}" in the {{nicheSlug}} niche. Professional digital art, high quality, no text, no words, no letters, clean composition, soft complementary colors, suitable for print, publishing-grade quality. Style: modern editorial, conceptual, uncluttered, premium feel. Aspect ratio 2:1 landscape.

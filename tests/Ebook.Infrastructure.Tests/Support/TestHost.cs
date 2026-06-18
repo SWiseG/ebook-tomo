@@ -1,3 +1,5 @@
+using Ebook.Application.Ai;
+using Ebook.Application.Media;
 using Ebook.Application.Publishing;
 using Ebook.Domain.Abstractions;
 using Ebook.Domain.Social;
@@ -32,6 +34,10 @@ public static class TestHost
         services.Configure<DataOptions>(o =>
             o.RootPath = Path.Combine(Path.GetTempPath(), "ebook-tests", Guid.NewGuid().ToString("N")));
         services.AddSingleton<IFileStore, JsonFileStore>();
+
+        // Media Gateway e PromptLibrary sem rede (PdfJobHandler precisa dos dois)
+        services.AddSingleton<IMediaGateway, FakeMediaGateway>();
+        services.AddSingleton<IPromptLibrary, NullPromptLibrary>();
 
         // Catálogo Kiwify falso (sem rede): a sincronização usa-o em vez da API real.
         services.AddSingleton<FakeKiwifyCatalog>();

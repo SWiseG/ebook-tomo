@@ -1,5 +1,6 @@
 using Ebook.Application.Administration.Auth;
 using Ebook.Application.Administration.Dashboard;
+using Ebook.Application.Administration.Media;
 using Ebook.Application.Analytics;
 using Ebook.Application.Common.Messaging;
 using Ebook.Application.Common.Settings;
@@ -63,6 +64,11 @@ public static class Endpoints
             (await dispatcher.QueryAsync(new GetDashboardSummaryQuery(), ct)).ToHttp())
             .WithTags("Dashboard")
             .WithSummary("KPIs do painel: produtos, jobs e consumo de IA");
+
+        secured.MapGet("/media/telemetry", async (IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.QueryAsync(new GetMediaTelemetryQuery(), ct)).ToHttp())
+            .WithTags("Media")
+            .WithSummary("Telemetria do Media Gateway: uso por provedor, cache e cotas (E14-08)");
 
         secured.MapGet("/jobs", async (string? status, int page, int size, EbookDbContext db, CancellationToken ct) =>
         {

@@ -202,3 +202,21 @@ export interface RealtimeProductChanged {
   productId: string;
   event: string;
 }
+
+// E14-08 — telemetria do Media Gateway
+export interface MediaProviderStat {
+  provider: string;
+  generatedToday: number;
+  generatedThisMonth: number;
+  cacheHitsToday: number;
+  dailyLimit: number;
+  totalBytesToday: number;
+  avgDurationMsToday: number;
+}
+
+export interface MediaTelemetry {
+  providers: MediaProviderStat[];
+  cacheHitsToday: number;
+  cacheEntriesTotal: number;
+  cacheSizeBytes: number;
+}

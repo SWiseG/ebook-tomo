@@ -1,5 +1,6 @@
 using Ebook.Application.Administration.Auth;
 using Ebook.Application.Administration.Dashboard;
+using Ebook.Application.Administration.Media;
 using Ebook.Application.Ai;
 using Ebook.Application.Common.Jobs;
 using Ebook.Application.Common.Settings;
@@ -79,6 +80,7 @@ public static class DependencyInjection
         services.AddHttpClient<IMediaResolver, Media.HuggingFaceImageResolver>(c => c.Timeout = TimeSpan.FromSeconds(90));
         services.AddHttpClient<IMediaResolver, Media.PollinationsMediaResolver>(c => c.Timeout = TimeSpan.FromSeconds(60));
         services.AddScoped<IMediaResolver, Media.PexelsMediaResolver>();
+        services.AddSingleton<IMediaResolver, Media.LocalSkiaImageResolver>(); // piso garantido — nunca falha
         services.AddScoped<IMediaGateway, Media.MediaGateway>();
         services.AddScoped<IPhotoProvider, Media.MediaGatewayPhotoProvider>();
         services.AddSingleton<ClaudeCliClient>();
@@ -89,6 +91,7 @@ public static class DependencyInjection
         services.AddScoped<IJobQueue, JobQueue>();
         services.AddScoped<ISettingsStore, SettingsStore>();
         services.AddScoped<IDashboardReader, DashboardReader>();
+        services.AddScoped<IMediaTelemetryReader, MediaTelemetryReader>();
         services.AddScoped<IProductReader, ProductReader>();
         services.AddScoped<IAiGateway, AiGateway>();
 
