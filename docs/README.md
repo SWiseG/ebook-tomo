@@ -14,6 +14,8 @@ SaaS autônomo para descoberta de nichos, geração, publicação, divulgação 
 | [06-estrutura-de-pastas.md](06-estrutura-de-pastas.md) | Árvore completa da solução (backend, frontend, deploy) |
 | [07-documentacao-tecnica.md](07-documentacao-tecnica.md) | Padrões, AI Gateway, eventos, jobs, cache, testes, convenções |
 | [08-implantacao.md](08-implantacao.md) | Infra, Docker, CI/CD, backups, secrets, runbook operacional |
+| [09-distribuicao.md](09-distribuicao.md) | Módulo de distribuição social: canais por nicho, calendário, carrossel, gate de aprovação |
+| [10-geracao-ia-midia.md](10-geracao-ia-midia.md) | Media Gateway (E14): geração de imagens free-first + loop de aprendizado de estilo (E15) |
 
 ## Resumo executivo
 
@@ -25,4 +27,4 @@ SaaS autônomo para descoberta de nichos, geração, publicação, divulgação 
 
 ## Status
 
-🟡 **Aguardando aprovação do planejamento.** Nenhum código de aplicação foi gerado. Após aprovação, a implementação segue o [roadmap](03-roadmap-mvp.md), módulo por módulo.
+🟢 **Em produção** (https://app.tomolibrary.com.br). M1 concluído (1º produto sincronizado Kiwify). Próximo marco: M2 (3 produtos ativos + funil de conversão medido). Ver [roadmap](03-roadmap-mvp.md) para as ondas de entrega.

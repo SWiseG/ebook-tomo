@@ -150,3 +150,46 @@ Estimativas em pontos (1 ≈ meio dia útil).
 | E13-06 | Tela de nichos e knowledge base (busca, reuso) | 3 (P1) |
 
 **Total P0: ~150 pts (~15 semanas-pessoa). Caminho crítico: E00 → E01 → E04 → E07.**
+
+---
+
+## E14 — Media Gateway (P1 — Onda 2)
+
+Espelha o AI Gateway de texto para **geração de imagens**: cadeia de resolvers com cota por provedor, cache content-addressable de bytes e fallback garantido no Skia local.
+
+| ID | História | Pts |
+|---|---|---|
+| E14-01 | `IMediaGateway` + cadeia `IMediaResolver`, tabela `MediaUsage` (cota/provedor/dia/mês), cache de mídia (bytes, content-addressable) | 5 |
+| E14-02 | Resolver Gemini/Imagen (text→image, free tier AI Studio) | 3 |
+| E14-03 | Resolver Cloudflare Workers AI (Flux/SDXL, cota diária grátis) | 3 |
+| E14-04 | Resolver HuggingFace Inference (SDXL/Flux, free rate-limit) | 2 |
+| E14-05 | Resolver Pollinations (sem chave, custo zero — último antes do local) | 2 |
+| E14-06 | Resolver Local Skia (embrulha `IImageComposer` — fallback garantido, nunca falha) | 2 |
+| E14-07 | Briefs de imagem por template (capa/card/carrossel/cena) em `/prompts/media/*` | 3 |
+| E14-08 | Telemetria no painel: provedor usado, cota restante, custo | 2 |
+| E14-09 | Frames de cena de vídeo via Media Gateway (imagens por cena em vez de só cards Skia) | 3 |
+| E14-10 | Resolver de vídeo generativo (Veo/RunwayML free quando disponível) | 2 |
+
+## E15 — Loop de Aprendizado de Estilo (P1 — Onda 3)
+
+O Claude Pro analisa a mídia gerada e ensina o sistema a gerar melhor, realimentando tanto os prompts dos provedores externos quanto os presets do Skia local.
+
+| ID | História | Pts |
+|---|---|---|
+| E15-01 | Job `style.learn` (cron semanal): seleciona mídia recente + de melhor desempenho por nicho | 3 |
+| E15-02 | AI Gateway (Claude vision, purpose `style.analyze`): descreve composição, paleta, tipografia, gancho, layout | 4 |
+| E15-03 | `KnowledgeAssetType.MediaStyle` — playbook de estilo por nicho na KB existente | 2 |
+| E15-04 | Realimentação A: aprendizados injetados nos prompts dos provedores (E14-07) | 3 |
+| E15-05 | Realimentação B: presets de paleta/layout para Skia local — fallback também melhora | 3 |
+
+## E16 — Marketing & Persuasão Studio (P1 — Onda 5)
+
+Base curada de frameworks de persuasão + ferramentas que geram e avaliam copy, integradas aos pipelines de LP, social e vídeo.
+
+| ID | História | Pts |
+|---|---|---|
+| E16-01 | Base de frameworks (AIDA, PAS, PASTOR, Cialdini, fórmulas de gancho) como `KnowledgeAssetType.MarketingFramework` | 3 |
+| E16-02 | Linter de persuasão: pontua copy contra os frameworks e aponta lacunas | 5 |
+| E16-03 | Gerador de ganchos/headlines e ângulos A/B por framework + nicho | 4 |
+| E16-04 | Tela Marketing Studio: compor/avaliar copy, gerar variações, enviar para A/B de LP | 5 |
+| E16-05 | Integração nos pipelines: LP, social e roteiro consultam ângulos vencedores; A/B alimenta ROI Optimizer | 4 |
