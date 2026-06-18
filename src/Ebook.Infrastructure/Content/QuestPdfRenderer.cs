@@ -123,13 +123,50 @@ public sealed class QuestPdfRenderer : IPdfRenderer
             case MarkdownBlockKind.Bullets:
                 foreach (var item in block.Items)
                 {
-                    col.Item().PaddingLeft(6).Row(row =>
+                    var (isTask, done, text) = ParseTask(item);
+                    col.Item().PaddingLeft(6).PaddingVertical(1).Row(row =>
                     {
-                        row.ConstantItem(14).Text("•").FontColor(theme.Accent);
-                        row.RelativeItem().Text(item);
+                        if (isTask)
+                        {
+                            // checkbox desenhado (sem glifo): quadrado vazado ou preenchido com o accent
+                            row.ConstantItem(18).AlignMiddle().Element(box => box
+                                .Width(11).Height(11).Border(1.2f).BorderColor(theme.Accent)
+                                .Background(done ? theme.Accent : "#FFFFFF"));
+                        }
+                        else
+                        {
+                            row.ConstantItem(14).Text("•").FontColor(theme.Accent);
+                        }
+
+                        row.RelativeItem().Text(text);
                     });
                 }
 
+                break;
+
+            case MarkdownBlockKind.PullQuote:
+                // citação de impacto: barra de accent + texto grande em itálico (cor do título)
+                col.Item().PaddingVertical(10).Row(row =>
+                {
+                    row.ConstantItem(4).Background(theme.Accent);
+                    row.ConstantItem(14);
+                    row.RelativeItem().Text(block.Text)
+                        .FontFamily(theme.HeadingFont).FontSize(15).Italic().FontColor(theme.Primary).LineHeight(1.4f);
+                });
+                break;
+
+            case MarkdownBlockKind.Callout:
+                // caixa de destaque (Insight rápido / Estudo de caso): borda accent + fundo claro + rótulo
+                col.Item().PaddingVertical(10)
+                    .BorderLeft(3).BorderColor(theme.Accent)
+                    .Background("#F5F5F3")
+                    .PaddingVertical(12).PaddingHorizontal(16)
+                    .Column(box =>
+                    {
+                        box.Item().Text(block.Label.ToUpperInvariant())
+                            .FontFamily(theme.HeadingFont).FontSize(10).Bold().FontColor(theme.Primary);
+                        box.Item().PaddingTop(5).Text(block.Text).FontColor(theme.Text).LineHeight(1.5f);
+                    });
                 break;
 
             case MarkdownBlockKind.Paragraph:
@@ -149,6 +186,22 @@ public sealed class QuestPdfRenderer : IPdfRenderer
             var link = string.IsNullOrWhiteSpace(book.Cta.Url) ? "Disponível em breve." : book.Cta.Url;
             cta.Item().PaddingTop(12).Text(link).FontFamily(theme.BodyFont).FontSize(12).FontColor(theme.Accent);
         });
+    }
+
+    // "[ ] tarefa" → (true,false,"tarefa") · "[x] feita" → (true,true,"feita") · resto → bullet normal
+    private static (bool IsTask, bool Done, string Text) ParseTask(string item)
+    {
+        if (item.StartsWith("[ ] ", StringComparison.Ordinal))
+        {
+            return (true, false, item[4..]);
+        }
+
+        if (item.StartsWith("[x] ", StringComparison.OrdinalIgnoreCase))
+        {
+            return (true, true, item[4..]);
+        }
+
+        return (false, false, item);
     }
 
     private sealed record Style(string Primary, string Accent, string Text, string HeadingFont, string BodyFont)

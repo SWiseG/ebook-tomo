@@ -40,6 +40,28 @@ public class QuestPdfRendererTests
     }
 
     [Fact]
+    public void Render_suporta_blocos_ricos_pullquote_callout_e_checklist()
+    {
+        var book = SampleBook(PdfTheme.Classic) with
+        {
+            Body =
+            [
+                MarkdownBlock.Heading(2, "Capítulo 1 — Comece aqui"),
+                MarkdownBlock.Paragraph("Abertura do capítulo."),
+                MarkdownBlock.PullQuote("Quem controla o dinheiro controla o futuro."),
+                MarkdownBlock.Callout("Insight rápido", "Automatize a poupança no dia do salário."),
+                MarkdownBlock.Callout("Estudo de caso", "A Ana saiu do vermelho em 60 dias."),
+                MarkdownBlock.Bullets(["[ ] listar dívidas", "[x] abrir conta", "item comum"]),
+            ],
+        };
+
+        var bytes = new QuestPdfRenderer().Render(book);
+
+        Assert.Equal("%PDF", Encoding.ASCII.GetString(bytes[..4]));
+        Assert.True(bytes.Length > 1000);
+    }
+
+    [Fact]
     public void Render_com_capa_de_imagem_embute_a_capa_gerada()
     {
         var composer = new SkiaImageComposer();

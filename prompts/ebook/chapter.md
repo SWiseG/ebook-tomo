@@ -20,9 +20,13 @@ Resumo do capítulo anterior (para continuidade, NÃO repita):
 ## Formatação (Markdown — use SÓ o que está aqui)
 - Parágrafos curtos: no máximo 4 linhas cada. Frases diretas.
 - Subtítulos com `###` para separar as 2–3 seções do capítulo.
-- Quando listar passos/critérios, use lista com `- ` (ótimo para um checklist acionável perto do fim).
-- UMA citação de impacto (pull quote) em uma linha iniciada por `> ` — uma frase memorável que resuma a virada do capítulo.
-- NÃO use negrito/itálico/código inline (`**`, `*`, crases) — eles são descartados na renderização.
+- UMA citação de impacto (pull quote) numa linha `> frase memorável` — a virada do capítulo em uma frase.
+- UMA caixa de destaque, escolhendo o tipo:
+  - `> [!INSIGHT] ...` para uma sacada prática rápida, OU
+  - `> [!CASO] ...` para um mini estudo de caso com dado/resultado real.
+- Perto do fim, UM checklist acionável usando itens de tarefa: `- [ ] ação a fazer` (uma linha por item).
+- Listas comuns (não-checklist) com `- `.
+- NÃO use negrito/itálico/código inline (`**`, `*`, crases) — são descartados na renderização.
 - NÃO inclua o título de nível `##` do capítulo — ele é adicionado automaticamente.
 
 ## Fechamento (micro-CTA)

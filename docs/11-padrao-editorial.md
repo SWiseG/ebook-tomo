@@ -160,8 +160,11 @@ O pipeline gera texto competente em um corpo visualmente amador. Evidências no 
 - `chapter.md`: PAS, hook em 2 parágrafos, parág. ≤4 linhas, pull quote (`>`) + checklist (`- `), micro-CTA com verbo de comando.
 - `sales-copy.md`: 4 U's, gatilhos de Cialdini, BAB, fórmulas de headline, verbos de conversão (schema JSON preservado).
 
-### 🟠 Frente C — Layout rico no PDF *(depende de B)*
-- Estender `MarkdownBlockKind` + parser + renderer: pull quote, caixa "Insight Rápido", checklist, quadro "Estudo de Caso", bloco de imagem, CTA-respiro, micro-CTA por capítulo, sumário visual com ícones (Phosphor/Lucide).
+### ✅ Frente C — Layout rico no PDF *(CONCLUÍDA 2026-06-18)*
+- `MarkdownBlockKind` estendido (`PullQuote`, `Callout`) + parser reconhece `> frase` (pull quote), `> [!INSIGHT]`/`> [!CASO]` (caixas) e `- [ ]`/`- [x]` (checklist).
+- `QuestPdfRenderer`: pull quote (barra accent + itálico), caixa de destaque (borda accent + fundo claro + rótulo), checklist com checkbox desenhado (sem depender de glifo).
+- `chapter.md` emite os marcadores. 156 testes OK.
+- **Pendente (próxima leva):** bloco de imagem no corpo (vem com a Frente D/E14), CTA-respiro no meio, sumário visual com ícones (Phosphor/Lucide).
 
 ### 🔵 Frente D — Imagens no corpo *(monta sobre a Onda 2 — E14 Media Gateway)*
 - 1 imagem / 2-3 páginas, de: E14 (geração free-first) para conceitos + Unsplash/Pixabay (hoje só Pexels) para foto editorial.

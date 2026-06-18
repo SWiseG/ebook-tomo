@@ -4,15 +4,18 @@ public enum MarkdownBlockKind
 {
     Heading,
     Paragraph,
-    Bullets
+    Bullets,
+    PullQuote,
+    Callout
 }
 
-/// <summary>Bloco estrutural de Markdown (nível para Heading, itens para Bullets).</summary>
+/// <summary>Bloco estrutural de Markdown (nível para Heading, itens para Bullets, rótulo para Callout).</summary>
 public sealed record MarkdownBlock
 {
     public required MarkdownBlockKind Kind { get; init; }
     public int Level { get; init; }
     public string Text { get; init; } = string.Empty;
+    public string Label { get; init; } = string.Empty;
     public IReadOnlyList<string> Items { get; init; } = [];
 
     public static MarkdownBlock Heading(int level, string text) =>
@@ -23,11 +26,18 @@ public sealed record MarkdownBlock
 
     public static MarkdownBlock Bullets(IReadOnlyList<string> items) =>
         new() { Kind = MarkdownBlockKind.Bullets, Items = items };
+
+    public static MarkdownBlock PullQuote(string text) =>
+        new() { Kind = MarkdownBlockKind.PullQuote, Text = text };
+
+    public static MarkdownBlock Callout(string label, string text) =>
+        new() { Kind = MarkdownBlockKind.Callout, Label = label, Text = text };
 }
 
 /// <summary>
 /// Parser de Markdown leve e determinístico (sem dependências): headings #/##/###,
-/// listas com "- "/"* " e parágrafos separados por linha em branco. Insumo do renderizador de PDF.
+/// listas "- "/"* ", parágrafos e blocos de citação "> ". Uma citação simples vira pull quote;
+/// com admoestação "> [!INSIGHT]" / "> [!CASO]" vira uma caixa de destaque (docs/11). Insumo do PDF.
 /// </summary>
 public static class MarkdownParser
 {
@@ -36,6 +46,7 @@ public static class MarkdownParser
         var blocks = new List<MarkdownBlock>();
         var paragraph = new List<string>();
         var bullets = new List<string>();
+        var quote = new List<string>();
 
         void FlushParagraph()
         {
@@ -55,38 +66,89 @@ public static class MarkdownParser
             }
         }
 
+        void FlushQuote()
+        {
+            if (quote.Count == 0)
+            {
+                return;
+            }
+
+            var first = quote[0];
+            string? label = null;
+            if (first.StartsWith("[!INSIGHT]", StringComparison.OrdinalIgnoreCase))
+            {
+                label = "Insight rápido";
+                first = first["[!INSIGHT]".Length..].Trim();
+            }
+            else if (first.StartsWith("[!CASO]", StringComparison.OrdinalIgnoreCase))
+            {
+                label = "Estudo de caso";
+                first = first["[!CASO]".Length..].Trim();
+            }
+
+            var lines = new List<string>();
+            if (first.Length > 0)
+            {
+                lines.Add(first);
+            }
+
+            for (var i = 1; i < quote.Count; i++)
+            {
+                lines.Add(quote[i]);
+            }
+
+            var text = string.Join(' ', lines);
+            blocks.Add(label is null ? MarkdownBlock.PullQuote(text) : MarkdownBlock.Callout(label, text));
+            quote.Clear();
+        }
+
+        void FlushAll()
+        {
+            FlushParagraph();
+            FlushBullets();
+            FlushQuote();
+        }
+
         foreach (var rawLine in (markdown ?? string.Empty).Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n'))
         {
             var line = rawLine.TrimEnd();
 
             if (string.IsNullOrWhiteSpace(line))
             {
-                FlushParagraph();
-                FlushBullets();
+                FlushAll();
                 continue;
             }
 
             if (TryHeading(line, out var level, out var headingText))
             {
+                FlushAll();
+                blocks.Add(MarkdownBlock.Heading(level, headingText));
+                continue;
+            }
+
+            if (line.StartsWith(">", StringComparison.Ordinal))
+            {
                 FlushParagraph();
                 FlushBullets();
-                blocks.Add(MarkdownBlock.Heading(level, headingText));
+                var content = line.Length > 1 && line[1] == ' ' ? line[2..] : line[1..];
+                quote.Add(Clean(content));
                 continue;
             }
 
             if (line.StartsWith("- ", StringComparison.Ordinal) || line.StartsWith("* ", StringComparison.Ordinal))
             {
                 FlushParagraph();
+                FlushQuote();
                 bullets.Add(Clean(line[2..]));
                 continue;
             }
 
             FlushBullets();
-            paragraph.Add(Clean(line.StartsWith("> ", StringComparison.Ordinal) ? line[2..] : line));
+            FlushQuote();
+            paragraph.Add(Clean(line));
         }
 
-        FlushParagraph();
-        FlushBullets();
+        FlushAll();
         return blocks;
     }
 

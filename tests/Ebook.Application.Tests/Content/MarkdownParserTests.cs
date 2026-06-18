@@ -39,6 +39,30 @@ public class MarkdownParserTests
     }
 
     [Fact]
+    public void Parse_reconhece_pullquote_callout_e_checklist()
+    {
+        const string md = """
+            > Uma frase de impacto.
+
+            > [!INSIGHT] Faça X antes de Y.
+
+            > [!CASO] Cliente Z dobrou o resultado em 30 dias.
+
+            - [ ] primeira ação
+            - [x] feita
+            """;
+
+        var blocks = MarkdownParser.Parse(md);
+
+        Assert.Contains(blocks, b => b.Kind == MarkdownBlockKind.PullQuote && b.Text == "Uma frase de impacto.");
+        Assert.Contains(blocks, b => b.Kind == MarkdownBlockKind.Callout && b.Label == "Insight rápido" && b.Text == "Faça X antes de Y.");
+        Assert.Contains(blocks, b => b.Kind == MarkdownBlockKind.Callout && b.Label == "Estudo de caso");
+
+        var tasks = Assert.Single(blocks, b => b.Kind == MarkdownBlockKind.Bullets);
+        Assert.Equal(["[ ] primeira ação", "[x] feita"], tasks.Items);
+    }
+
+    [Fact]
     public void Composer_separa_capa_do_corpo()
     {
         const string manuscript = """
