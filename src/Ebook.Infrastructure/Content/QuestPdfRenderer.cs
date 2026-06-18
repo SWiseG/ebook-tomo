@@ -1,3 +1,4 @@
+using Ebook.Application.Content.Images;
 using Ebook.Application.Content.Pdf;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -6,16 +7,23 @@ using QuestPDF.Infrastructure;
 namespace Ebook.Infrastructure.Content;
 
 /// <summary>
-/// Renderiza o e-book em PDF com QuestPDF (licença Community). Três temas profissionais
-/// (capa colorida, sumário, tipografia, cabeçalho/rodapé com paginação e página de CTA).
+/// Renderiza o e-book em PDF com QuestPDF (licença Community). Cores e tipografia vêm da paleta
+/// do nicho (docs/11), com hierarquia profissional (capa, sumário, cabeçalho/rodapé, página de CTA).
+/// Fontes embarcadas via <see cref="FontRegistry"/>; ausentes, há fallback (Lato padrão do QuestPDF).
 /// </summary>
 public sealed class QuestPdfRenderer : IPdfRenderer
 {
-    static QuestPdfRenderer() => QuestPDF.Settings.License = LicenseType.Community;
+    static QuestPdfRenderer()
+    {
+        QuestPDF.Settings.License = LicenseType.Community;
+        // não lança exceção quando um glifo/fonte falta: cai no fallback (fonte pode não estar embarcada)
+        QuestPDF.Settings.CheckIfAllTextGlyphsAreAvailable = false;
+    }
 
     public byte[] Render(PdfBook book, byte[]? coverImage = null)
     {
-        var theme = Style.For(book.Theme);
+        // paleta do nicho tem prioridade (coerência com a capa); sem ela, cai no tema (compat)
+        var theme = book.Palette is { } palette ? Style.From(palette) : Style.For(book.Theme);
 
         return Document.Create(doc =>
         {
@@ -24,7 +32,7 @@ public sealed class QuestPdfRenderer : IPdfRenderer
             {
                 content.Size(PageSizes.A5);
                 content.Margin(42);
-                content.DefaultTextStyle(x => x.FontFamily(theme.BodyFont).FontSize(11).FontColor(theme.Text).LineHeight(1.4f));
+                content.DefaultTextStyle(x => x.FontFamily(theme.BodyFont).FontSize(12).FontColor(theme.Text).LineHeight(1.5f));
                 content.Header().Element(h => ComposeHeader(h, book, theme));
                 content.Footer().AlignCenter().Text(t =>
                 {
@@ -51,18 +59,18 @@ public sealed class QuestPdfRenderer : IPdfRenderer
         cover.Content().Background(theme.Primary).Padding(46).Column(col =>
         {
             col.Item().PaddingTop(110).Text(book.Title)
-                .FontFamily(theme.HeadingFont).FontSize(30).Bold().FontColor("#FFFFFF");
+                .FontFamily(theme.HeadingFont).FontSize(40).Bold().FontColor("#FFFFFF");
 
             if (!string.IsNullOrWhiteSpace(book.Subtitle))
             {
-                col.Item().PaddingTop(14).Text(book.Subtitle)
-                    .FontFamily(theme.HeadingFont).FontSize(16).FontColor(theme.Accent);
+                col.Item().PaddingTop(16).Text(book.Subtitle)
+                    .FontFamily(theme.HeadingFont).FontSize(18).FontColor(theme.Accent);
             }
 
             if (!string.IsNullOrWhiteSpace(book.Tagline))
             {
                 col.Item().PaddingTop(38).Text(book.Tagline)
-                    .FontFamily(theme.BodyFont).FontSize(12).Italic().FontColor("#E5E7EB");
+                    .FontFamily(theme.BodyFont).FontSize(13).Italic().FontColor("#E5E7EB");
             }
         });
     }
@@ -80,11 +88,11 @@ public sealed class QuestPdfRenderer : IPdfRenderer
 
         if (chapters.Count > 0)
         {
-            col.Item().Text("Sumário").FontFamily(theme.HeadingFont).FontSize(20).Bold().FontColor(theme.Primary);
+            col.Item().Text("Sumário").FontFamily(theme.HeadingFont).FontSize(24).Bold().FontColor(theme.Primary);
             col.Item().PaddingBottom(8);
             foreach (var chapter in chapters)
             {
-                col.Item().PaddingVertical(2).Text(chapter.Text).FontSize(11).FontColor(theme.Text);
+                col.Item().PaddingVertical(2).Text(chapter.Text).FontSize(12).FontColor(theme.Text);
             }
         }
 
@@ -103,13 +111,13 @@ public sealed class QuestPdfRenderer : IPdfRenderer
         {
             case MarkdownBlockKind.Heading when block.Level == 2:
                 col.Item().PageBreak();
-                col.Item().PaddingBottom(10).Text(block.Text)
-                    .FontFamily(theme.HeadingFont).FontSize(22).Bold().FontColor(theme.Primary);
+                col.Item().PaddingBottom(12).Text(block.Text)
+                    .FontFamily(theme.HeadingFont).FontSize(26).Bold().FontColor(theme.Primary);
                 break;
 
             case MarkdownBlockKind.Heading: // nível 3 (e demais subtítulos)
-                col.Item().PaddingTop(8).PaddingBottom(4).Text(block.Text)
-                    .FontFamily(theme.HeadingFont).FontSize(14).SemiBold().FontColor(theme.Accent);
+                col.Item().PaddingTop(10).PaddingBottom(4).Text(block.Text)
+                    .FontFamily(theme.HeadingFont).FontSize(18).SemiBold().FontColor(theme.Primary);
                 break;
 
             case MarkdownBlockKind.Bullets:
@@ -136,22 +144,26 @@ public sealed class QuestPdfRenderer : IPdfRenderer
         col.Item().Background(theme.Primary).Padding(28).Column(cta =>
         {
             cta.Item().Text(book.Cta.Headline)
-                .FontFamily(theme.HeadingFont).FontSize(18).Bold().FontColor("#FFFFFF");
+                .FontFamily(theme.HeadingFont).FontSize(20).Bold().FontColor("#FFFFFF");
 
             var link = string.IsNullOrWhiteSpace(book.Cta.Url) ? "Disponível em breve." : book.Cta.Url;
             cta.Item().PaddingTop(12).Text(link).FontFamily(theme.BodyFont).FontSize(12).FontColor(theme.Accent);
         });
     }
 
-    // Famílias resolvíveis em Windows (nativas) e Linux (aliases do fonts-liberation):
-    // "Arial" → Liberation Sans, "Times New Roman" → Liberation Serif.
     private sealed record Style(string Primary, string Accent, string Text, string HeadingFont, string BodyFont)
     {
+        // Derivado da paleta do nicho (caminho principal): cor de cabeçalho = fundo do nicho,
+        // texto do corpo num quase-preto legível sobre branco, fontes profissionais embarcadas.
+        public static Style From(NichePalette p) =>
+            new(p.Background, p.Accent, "#1A1A1A", p.HeadingFont, p.BodyFont);
+
+        // Fallback por tema (usado quando não há paleta, ex.: testes). Fontes embarcadas via FontRegistry.
         public static Style For(PdfTheme theme) => theme switch
         {
-            PdfTheme.Modern => new Style("#0F766E", "#5EEAD4", "#1F2937", "Arial", "Arial"),
-            PdfTheme.Editorial => new Style("#7C2D12", "#FDBA74", "#292524", "Times New Roman", "Arial"),
-            PdfTheme.Classic or _ => new Style("#1F2937", "#CBA15A", "#111827", "Times New Roman", "Times New Roman")
+            PdfTheme.Modern => new Style("#1E1B4B", "#8B93F8", "#1A1A1A", "Manrope", "Inter"),
+            PdfTheme.Editorial => new Style("#7C2D12", "#FDBA74", "#1A1A1A", "Fraunces", "Lora"),
+            PdfTheme.Classic or _ => new Style("#0E2A47", "#E0B978", "#1A1A1A", "Manrope", "Merriweather")
         };
     }
 }

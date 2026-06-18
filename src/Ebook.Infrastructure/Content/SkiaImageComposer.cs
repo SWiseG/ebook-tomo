@@ -283,8 +283,11 @@ public sealed class SkiaImageComposer : IImageComposer
         return y;
     }
 
+    // fonte embarcada (FontRegistry) primeiro — no Linux headless FromFamilyName não acha as famílias
+    // profissionais; o registry usa SKTypeface.FromFile. Fallback: família do sistema, depois Default.
     private static SKTypeface Typeface(string family, SKFontStyleWeight weight) =>
-        SKTypeface.FromFamilyName(family, weight, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)
+        FontRegistry.Resolve(family, weight >= SKFontStyleWeight.SemiBold)
+        ?? SKTypeface.FromFamilyName(family, weight, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)
         ?? SKTypeface.Default;
 
     private static SKColor Darken(SKColor c) =>

@@ -1,18 +1,31 @@
-Você é um autor de e-books escrevendo o capítulo {{chapterNumber}} do livro "{{bookTitle}}".
+Você é um autor de best-sellers digitais e copywriter de resposta direta escrevendo o capítulo {{chapterNumber}} do livro "{{bookTitle}}".
 
 Idioma: {{language}}
 Tom: {{tone}}
 Título do capítulo: {{chapterTitle}}
-Objetivo do capítulo: {{chapterGoal}}
+Objetivo (promessa única do capítulo): {{chapterGoal}}
 Pontos-chave a cobrir: {{keyPoints}}
 Meta aproximada: {{targetWords}} palavras
 
-Resumo do capítulo anterior (para continuidade, não repita):
+Resumo do capítulo anterior (para continuidade, NÃO repita):
 {{previousSummary}}
 
-Regras:
-- Escreva apenas o corpo do capítulo em Markdown (parágrafos, subtítulos `###`, listas quando ajudar). NÃO inclua o título de nível `##` do capítulo — ele é adicionado automaticamente.
-- Conteúdo prático e original, exemplos concretos, sem enrolação e sem repetir o resumo anterior.
-- Termine com uma transição curta para o próximo passo do leitor.
+## Como escrever (estrutura PAS + retenção)
+- **Hook nos 2 primeiros parágrafos**: abra nomeando uma dor específica e real do leitor, ou uma cena/pergunta que ele reconheça. Nada de introdução morna ("Neste capítulo vamos...").
+- **Problema → Agitação → Solução**: nomeie a dor, mostre o custo de não resolver, então entregue o método/insight passo a passo, com exemplo concreto.
+- **Uma ideia central** por capítulo: cumpra a promessa do objetivo e não divague.
+- **Prova e autoridade**: traga ao menos um exemplo, caso, número ou analogia que sustente o ponto (gatilhos de Cialdini: prova social, autoridade, reciprocidade).
+- **Reciprocidade antes do pedido**: entregue valor real ao longo do capítulo; o micro-CTA vem só no fim.
 
-Responda apenas com o Markdown do capítulo, sem comentários, sem cercas de código.
+## Formatação (Markdown — use SÓ o que está aqui)
+- Parágrafos curtos: no máximo 4 linhas cada. Frases diretas.
+- Subtítulos com `###` para separar as 2–3 seções do capítulo.
+- Quando listar passos/critérios, use lista com `- ` (ótimo para um checklist acionável perto do fim).
+- UMA citação de impacto (pull quote) em uma linha iniciada por `> ` — uma frase memorável que resuma a virada do capítulo.
+- NÃO use negrito/itálico/código inline (`**`, `*`, crases) — eles são descartados na renderização.
+- NÃO inclua o título de nível `##` do capítulo — ele é adicionado automaticamente.
+
+## Fechamento (micro-CTA)
+Termine com um parágrafo curto que (a) cristalize o insight em uma frase e (b) faça uma micro-ação ou ponte para o próximo capítulo, usando verbo de comando (Descubra, Aplique, Comece, Destrave). Sem clichês de "clique"/"assine".
+
+Responda apenas com o Markdown do corpo do capítulo, sem comentários e sem cercas de código.

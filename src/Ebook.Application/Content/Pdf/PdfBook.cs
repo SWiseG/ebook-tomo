@@ -1,4 +1,4 @@
-using System.Text;
+using Ebook.Application.Content.Images;
 
 namespace Ebook.Application.Content.Pdf;
 
@@ -11,28 +11,29 @@ public enum PdfTheme
 
 public sealed record PdfCta(string Headline, string? Url);
 
-/// <summary>Modelo pronto para renderização em PDF: capa + corpo (blocos) + página de CTA.</summary>
+/// <summary>
+/// Modelo pronto para renderização em PDF: capa + corpo (blocos) + página de CTA.
+/// <see cref="Palette"/> (cores+fontes do nicho) tem prioridade no renderizador; quando nula,
+/// cai no estilo do <see cref="Theme"/> (compatibilidade).
+/// </summary>
 public sealed record PdfBook(
     string Title,
     string? Subtitle,
     string? Tagline,
     PdfTheme Theme,
     IReadOnlyList<MarkdownBlock> Body,
-    PdfCta Cta);
+    PdfCta Cta,
+    NichePalette? Palette = null);
 
-/// <summary>Seleção determinística de tema por nicho (mesmo nicho → mesmo tema, estável entre processos).</summary>
+/// <summary>Seleção de tema (flavor de layout) por nicho — semântica, alinhada ao NicheStyleCatalog.</summary>
 public static class PdfThemeSelector
 {
-    public static PdfTheme ForNiche(string slug)
+    public static PdfTheme ForNiche(string slug) => NicheStyleCatalog.Classify(slug) switch
     {
-        var hash = 2166136261u; // FNV-1a 32-bit, estável (não usar string.GetHashCode)
-        foreach (var b in Encoding.UTF8.GetBytes(slug ?? string.Empty))
-        {
-            hash = (hash ^ b) * 16777619u;
-        }
-
-        return (PdfTheme)(hash % 3);
-    }
+        NicheCategory.Tech or NicheCategory.Marketing => PdfTheme.Modern,
+        NicheCategory.Health or NicheCategory.SelfHelp or NicheCategory.Fiction => PdfTheme.Editorial,
+        _ => PdfTheme.Classic,
+    };
 }
 
 /// <summary>
@@ -46,7 +47,8 @@ public static class PdfBookComposer
         string fallbackTitle,
         string? tagline,
         PdfCta cta,
-        PdfTheme theme)
+        PdfTheme theme,
+        NichePalette? palette = null)
     {
         var blocks = MarkdownParser.Parse(manuscript);
         var body = new List<MarkdownBlock>(blocks);
@@ -68,6 +70,6 @@ public static class PdfBookComposer
             body.RemoveAt(0);
         }
 
-        return new PdfBook(title, subtitle, tagline, theme, body, cta);
+        return new PdfBook(title, subtitle, tagline, theme, body, cta, palette);
     }
 }

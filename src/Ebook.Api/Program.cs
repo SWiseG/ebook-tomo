@@ -105,6 +105,10 @@ try
 
     var app = builder.Build();
 
+    // fontes embarcadas (docs/11): registra no QuestPDF + Skia antes de qualquer renderização
+    Ebook.Infrastructure.Content.FontRegistry.Initialize(
+        Path.Combine(AppContext.BaseDirectory, "assets", "fonts"));
+
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<EbookDbContext>();

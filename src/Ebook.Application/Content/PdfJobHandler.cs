@@ -83,9 +83,11 @@ public sealed class PdfJobHandler(
         var outline = await ContentPaths.ReadOutlineAsync(fileStore, product.Slug, ct);
         var tagline = outline.IsSuccess ? outline.Value.Promise : null;
 
-        var theme = PdfThemeSelector.ForNiche(await NicheSlugAsync(product, ct));
+        var nicheSlug = await NicheSlugAsync(product, ct);
+        var theme = PdfThemeSelector.ForNiche(nicheSlug);
+        var palette = Images.PaletteCatalog.ForNiche(nicheSlug);
         var cta = await BuildCtaAsync(product, ct);
-        var book = PdfBookComposer.Build(manuscript, product.Title, tagline, cta, theme);
+        var book = PdfBookComposer.Build(manuscript, product.Title, tagline, cta, theme, palette);
 
         var coverImage = await artifactStore.ReadBytesAsync(ContentPaths.Cover(product.Slug), ct);
         var bytes = renderer.Render(book, coverImage);

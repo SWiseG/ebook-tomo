@@ -131,8 +131,8 @@ O pipeline gera texto competente em um corpo visualmente amador. Evidências no 
 
 | Dimensão | Hoje | Padrão | Gap |
 |---|---|---|---|
-| Fontes | Times New Roman + Arial ([QuestPdfRenderer](../src/Ebook.Infrastructure/Content/QuestPdfRenderer.cs), [PaletteCatalog](../src/Ebook.Application/Content/Images/NichePalette.cs)) | Nunca Times/Arial; serifa+sans por nicho, embarcadas | 🔴 viola regra |
-| Cores | 4 paletas por hash (aleatório) | Emocional por nicho + 60-30-10 | 🔴 não-semântico |
+| Fontes | ~~Times New Roman + Arial~~ → **6 fontes profissionais embarcadas, par por nicho** (Frente A ✅) | Nunca Times/Arial; serifa+sans por nicho, embarcadas | ✅ resolvido |
+| Cores | ~~4 paletas por hash~~ → **emocional por nicho + 60-30-10** (Frente A ✅) | Emocional por nicho + 60-30-10 | ✅ resolvido |
 | Imagens no corpo | Zero (só capa) | ≥1 a cada 2-3 páginas | 🔴 exemplos têm 9–34 imgs |
 | Elementos visuais | heading/bullet/parágrafo | pull quotes, caixas, checklists, estudo de caso, infográficos | 🔴 ausentes |
 | Sumário | texto puro | visual com ícones + 1 linha/cap | 🟠 |
@@ -148,15 +148,17 @@ O pipeline gera texto competente em um corpo visualmente amador. Evidências no 
 
 # Parte 3 — Plano de melhoria (5 frentes, track paralelo às Ondas)
 
-### 🟢 Frente A — Tipografia + cor profissionais *(quick win, sem dependência externa)*
-- Embarcar fontes (Google/Fontshare) como `.ttf` em assets, registradas no QuestPDF via `FontManager`.
-- `PaletteCatalog` e `PdfThemeSelector`: de hash → **semântico por nicho** (tabela da Parte 1).
-- Hierarquia 32/24/18/12, line-height 1.5, regra 60-30-10. **Impacto alto, esforço/risco baixos.**
+### ✅ Frente A — Tipografia + cor profissionais *(CONCLUÍDA 2026-06-18)*
+- **6 fontes profissionais embarcadas** (Inter, Manrope, Merriweather, Lora, Fraunces, Playfair Display) — estáticos Regular+Bold instanciados de fontes variáveis Google, em `src/Ebook.Api/assets/fonts/`.
+- `FontRegistry` registra no QuestPDF (`RegisterFontWithCustomName`, família derivada do nome do arquivo) e no Skia (cache por família+peso, `FromFile`); fallback gracioso.
+- `NicheStyleCatalog`: hash → **semântico por nicho** (cores emocionais + par de fontes da tabela acima). `PaletteCatalog`/`PdfThemeSelector` delegam a ele.
+- `QuestPdfRenderer`: cores/fontes da paleta do nicho (coerente com a capa), hierarquia 40/26/18/12 + line-height 1.5, accent reservado a destaques (60-30-10).
+- **Verificado**: PDF do nicho Finanças embarca `Manrope-Bold`/`Merriweather-Regular`, **sem fallback para Lato**. 154 testes OK.
 
-### 🟢 Frente B — Prompts de conteúdo (AIDA/PAS/estrutura) *(quick win, só prompts)*
-- `outline.md`: macro-AIDA (prefácio BAB, Cap 1 "O Grande Insight", Cap final "O Próximo Passo", sobre-autor, bônus); 1 ideia/capítulo (800–1.500 palavras).
-- `chapter.md`: PAS, hook em 2 parágrafos, parág. ≤4 linhas, micro-CTA; **emitir marcadores** de elemento visual (pull quote, caixa Insight, checklist, estudo de caso) + **query de imagem por seção**.
-- `sales-copy.md`: 4 U's, gatilhos de Cialdini, BAB, fórmulas de headline, verbos de conversão. **Sem build C#.**
+### ✅ Frente B — Prompts de conteúdo (AIDA/PAS/estrutura) *(CONCLUÍDA 2026-06-18)*
+- `outline.md`: macro-AIDA (Cap 1 "O Grande Insight", Cap final "O Próximo Passo"), 1 ideia/capítulo (800–1.500 palavras), título com 4 U's.
+- `chapter.md`: PAS, hook em 2 parágrafos, parág. ≤4 linhas, pull quote (`>`) + checklist (`- `), micro-CTA com verbo de comando.
+- `sales-copy.md`: 4 U's, gatilhos de Cialdini, BAB, fórmulas de headline, verbos de conversão (schema JSON preservado).
 
 ### 🟠 Frente C — Layout rico no PDF *(depende de B)*
 - Estender `MarkdownBlockKind` + parser + renderer: pull quote, caixa "Insight Rápido", checklist, quadro "Estudo de Caso", bloco de imagem, CTA-respiro, micro-CTA por capítulo, sumário visual com ícones (Phosphor/Lucide).
