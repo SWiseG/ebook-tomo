@@ -106,7 +106,8 @@ public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : D
             e.ToTable("SaleEvent");
             e.HasKey(x => x.Id);
             e.Property(x => x.KiwifyOrderId).HasMaxLength(120);
-            e.HasIndex(x => x.KiwifyOrderId).IsUnique();
+            // chave natural composta: a Kiwify reusa o order_id na venda e no estorno/chargeback
+            e.HasIndex(x => new { x.KiwifyOrderId, x.Type }).IsUnique();
             e.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);
             e.Property(x => x.Currency).HasMaxLength(3);
             e.Property(x => x.GrossAmount).HasConversion<double>();

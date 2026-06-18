@@ -206,6 +206,39 @@ public class PublishingTests
         Assert.Equal(27m, events[0].GrossAmount);
 
         var fileStore = scope.ServiceProvider.GetRequiredService<IFileStore>();
-        Assert.NotNull(await fileStore.ReadTextAsync(SalePaths.Raw("ORDER-1"))); // payload bruto guardado
+        Assert.NotNull(await fileStore.ReadTextAsync(SalePaths.Raw("ORDER-1", SaleType.Sale))); // payload bruto guardado
+    }
+
+    [Fact]
+    public async Task Webhook_grava_estorno_com_mesmo_order_id_da_venda()
+    {
+        var (provider, _) = Build();
+        using var _p = provider;
+        var id = await SeedAwaitingApprovalAsync(provider);
+        await SetAsync(provider, SettingKeys.KiwifyAutoPublish, true);
+        await SendAsync(provider, new ApproveProductCommand(id));
+        await DrainAsync(provider);
+
+        var sale = new RecordSaleCommand(
+            "ORDER-9", SaleType.Sale, 50m, 45m, "BRL", "kw-guia-x",
+            "instagram", "lancamento", DateTime.UtcNow, "{\"t\":\"sale\"}");
+        var refund = new RecordSaleCommand(
+            "ORDER-9", SaleType.Refund, 50m, 45m, "BRL", "kw-guia-x",
+            "instagram", "lancamento", DateTime.UtcNow, "{\"t\":\"refund\"}");
+
+        await SendAsync(provider, sale);
+        await SendAsync(provider, refund); // mesmo order_id, tipo diferente → grava (não descarta)
+        await SendAsync(provider, refund); // reentrega do estorno → idempotente por (order_id, tipo)
+
+        using var scope = provider.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EbookDbContext>();
+        var events = await db.SaleEvents.AsNoTracking().Where(s => s.KiwifyOrderId == "ORDER-9").ToListAsync();
+        Assert.Equal(2, events.Count); // venda + estorno coexistem
+        Assert.Contains(events, e => e.Type == SaleType.Sale);
+        Assert.Contains(events, e => e.Type == SaleType.Refund);
+
+        var fileStore = scope.ServiceProvider.GetRequiredService<IFileStore>();
+        Assert.NotNull(await fileStore.ReadTextAsync(SalePaths.Raw("ORDER-9", SaleType.Sale)));
+        Assert.NotNull(await fileStore.ReadTextAsync(SalePaths.Raw("ORDER-9", SaleType.Refund))); // payloads separados
     }
 }

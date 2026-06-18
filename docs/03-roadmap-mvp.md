@@ -28,16 +28,40 @@ Medir $   ►  IA de Mídia ► Aprender  ► Vídeo c/IA ► Persuasão  ► Au
 
 ## Onda 1 — Fechar o loop do dinheiro
 
-Sem vendas e conversão reais no banco, o restante do sistema mede o nada. Esta onda fecha o que estava planejado e ainda falta.
+> **Revisão 2026-06-18:** auditoria do código mostrou que **o grosso desta onda já está implementado e em produção** (a nota anterior de "não implementado" estava errada). O que resta é **validação e configuração**, não construção.
 
-| Item | O quê | Prioridade |
+### Já implementado e no ar ✅
+
+| Item | Evidência no código |
+|---|---|
+| **E07-02** Webhooks Kiwify | `POST /webhooks/kiwify` (token fixed-time), `KiwifyWebhookMapper`, `RecordSaleCommand` (idempotente por order id), `SaleEvent` |
+| **E11-01** Pixel + atribuição | `/px.gif` (1×1), `/go/{slug}`; LP injeta script que repassa UTM ao pixel **e** aos CTAs (`LandingPageBuilder.Pixel`) |
+| **E11-02** Agregação diária | `MetricsAggregator` (upsert idempotente) + cron Quartz `metrics-daily` (02:30 UTC, registrado no DI) |
+| **E11-03** Dashboard de funil | `DashboardReader` (funil 30d) + `MetricsReader` (por canal) + `GET /products/{id}/metrics` + UI em dashboard e product-detail |
+| **UTM uniformes** | `GenerateCalendarJobHandler.BuildUtm` — **todos** os posts (não só Reel); Reel via `GenerateVideoJobHandler` |
+| **E12-02/03** | `OptimizationExecutor`: Kill→`Retire`+reposição se abaixo do mínimo; Iterate→aplica preço sugerido |
+
+### Hardening do webhook ✅ (2026-06-18)
+
+**Mapeamento do payload** (`KiwifyWebhookMapper` reescrito contra o payload **real** da Kiwify):
+- lê objetos aninhados `Commissions` / `Product` / `TrackingParameters` (antes só lia campos no topo → toda venda gravava R$ 0, sem produto, sem UTM);
+- converte valores em **centavos-string** (`charge_amount: "8063"` → R$ 80,63);
+- só grava eventos pagos/estorno/chargeback — eventos pendentes (`pix_gerado`/`boleto_gerado`/`waiting_payment`/recusado) são reconhecidos e ignorados (200 OK sem gravar), evitando **venda-fantasma** (esses eventos também trazem `charge_amount`);
+- mantém fallback plano (reais) por compatibilidade.
+
+**Idempotência de estorno** (a Kiwify reusa o mesmo `order_id` na venda e no estorno):
+- chave natural agora composta `(order_id, type)` — `ISaleRepository.ExistsAsync(orderId, type)`; índice único `(KiwifyOrderId, Type)` (migration `SaleRefundIdempotency`). Antes o estorno era **descartado** pelo dedup por order_id;
+- payload bruto separado por tipo (`sales/{order}-{type}.json`) — estorno não sobrescreve a venda;
+- agregador (`MetricsAggregator`) subtrai estornos/chargebacks da **receita líquida** do dia.
+
+140 testes passam (8 casos de webhook + estorno gravado + estorno subtraindo receita).
+
+### Falta de verdade
+
+| Item | O quê | Tipo |
 |---|---|---|
-| **E07-02** | Webhooks Kiwify (venda/refund) → `SaleEvent` → dashboard de funil | crítico |
-| **E11-01** | Pixel próprio (GET 1×1 + endpoint) por LP com UTM | crítico |
-| **E11-02** | Agregação diária `MetricDaily` (visitas, cliques, vendas, receita, conversão) | crítico |
-| **E11-03** | Dashboard de funil/ROI conectado aos dados reais | conectar |
-| **UTM uniformes** | UTMs consistentes em todos os posts sociais (hoje só o Reel tem) | alta |
-| **E12-02/03** | "Matar" → arquiva + repõe substituto; "Iterar" → preço/headline/calendário | alta |
+| **E12-03 ações completas** | "Iterar" hoje só aplica preço; falta regenerar headline da LP e novo calendário social | código (menor) |
+| **Config Kiwify + Railway** | Registrar a URL do webhook no painel Kiwify + setar `Kiwify__WebhookToken` no Railway + venda de teste | ação do usuário |
 
 **Marco M2:** 3 produtos ativos com tráfego orgânico + funil de conversão medido ponta a ponta.
 

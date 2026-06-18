@@ -136,7 +136,15 @@ public static class PublicEndpoints
                 return Results.BadRequest(new { error = mapped.Error.Code });
             }
 
-            var result = await dispatcher.SendAsync(mapped.Value, ct);
+            var command = mapped.Value;
+            if (command is null)
+            {
+                // evento reconhecido mas não-gravável (pendente/recusado): confirma sem registrar venda
+                logger.LogInformation("Webhook Kiwify ignorado: evento não-gravável");
+                return Results.Ok();
+            }
+
+            var result = await dispatcher.SendAsync(command, ct);
             return result.IsSuccess ? Results.Ok() : Results.Problem(result.Error.Message);
         })
         .AllowAnonymous()

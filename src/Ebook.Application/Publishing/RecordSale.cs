@@ -32,9 +32,9 @@ public sealed class RecordSaleCommandHandler(
 {
     public async Task<Result<bool>> HandleAsync(RecordSaleCommand command, CancellationToken ct)
     {
-        if (await sales.ExistsByOrderIdAsync(command.KiwifyOrderId, ct))
+        if (await sales.ExistsAsync(command.KiwifyOrderId, command.Type, ct))
         {
-            return Result.Success(true); // reentrega do webhook: idempotente
+            return Result.Success(true); // reentrega do webhook: idempotente por (order_id, tipo)
         }
 
         Guid? productId = null;
@@ -45,7 +45,7 @@ public sealed class RecordSaleCommandHandler(
         }
 
         var stored = await fileStore.WriteTextAsync(
-            SalePaths.Raw(command.KiwifyOrderId), command.RawPayloadJson, ct);
+            SalePaths.Raw(command.KiwifyOrderId, command.Type), command.RawPayloadJson, ct);
 
         sales.Add(SaleEvent.Create(
             productId,
@@ -66,7 +66,9 @@ public sealed class RecordSaleCommandHandler(
 
 public static class SalePaths
 {
-    public static string Raw(string orderId) => $"sales/{Sanitize(orderId)}.json";
+    // tipo no caminho: venda e estorno do mesmo pedido não sobrescrevem o payload um do outro
+    public static string Raw(string orderId, SaleType type) =>
+        $"sales/{Sanitize(orderId)}-{type.ToString().ToLowerInvariant()}.json";
 
     private static string Sanitize(string value)
     {

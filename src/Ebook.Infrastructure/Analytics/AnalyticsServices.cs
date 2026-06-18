@@ -53,14 +53,21 @@ public sealed class MetricsAggregator(EbookDbContext db) : IMetricsAggregator
             .ToList();
 
         var rawSales = await db.SaleEvents.AsNoTracking()
-            .Where(s => s.ProductId != null && s.Type == SaleType.Sale
-                && s.OccurredAtUtc >= day && s.OccurredAtUtc < next)
-            .Select(s => new { ProductId = s.ProductId!.Value, s.UtmSource, s.NetAmount })
+            .Where(s => s.ProductId != null && s.OccurredAtUtc >= day && s.OccurredAtUtc < next)
+            .Select(s => new { ProductId = s.ProductId!.Value, s.UtmSource, s.NetAmount, s.Type })
             .ToListAsync(ct);
 
         var sales = rawSales
             .GroupBy(s => (s.ProductId, Channel: ChannelMap.From(s.UtmSource)))
-            .Select(g => new { g.Key.ProductId, g.Key.Channel, Sales = g.Count(), Revenue = g.Sum(x => x.NetAmount) })
+            .Select(g => new
+            {
+                g.Key.ProductId,
+                g.Key.Channel,
+                Sales = g.Count(x => x.Type == SaleType.Sale),
+                // receita líquida: vendas menos estornos/chargebacks do dia (atribuídos ao próprio canal)
+                Revenue = g.Where(x => x.Type == SaleType.Sale).Sum(x => x.NetAmount)
+                          - g.Where(x => x.Type != SaleType.Sale).Sum(x => x.NetAmount)
+            })
             .ToList();
 
         var keys = events.Select(e => (e.ProductId, e.Channel))

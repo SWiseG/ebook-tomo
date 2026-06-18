@@ -51,8 +51,8 @@ public sealed class ProductRepository(EbookDbContext db) : IProductRepository
 
 public sealed class SaleRepository(EbookDbContext db) : ISaleRepository
 {
-    public Task<bool> ExistsByOrderIdAsync(string kiwifyOrderId, CancellationToken ct = default) =>
-        db.SaleEvents.AsNoTracking().AnyAsync(s => s.KiwifyOrderId == kiwifyOrderId, ct);
+    public Task<bool> ExistsAsync(string kiwifyOrderId, SaleType type, CancellationToken ct = default) =>
+        db.SaleEvents.AsNoTracking().AnyAsync(s => s.KiwifyOrderId == kiwifyOrderId && s.Type == type, ct);
 
     public void Add(SaleEvent sale) => db.SaleEvents.Add(sale);
 }

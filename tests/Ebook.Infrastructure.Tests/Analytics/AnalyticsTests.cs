@@ -46,6 +46,16 @@ public class AnalyticsTests
         await db.SaveChangesAsync();
     }
 
+    private static async Task SeedRefundAsync(ServiceProvider provider, Guid productId, string utm, decimal net)
+    {
+        using var scope = provider.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EbookDbContext>();
+        db.SaleEvents.Add(SaleEvent.Create(
+            productId, $"order-{Guid.NewGuid():N}", SaleType.Refund, net + 3m, net, "BRL",
+            utm, "lancamento", DateTime.UtcNow, "sales/x-refund.json"));
+        await db.SaveChangesAsync();
+    }
+
     private static async Task<int> AggregateAsync(ServiceProvider provider)
     {
         using var scope = provider.CreateScope();
@@ -105,6 +115,23 @@ public class AnalyticsTests
         var ig = await db.MetricDailies.AsNoTracking().SingleAsync(m => m.Channel == AnalyticsChannel.Instagram);
         Assert.Equal(3, ig.Visits); // não dobrou
         Assert.Equal(1, ig.Sales);
+    }
+
+    [Fact]
+    public async Task Estorno_reduz_a_receita_liquida_do_dia()
+    {
+        using var provider = Build();
+        var (id, _) = await SeedProductAsync(provider);
+        await SeedSaleAsync(provider, id, "instagram", 100m);   // venda líquida 100
+        await SeedRefundAsync(provider, id, "instagram", 100m); // estorno 100 → receita líquida 0
+
+        await AggregateAsync(provider);
+
+        using var scope = provider.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EbookDbContext>();
+        var ig = await db.MetricDailies.AsNoTracking().SingleAsync(m => m.Channel == AnalyticsChannel.Instagram);
+        Assert.Equal(1, ig.Sales);    // 1 venda contada
+        Assert.Equal(0m, ig.Revenue); // 100 vendido - 100 estornado
     }
 
     [Fact]
