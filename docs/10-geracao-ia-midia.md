@@ -2,6 +2,17 @@
 
 > Arquitetura do Media Gateway e do loop de aprendizado de estilo. Documento normativo — toda decisão de implementação deve respeitar estas convenções.
 
+## Status de implementação (2026-06-18)
+
+**✅ Incremento 1 — núcleo + free-first sem chave (162 testes):**
+- `IMediaGateway`/`IMediaResolver`/`MediaBrief`/`MediaResult` em `Application/Media`; `MediaGateway` (Infra) com cadeia, **cache content-addressable** (`MediaCache`) e **cota diária** + telemetria (`MediaUsage`) — migration `MediaGateway`.
+- Resolvers: **Pollinations** (generativo grátis, sem chave, ligado por padrão) + **Pexels** (banco de fotos, último elo).
+- Integração sem custo de mudança: `MediaGatewayPhotoProvider : IPhotoProvider` — capa/cards/vídeo passam a usar IA generativa de fundo (Pollinations) com fallback Pexels → gradiente; o Skia segue sobrepondo o texto.
+
+**⏳ Incremento 2 — provedores com chave:** `GeminiImageResolver`, `CloudflareImageResolver`, `HuggingFaceImageResolver` (entram ANTES do Pollinations na cadeia; ligam quando a chave é configurada em `Media:*` no Railway). Depois: API rica `GenerateAsync(MediaBrief)` consumida direto para **ilustrações no corpo** (Frente D) e frames de vídeo (E14-09).
+
+Config (env/appsettings, seção `Media`): `Media:Gemini:ApiKey`, `Media:Cloudflare:AccountId`/`ApiKey`, `Media:HuggingFace:ApiKey`, `Media:Pollinations:Enabled` (true), `*:DailyLimit`.
+
 ## Motivação
 
 A geração de imagens e vídeos sempre foi local (SkiaSharp + FFmpeg). Isso garante disponibilidade e custo zero, mas a qualidade visual é limitada. IAs generativas (Gemini, Cloudflare, HuggingFace, Pollinations) produzem resultados muito superiores nos seus free tiers. O objetivo é:

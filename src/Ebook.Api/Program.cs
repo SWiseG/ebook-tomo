@@ -108,6 +108,9 @@ try
     // fontes embarcadas (docs/11): registra no QuestPDF + Skia antes de qualquer renderização
     Ebook.Infrastructure.Content.FontRegistry.Initialize(
         Path.Combine(AppContext.BaseDirectory, "assets", "fonts"));
+    // ícones SVG (docs/12): caixas de destaque/divisores no PDF
+    Ebook.Infrastructure.Content.IconRegistry.Initialize(
+        Path.Combine(AppContext.BaseDirectory, "assets", "icons"));
 
     using (var scope = app.Services.CreateScope())
     {

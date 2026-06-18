@@ -8,6 +8,7 @@ using Ebook.Application.Content.Images;
 using Ebook.Application.Content.Pdf;
 using Ebook.Application.Analytics;
 using Ebook.Application.Discovery;
+using Ebook.Application.Media;
 using Ebook.Application.Optimization;
 using Ebook.Application.Publishing;
 using Ebook.Application.Social;
@@ -51,6 +52,7 @@ public static class DependencyInjection
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<AdminAuthOptions>(configuration.GetSection(AdminAuthOptions.SectionName));
         services.Configure<PexelsOptions>(configuration.GetSection(PexelsOptions.SectionName));
+        services.Configure<Media.MediaOptions>(configuration.GetSection(Media.MediaOptions.SectionName));
         services.Configure<KiwifyOptions>(configuration.GetSection(KiwifyOptions.SectionName));
         services.Configure<MetaOptions>(configuration.GetSection(MetaOptions.SectionName));
         services.Configure<VideoOptions>(configuration.GetSection(VideoOptions.SectionName));
@@ -68,7 +70,13 @@ public static class DependencyInjection
         services.AddSingleton<IImageComposer, SkiaImageComposer>();
         services.AddSingleton<IPromptLibrary, PromptLibrary>();
 
-        services.AddHttpClient<IPhotoProvider, PexelsPhotoProvider>(c => c.Timeout = TimeSpan.FromSeconds(15));
+        // Media Gateway (E14): cadeia free-first de geração de imagem por trás do seam IPhotoProvider.
+        // Pexels deixa de ser o IPhotoProvider direto e vira o último elo da cadeia (banco de fotos).
+        services.AddHttpClient<PexelsPhotoProvider>(c => c.Timeout = TimeSpan.FromSeconds(15));
+        services.AddHttpClient<IMediaResolver, Media.PollinationsMediaResolver>(c => c.Timeout = TimeSpan.FromSeconds(60));
+        services.AddScoped<IMediaResolver, Media.PexelsMediaResolver>();
+        services.AddScoped<IMediaGateway, Media.MediaGateway>();
+        services.AddScoped<IPhotoProvider, Media.MediaGatewayPhotoProvider>();
         services.AddSingleton<ClaudeCliClient>();
         services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
         services.AddSingleton<IJwtService, JwtService>();

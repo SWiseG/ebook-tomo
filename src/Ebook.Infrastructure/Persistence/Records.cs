@@ -67,6 +67,28 @@ public sealed class AiCacheRecord
     public DateTime? LastHitAtUtc { get; set; }
 }
 
+public sealed class MediaUsageRecord
+{
+    public Guid Id { get; set; }
+    public string Purpose { get; set; } = string.Empty;
+    public string Provider { get; set; } = string.Empty;
+    public bool CacheHit { get; set; }
+    public int Bytes { get; set; }
+    public int DurationMs { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
+}
+
+public sealed class MediaCacheRecord
+{
+    public string Hash { get; set; } = string.Empty;
+    public string Purpose { get; set; } = string.Empty;
+    public string Provider { get; set; } = string.Empty;
+    public string Path { get; set; } = string.Empty;
+    public int HitCount { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
+    public DateTime? LastHitAtUtc { get; set; }
+}
+
 public sealed class SettingRecord
 {
     public string Key { get; set; } = string.Empty;

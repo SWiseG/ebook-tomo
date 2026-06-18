@@ -156,16 +156,26 @@ public sealed class QuestPdfRenderer : IPdfRenderer
                 break;
 
             case MarkdownBlockKind.Callout:
-                // caixa de destaque (Insight rápido / Estudo de caso): borda accent + fundo claro + rótulo
+                // caixa de destaque (Insight rápido / Estudo de caso): ícone SVG + borda accent + fundo claro
                 col.Item().PaddingVertical(10)
                     .BorderLeft(3).BorderColor(theme.Accent)
                     .Background("#F5F5F3")
                     .PaddingVertical(12).PaddingHorizontal(16)
                     .Column(box =>
                     {
-                        box.Item().Text(block.Label.ToUpperInvariant())
-                            .FontFamily(theme.HeadingFont).FontSize(10).Bold().FontColor(theme.Primary);
-                        box.Item().PaddingTop(5).Text(block.Text).FontColor(theme.Text).LineHeight(1.5f);
+                        box.Item().Row(head =>
+                        {
+                            var icon = IconRegistry.Colored(IconFor(block.Label), theme.Primary);
+                            if (icon is not null)
+                            {
+                                head.ConstantItem(16).AlignMiddle().Svg(icon);
+                                head.ConstantItem(8);
+                            }
+
+                            head.RelativeItem().AlignMiddle().Text(block.Label.ToUpperInvariant())
+                                .FontFamily(theme.HeadingFont).FontSize(10).Bold().FontColor(theme.Primary);
+                        });
+                        box.Item().PaddingTop(6).Text(block.Text).FontColor(theme.Text).LineHeight(1.5f);
                     });
                 break;
 
@@ -187,6 +197,10 @@ public sealed class QuestPdfRenderer : IPdfRenderer
             cta.Item().PaddingTop(12).Text(link).FontFamily(theme.BodyFont).FontSize(12).FontColor(theme.Accent);
         });
     }
+
+    // ícone Lucide por tipo de caixa (docs/12): Estudo de caso → tendência; Insight → lâmpada
+    private static string IconFor(string label) =>
+        label.StartsWith("Estudo", StringComparison.OrdinalIgnoreCase) ? "trending-up" : "lightbulb";
 
     // "[ ] tarefa" → (true,false,"tarefa") · "[x] feita" → (true,true,"feita") · resto → bullet normal
     private static (bool IsTask, bool Done, string Text) ParseTask(string item)

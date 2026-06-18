@@ -17,6 +17,7 @@ SaaS autônomo para descoberta de nichos, geração, publicação, divulgação 
 | [09-distribuicao.md](09-distribuicao.md) | Módulo de distribuição social: canais por nicho, calendário, carrossel, gate de aprovação |
 | [10-geracao-ia-midia.md](10-geracao-ia-midia.md) | Media Gateway (E14): geração de imagens free-first + loop de aprendizado de estilo (E15) |
 | [11-padrao-editorial.md](11-padrao-editorial.md) | Padrão editorial inegociável (fontes, cores, imagens, copy, arquitetura) + diagnóstico + plano de melhoria |
+| [12-pdf-recursos-visuais.md](12-pdf-recursos-visuais.md) | Pesquisa: PDF mais bonito (QuestPDF SVG/Layers/gradientes/drop cap) + repositórios de imagens/SVGs + perfil visual por segmento |
 
 ## Resumo executivo
 

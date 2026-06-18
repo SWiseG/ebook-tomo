@@ -24,6 +24,8 @@
   <ItemGroup>
     <!-- fontes profissionais embarcadas (docs/11) — copiadas para o output e publicadas no Docker -->
     <Content Include="assets\fonts\**\*.ttf" CopyToOutputDirectory="PreserveNewest" />
+    <!-- ícones SVG vetoriais (docs/12, Lucide ISC) para o PDF -->
+    <Content Include="assets\icons\**\*.svg" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

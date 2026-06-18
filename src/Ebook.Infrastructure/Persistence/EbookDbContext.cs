@@ -29,6 +29,8 @@ public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : D
     public DbSet<JobRecord> Jobs => Set<JobRecord>();
     public DbSet<AiUsageRecord> AiUsages => Set<AiUsageRecord>();
     public DbSet<AiCacheRecord> AiCache => Set<AiCacheRecord>();
+    public DbSet<MediaUsageRecord> MediaUsages => Set<MediaUsageRecord>();
+    public DbSet<MediaCacheRecord> MediaCache => Set<MediaCacheRecord>();
     public DbSet<SettingRecord> Settings => Set<SettingRecord>();
     public DbSet<JobRunLogRecord> JobRunLogs => Set<JobRunLogRecord>();
 
@@ -233,6 +235,24 @@ public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : D
             e.HasKey(x => x.Hash);
             e.Property(x => x.Hash).HasMaxLength(64);
             e.Property(x => x.Purpose).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<MediaUsageRecord>(e =>
+        {
+            e.ToTable("MediaUsage");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Purpose).HasMaxLength(100);
+            e.Property(x => x.Provider).HasMaxLength(20);
+            e.HasIndex(x => new { x.Provider, x.CreatedAtUtc }); // cota diária por provedor
+        });
+
+        modelBuilder.Entity<MediaCacheRecord>(e =>
+        {
+            e.ToTable("MediaCache");
+            e.HasKey(x => x.Hash);
+            e.Property(x => x.Hash).HasMaxLength(64);
+            e.Property(x => x.Purpose).HasMaxLength(100);
+            e.Property(x => x.Provider).HasMaxLength(20);
         });
 
         modelBuilder.Entity<SettingRecord>(e =>
