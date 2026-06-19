@@ -1,14 +1,19 @@
 @use '../../../styles/tokens' as t;
 
+/* página sem grid full-screen: altura natural; rolagem fica no .content */
+:host { display: block; flex: none; }
+
 .back {
   display: inline-flex;
   align-items: center;
   gap: t.$space-1;
-  padding: t.$space-4 0 0 t.$space-6;
-  margin-bottom: t.$space-2;
+  padding: t.$space-5 0 0 t.$space-6;
   color: var(--p-text-muted-color);
   font-size: 0.88rem;
 }
+
+/* o link "voltar" já dá o respiro superior — o título não repete o padding-top */
+.page-head { padding-top: t.$space-2; }
 
 .chips {
   display: flex;

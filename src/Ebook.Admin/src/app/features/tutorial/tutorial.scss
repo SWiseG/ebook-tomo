@@ -1,5 +1,8 @@
 @use '../../../styles/tokens' as t;
 
+/* página sem grid full-screen: altura natural; rolagem fica no .content */
+:host { display: block; flex: none; }
+
 .hero {
   padding: t.$space-6;
   border-radius: t.$radius-xl;

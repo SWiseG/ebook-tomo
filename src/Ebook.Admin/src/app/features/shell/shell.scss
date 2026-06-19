@@ -516,10 +516,18 @@
   }
 }
 
+/* Container do conteúdo: coluna flex que preenche a altura abaixo da topbar.
+   Sem padding próprio — quem padda é o .page-head / .grid-toolbar / .page-body.
+   Páginas de grid usam :host flex + .tomo-grid-fill (flex:1) → grid ocupa o resto.
+   Páginas longas (sem grid) rolam aqui via overflow-y. */
 .content {
   flex: 1;
-  padding: t.$space-6 t.$space-6 0;
+  min-height: 0;
   width: 100%;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }
 
 .backdrop {
@@ -558,7 +566,7 @@
     animation: tomo-fade-in t.$dur t.$ease-out;
   }
   .content {
-    padding: t.$space-5 t.$space-4 0;
+    padding: 0;
   }
 }
 

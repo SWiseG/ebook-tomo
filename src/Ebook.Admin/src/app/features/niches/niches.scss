@@ -1,12 +1,10 @@
 @use '../../../styles/tokens' as t;
 
-:host { --grid-above: 138px; }
-
-.row-actions {
+:host {
+  flex: 1;
+  min-height: 0;
   display: flex;
-  gap: t.$space-2;
-  justify-content: flex-end;
-  align-items: center;
+  flex-direction: column;
 }
 
 .row-actions {

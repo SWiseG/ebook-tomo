@@ -1,9 +1,18 @@
 @use '../../../styles/tokens' as t;
 
+/* página de terminal: coluna flex que preenche o .content */
+:host {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .logs-toolbar {
   display: flex;
   align-items: center;
   gap: t.$space-3;
+  flex: none;
   margin-bottom: t.$space-4;
   flex-wrap: wrap;
   padding: 0 t.$space-6;
@@ -11,9 +20,10 @@
   .logs-count { font-size: 0.82rem; }
 }
 
-/* Terminal window — ocupa toda a largura e altura restante do viewport.
-   Fórmula: 100vh − topbar(60) − content-pt(32) − page-head(~84) − toolbar(~54) */
+/* Terminal window — ocupa toda a largura e a altura restante (flex:1), sem scroll de página. */
 .terminal {
+  flex: 1;
+  min-height: 0;
   font-family: t.$font-mono;
   font-size: 0.78rem;
   line-height: 1.6;
@@ -21,8 +31,6 @@
   color: var(--p-surface-200, #e2e8f0);
   border-radius: 0;
   padding: t.$space-4 t.$space-6;
-  height: calc(100vh - 60px - 32px - 84px - 54px);
-  min-height: 300px;
   overflow-y: auto;
   border-top: 1px solid var(--p-surface-800, #1e293b);
   scroll-behavior: smooth;

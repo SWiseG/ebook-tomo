@@ -1,6 +1,11 @@
 @use '../../../styles/tokens' as t;
 
-:host { --grid-above: 138px; }
+:host {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 
 .error-cell {
   max-width: 320px;

@@ -1,5 +1,8 @@
 @use '../../../styles/tokens' as t;
 
+/* página sem grid full-screen: altura natural; rolagem fica no .content */
+:host { display: block; flex: none; }
+
 .block {
   margin-bottom: t.$space-6;
 

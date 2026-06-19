@@ -158,13 +158,17 @@ a {
 }
 
 /* ── Page scaffolding ─────────────────────────────────────── */
+/* Título da página: mantém o padding (o conteúdo/grid abaixo vai full-bleed).
+   flex:none → numa página de grid (host flex-column) o head não estica. */
 .page-head {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: t.$space-4;
-  margin-bottom: t.$space-5;
+  flex: none;
   flex-wrap: wrap;
+  padding: t.$space-6 t.$space-6 0;
+  margin-bottom: t.$space-5;
 
   h1 {
     font-size: 1.5rem;
@@ -181,9 +185,10 @@ a {
   }
 }
 
-/* Wrapper para conteúdo de páginas sem grid de tela cheia — adiciona espaço inferior */
+/* Wrapper de páginas sem grid de tela cheia (dashboard, settings, tutorial, etc.):
+   recebe o padding lateral/inferior, já que .content não tem mais padding próprio. */
 .page-body {
-  padding-bottom: t.$space-7;
+  padding: 0 t.$space-6 t.$space-7;
 }
 
 /* KPI em linha (usado em media-telemetry e dashboard) */
@@ -199,8 +204,11 @@ a {
 }
 .error {
   color: var(--p-red-500, #ef4444);
+  padding: 0 t.$space-6;
 }
+/* estado vazio: inset lateral (o .content não tem mais padding próprio) */
 .empty {
+  margin: 0 t.$space-6;
   padding: t.$space-6;
   text-align: center;
   color: var(--p-text-muted-color);
@@ -316,6 +324,11 @@ a {
    Cada <td> precisa de [data-label] (rótulo da coluna); células sem rótulo
    (ações) ficam em linha cheia. Selectores não-layered vencem o PrimeNG. */
 @media (max-width: 860px) {
+  /* padding lateral menor no celular (16px), só no título/toolbar/corpo */
+  .page-head {
+    padding: t.$space-5 t.$space-4 0;
+    margin-bottom: t.$space-4;
+  }
   .page-head h1 {
     font-size: 1.3rem;
   }
@@ -324,6 +337,25 @@ a {
   }
   .grid-toolbar {
     flex-wrap: wrap;
+    padding: 0 t.$space-4;
+  }
+  .page-body {
+    padding: 0 t.$space-4 t.$space-6;
+  }
+
+  /* busca ocupa a largura toda quando a toolbar quebra a linha */
+  .grid-search {
+    margin-left: 0;
+    width: 100%;
+    input {
+      width: 100%;
+      flex: 1;
+    }
+  }
+  /* filtros (selectButton) também ocupam a linha inteira e rolam se preciso */
+  .grid-toolbar .p-selectbutton {
+    width: 100%;
+    overflow-x: auto;
   }
 
   /* diálogos não estouram a viewport no celular */
@@ -464,11 +496,14 @@ ag-grid-angular,
   .tomo-badge--contrast { background: rgba(248,250,252,.12); color: var(--p-surface-100,#f1f5f9); }
 }
 
-/* ── Toolbar acima do grid (filtros à esquerda + search à direita) ─── */
+/* ── Toolbar acima do grid (filtros à esquerda + search à direita) ───
+   Mantém padding lateral (alinhada ao título); o grid abaixo é que vai full-bleed. */
 .grid-toolbar {
   display: flex;
   align-items: center;
   gap: t.$space-3;
+  flex: none;
+  padding: 0 t.$space-6;
   margin-bottom: t.$space-4;
 }
 
@@ -511,20 +546,13 @@ ag-grid-angular,
   }
 }
 
-/* Grid ocupa toda a largura (quebra o padding lateral do content) e toda a altura disponível.
-   --grid-above: altura total dos elementos acima do grid (page-head + toolbar + etc.)
-   Fórmula: 100vh − topbar(60px) − content-pt(32px) − --grid-above */
+/* Grid ocupa todo o espaço restante (largura e altura), sem scroll de página.
+   Requer que o :host da página seja flex-column com flex:1 (ver .page-fill).
+   min-height:0 deixa o flex encolher o grid; AG Grid + paginação evita scroll interno. */
 .tomo-grid-fill {
-  width: calc(100% + 2 * #{t.$space-6});
-  margin-left: -#{t.$space-6};
-  height: calc(100vh - #{t.$topbar-h} - #{t.$space-6} - var(--grid-above, 90px));
-}
-@media (max-width: 860px) {
-  .tomo-grid-fill {
-    width: calc(100% + 2 * #{t.$space-4});
-    margin-left: -#{t.$space-4};
-    height: calc(100vh - #{t.$topbar-h} - #{t.$space-5} - var(--grid-above, 90px));
-  }
+  flex: 1;
+  min-height: 0;
+  width: 100%;
 }
 
 /* ── Botão ícone nas células de ação ─── */

@@ -1,2 +1,33 @@
-// Estilos locais — layout compartilhado via shell.scss (kpi-row, kpi, block__title, etc.)
-:host { --grid-above: 284px; }
+@use '../../../styles/tokens' as t;
+
+// Estilos locais — cards de KPI reaproveitam .kpi global; aqui só o esqueleto flex
+// para o grid de provedores preencher a altura restante.
+:host {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-row {
+  flex: none;
+  padding: 0 t.$space-6;
+}
+
+.media-providers {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-top: t.$space-5;
+
+  .block__title {
+    flex: none;
+    padding: 0 t.$space-6;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--p-text-muted-color);
+    margin-bottom: t.$space-3;
+  }
+}

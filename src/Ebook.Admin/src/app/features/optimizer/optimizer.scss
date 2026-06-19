@@ -1,5 +1,12 @@
 @use '../../../styles/tokens' as t;
 
+/* página sem grid full-screen (layout em 2 colunas): altura natural; rolagem no .content */
+:host { display: block; flex: none; }
+
+/* toolbar/empty aninhados (já dentro do .page-body): cancelam o padding/margin lateral global */
+.grid-toolbar { padding: 0; }
+.empty { margin: 0; }
+
 .block__title {
   font-size: 0.78rem;
   text-transform: uppercase;
