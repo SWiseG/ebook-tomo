@@ -39,6 +39,9 @@ public static class TestHost
         services.AddSingleton<IMediaGateway, FakeMediaGateway>();
         services.AddSingleton<IPromptLibrary, NullPromptLibrary>();
 
+        // Style analyzer sem CLI/visão: o JobWorker resolve todos os IJobHandler (StyleLearnJobHandler) ao processar
+        services.AddSingleton<Application.Knowledge.IStyleAnalyzer, FakeStyleAnalyzer>();
+
         // Catálogo Kiwify falso (sem rede): a sincronização usa-o em vez da API real.
         services.AddSingleton<FakeKiwifyCatalog>();
         services.AddSingleton<IKiwifyCatalog>(sp => sp.GetRequiredService<FakeKiwifyCatalog>());

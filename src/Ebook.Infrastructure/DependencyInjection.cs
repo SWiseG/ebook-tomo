@@ -9,6 +9,7 @@ using Ebook.Application.Content.Images;
 using Ebook.Application.Content.Pdf;
 using Ebook.Application.Analytics;
 using Ebook.Application.Discovery;
+using Ebook.Application.Knowledge;
 using Ebook.Application.Media;
 using Ebook.Application.Optimization;
 using Ebook.Application.Publishing;
@@ -129,6 +130,9 @@ public static class DependencyInjection
         services.AddScoped<IAiResolver, AiCacheResolver>();
         services.AddScoped<IAiResolver, ClaudeCliResolver>();
 
+        // E15 — loop de aprendizado de estilo: análise de capa por visão (Claude CLI), sem cache de IA
+        services.AddScoped<IStyleAnalyzer, ClaudeVisionStyleAnalyzer>();
+
         services.AddSingleton<OutboxDispatcher>();
         services.AddHostedService(sp => sp.GetRequiredService<OutboxDispatcher>());
         services.AddSingleton<JobWorker>();
@@ -188,6 +192,15 @@ public static class DependencyInjection
                 .ForJob(videoKey)
                 .WithIdentity(VideoSchedulerJob.JobName + "-trigger")
                 .WithCronSchedule(videoCron));
+
+            // aprendizado de estilo (E15): cron semanal analisa capas por nicho, gated por style.learn.enabled
+            var styleCron = configuration["Scheduling:StyleLearnCron"] ?? "0 0 6 ? * MON";
+            var styleKey = new JobKey(StyleLearnJob.JobName);
+            quartz.AddJob<StyleLearnJob>(o => o.WithIdentity(styleKey));
+            quartz.AddTrigger(t => t
+                .ForJob(styleKey)
+                .WithIdentity(StyleLearnJob.JobName + "-trigger")
+                .WithCronSchedule(styleCron));
         });
         services.AddQuartzHostedService(o => o.WaitForJobsToComplete = true);
 
