@@ -24,6 +24,7 @@ public sealed class GenerateVideoJobHandler(
     IArtifactRepository artifacts,
     IAiGateway aiGateway,
     IImageComposer imageComposer,
+    IPhotoProvider photos,
     ITtsEngine tts,
     IVideoComposer videoComposer,
     IFileStore fileStore,
@@ -86,9 +87,12 @@ public sealed class GenerateVideoJobHandler(
 
         await fileStore.WriteTextAsync(ContentPaths.VideoScript(product.Slug), ai.Value.Content, ct);
 
+        // AI-first: fundo 9:16 gerado pela cadeia de mídia; Skia só sobrepõe o texto da cena.
+        var background = await photos.TryGetBackgroundAsync(niche?.Name ?? product.Title, ct);
+
         var scenes = script.Value.Scenes
             .Select(s => new VideoScene(
-                imageComposer.RenderSocial(new SocialArt(s.OnScreen, product.Title, ImageTemplate.Story, palette)),
+                imageComposer.RenderSocial(new SocialArt(s.OnScreen, product.Title, ImageTemplate.Story, palette), background),
                 s.Seconds <= 0 ? 8 : s.Seconds))
             .ToList();
 

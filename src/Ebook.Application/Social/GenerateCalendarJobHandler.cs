@@ -25,6 +25,7 @@ public sealed class GenerateCalendarJobHandler(
     ISocialPostRepository posts,
     IAiGateway aiGateway,
     IImageComposer composer,
+    IPhotoProvider photos,
     IFileStore fileStore,
     IArtifactStore artifactStore,
     IUnitOfWork unitOfWork,
@@ -80,6 +81,10 @@ public sealed class GenerateCalendarJobHandler(
         var startUtc = clock.UtcNow;
         await WriteCalendarFileAsync(product.Slug, startUtc, plan.Value, ct);
 
+        // AI-first: fundo gerado pela cadeia de mídia (Pollinations & cia.); Skia só sobrepõe texto.
+        // Buscado uma vez e reaproveitado (cache content-addressable) por todos os cards do calendário.
+        var background = await photos.TryGetBackgroundAsync(niche?.Name ?? product.Title, ct);
+
         var created = 0;
         foreach (var item in plan.Value.Posts.Take(MaxPosts))
         {
@@ -97,7 +102,7 @@ public sealed class GenerateCalendarJobHandler(
             if (slides.Count >= 2)
             {
                 // carrossel (E09): capa com headline + 1 slide por texto; o primeiro caminho é a capa.
-                var images = composer.RenderCarousel(new CarouselArt(item.Headline, product.Title, slides, palette));
+                var images = composer.RenderCarousel(new CarouselArt(item.Headline, product.Title, slides, palette), background);
                 var paths = new List<string>(images.Count);
                 for (var i = 0; i < images.Count; i++)
                 {
@@ -114,7 +119,7 @@ public sealed class GenerateCalendarJobHandler(
             else
             {
                 var card = composer.RenderSocial(
-                    new SocialArt(item.Headline, product.Title, ImageTemplate.SocialCard, palette));
+                    new SocialArt(item.Headline, product.Title, ImageTemplate.SocialCard, palette), background);
                 var stored = await artifactStore.WriteBytesAsync(
                     ContentPaths.SocialCard(product.Slug, item.Day), card, ct);
                 post.SetMedia(stored.RelativePath);
