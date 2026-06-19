@@ -18,37 +18,25 @@
 
   @if (page(); as p) {
     <p class="muted count">{{ t('jobs.count', { count: p.total }) }}</p>
-    <p-table class="anim-in cards-sm" [value]="p.items" [paginator]="p.items.length > 15" [rows]="15" [rowHover]="true" size="small">
-      <ng-template #header>
-        <tr>
-          <th>{{ t('jobs.col.type') }}</th>
-          <th>{{ t('jobs.col.status') }}</th>
-          <th>{{ t('jobs.col.attempts') }}</th>
-          <th>{{ t('jobs.col.created') }}</th>
-          <th>{{ t('jobs.col.error') }}</th>
-          <th></th>
-        </tr>
-      </ng-template>
-      <ng-template #body let-job>
-        <tr>
-          <td class="mono" [attr.data-label]="t('jobs.col.type')">{{ job.type }}</td>
-          <td [attr.data-label]="t('jobs.col.status')"><p-tag [value]="t('status.job.' + job.status)" [severity]="severity(job.status)" /></td>
-          <td [attr.data-label]="t('jobs.col.attempts')">{{ job.attempts }}</td>
-          <td [attr.data-label]="t('jobs.col.created')">{{ job.createdAtUtc | date: 'dd/MM HH:mm' }}</td>
-          <td class="error-cell" [attr.data-label]="t('jobs.col.error')">{{ job.lastError ?? '—' }}</td>
-          <td>
-            @if (job.status === 'Dead') {
-              <p-button [label]="t('jobs.retry')" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="retry(job)" />
-            }
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template #emptymessage>
-        <tr>
-          <td colspan="6"><div class="empty">{{ t('jobs.empty') }}</div></td>
-        </tr>
-      </ng-template>
-    </p-table>
+    @if (p.items.length === 0) {
+      <div class="empty anim-in">{{ t('jobs.empty') }}</div>
+    } @else {
+      <ag-grid-angular
+        class="anim-in"
+        [rowData]="p.items"
+        [columnDefs]="colDefs"
+        [defaultColDef]="defaultColDef"
+        [theme]="theme"
+        [gridOptions]="gridOptions"
+        domLayout="autoHeight"
+        [pagination]="p.items.length > 15"
+        [paginationPageSize]="15"
+        [paginationPageSizeSelector]="false"
+        [suppressPaginationPanel]="p.items.length <= 15"
+        (gridReady)="onGridReady($event)"
+        style="width:100%"
+      />
+    }
   } @else {
     <app-loading variant="table" [rows]="8" />
   }

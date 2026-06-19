@@ -14,49 +14,26 @@
   }
 
   @if (products(); as list) {
-    <p-table class="anim-in cards-sm" [value]="list" [paginator]="list.length > 12" [rows]="12" [rowHover]="true" size="small">
-      <ng-template #header>
-        <tr>
-          <th>{{ t('products.col.product') }}</th>
-          <th>{{ t('products.col.stage') }}</th>
-          <th>{{ t('products.col.status') }}</th>
-          <th>{{ t('products.col.platform') }}</th>
-          <th>{{ t('products.col.price') }}</th>
-          <th>{{ t('products.col.created') }}</th>
-          <th></th>
-        </tr>
-      </ng-template>
-      <ng-template #body let-p>
-        <tr class="clickable" (click)="open(p)">
-          <td [attr.data-label]="t('products.col.product')">
-            <span>
-              <strong>{{ p.title }}</strong>
-              <div class="mono">{{ p.slug }}</div>
-            </span>
-          </td>
-          <td [attr.data-label]="t('products.col.stage')"><p-tag [value]="t('status.stage.' + p.stage)" severity="secondary" /></td>
-          <td [attr.data-label]="t('products.col.status')"><p-tag [value]="t('status.product.' + p.status)" [severity]="severity(p.status)" /></td>
-          <td [attr.data-label]="t('products.col.platform')">{{ p.publicationPlatform ? t('status.platform.' + p.publicationPlatform) : '—' }}</td>
-          <td [attr.data-label]="t('products.col.price')">{{ p.price > 0 ? (p.price | currency: p.currency) : '—' }}</td>
-          <td [attr.data-label]="t('products.col.created')">{{ p.createdAtUtc | date: 'dd/MM/yy HH:mm' }}</td>
-          <td>
-            <p-button
-              icon="pi pi-ellipsis-v"
-              [text]="true"
-              severity="secondary"
-              size="small"
-              [attr.aria-label]="t('products.actions.menu')"
-              (click)="$event.stopPropagation(); openMenu($event, p, actionsMenu)"
-            />
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template #emptymessage>
-        <tr>
-          <td colspan="7"><div class="empty">{{ t('products.empty') }}</div></td>
-        </tr>
-      </ng-template>
-    </p-table>
+    @if (list.length === 0) {
+      <div class="empty anim-in">{{ t('products.empty') }}</div>
+    } @else {
+      <ag-grid-angular
+        class="tomo-grid-clickable anim-in"
+        [rowData]="list"
+        [columnDefs]="colDefs"
+        [defaultColDef]="defaultColDef"
+        [theme]="theme"
+        [gridOptions]="gridOptions"
+        domLayout="autoHeight"
+        [pagination]="list.length > 12"
+        [paginationPageSize]="12"
+        [paginationPageSizeSelector]="false"
+        [suppressPaginationPanel]="list.length <= 12"
+        (rowClicked)="open($event.data!)"
+        (gridReady)="onGridReady($event)"
+        style="width:100%"
+      />
+    }
   } @else if (!error()) {
     <app-loading variant="table" [rows]="6" />
   }

@@ -27,6 +27,7 @@
     "jobs": "Jobs",
     "optimizer": "Optimizer",
     "media": "AI Media",
+    "logs": "Logs",
     "settings": "Settings",
     "tutorial": "How to use"
   },
@@ -270,6 +271,17 @@
       "idle": "Idle",
       "quotaExhausted": "Quota exhausted"
     }
+  },
+  "logs": {
+    "title": "Server Logs",
+    "subtitle": "Real-time stream of routines: jobs, AI, webhooks and errors.",
+    "pause": "Pause",
+    "resume": "Resume",
+    "clear": "Clear",
+    "filterAll": "All",
+    "entries": "entries",
+    "paused": "Paused",
+    "empty": "Waiting for logs… Run a job to see activity here."
   },
   "login": {
     "subtitle": "Autonomous e-book factory",

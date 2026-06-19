@@ -1,0 +1,58 @@
+<ng-container *transloco="let t">
+  <div class="page-head anim-in">
+    <div>
+      <h1>{{ t('logs.title') }}</h1>
+      <div class="sub">{{ t('logs.subtitle') }}</div>
+    </div>
+    <div class="actions">
+      <p-button
+        [label]="paused() ? t('logs.resume') : t('logs.pause')"
+        [icon]="paused() ? 'pi pi-play' : 'pi pi-pause'"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="togglePause()"
+      />
+      <p-button
+        [label]="t('logs.clear')"
+        icon="pi pi-trash"
+        severity="danger"
+        [text]="true"
+        (onClick)="clear()"
+      />
+    </div>
+  </div>
+
+  <!-- Filtro de nível -->
+  <div class="logs-toolbar anim-in">
+    <p-selectButton
+      [options]="levelOptions"
+      [(ngModel)]="levelFilter"
+      optionLabel="label"
+      optionValue="value"
+      [allowEmpty]="false"
+      (onChange)="shouldScrollToBottom = true"
+    />
+    <span class="logs-count muted">{{ filtered.length }} {{ t('logs.entries') }}</span>
+    @if (paused()) {
+      <span class="tomo-badge tomo-badge--warn">{{ t('logs.paused') }}</span>
+    }
+  </div>
+
+  <!-- Terminal -->
+  <div class="terminal anim-in" #terminal>
+    @if (filtered.length === 0) {
+      <div class="terminal__empty">{{ t('logs.empty') }}</div>
+    } @else {
+      @for (entry of filtered; track entry.id) {
+        <div class="log-line" [class]="levelClass(entry.level)">
+          <span class="log-time">{{ formatTime(entry.timestamp) }}</span>
+          <span class="log-level">{{ entry.level }}</span>
+          @if (entry.source) {
+            <span class="log-source">{{ entry.source }}</span>
+          }
+          <span class="log-msg">{{ entry.message }}</span>
+        </div>
+      }
+    }
+  </div>
+</ng-container>

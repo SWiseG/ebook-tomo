@@ -1,6 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { Component, effect, inject, signal, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { debounceTime } from 'rxjs';
@@ -8,7 +7,6 @@ import { Router, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { MenuItem } from 'primeng/api';
-import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { MenuModule } from 'primeng/menu';
@@ -17,6 +15,9 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { SelectModule } from 'primeng/select';
+import { AgGridAngular } from 'ag-grid-angular';
+import { ColDef, GridApi, GridReadyEvent, ICellRendererParams } from 'ag-grid-community';
+import { tomoAgTheme } from '../../shared/ag-grid/tomo-ag-theme';
 import { ProductDetail, ProductItem, ProductStatus } from '../../core/api.types';
 import { NotificationService } from '../../core/notification.service';
 import { RealtimeService } from '../../core/realtime.service';
@@ -24,7 +25,6 @@ import { Loading } from '../../shared/loading';
 
 type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' | undefined;
 
-/** Recorte do sales-copy.json (copy de venda gerada pela IA) usado para pré-preencher o modal. */
 interface SalesCopy {
   headline?: string;
   subheadline?: string;
@@ -49,12 +49,10 @@ const SEVERITY: Record<ProductStatus, Severity> = {
 @Component({
   selector: 'app-products',
   imports: [
-    DatePipe,
-    CurrencyPipe,
     FormsModule,
     RouterLink,
     TranslocoDirective,
-    TableModule,
+    AgGridAngular,
     TagModule,
     ButtonModule,
     MenuModule,
@@ -75,10 +73,10 @@ export class Products {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly t = inject(TranslocoService);
 
+  @ViewChild('actionsMenu') actionsMenu!: Menu;
+
   readonly products = signal<ProductItem[] | null>(null);
   readonly error = signal<string | null>(null);
-
-  // Menu de ações por linha
   readonly menuModel = signal<MenuItem[]>([]);
 
   // Modal: Dados de Publicação
@@ -111,13 +109,115 @@ export class Products {
     { label: 'Español', value: 'es' },
   ];
 
+  // AG Grid
+  readonly theme = tomoAgTheme;
+  gridApi?: GridApi<ProductItem>;
+
+  readonly defaultColDef: ColDef = {
+    sortable: true,
+    resizable: true,
+    suppressMovable: true,
+    suppressHeaderMenuButton: true,
+  };
+
+  readonly colDefs: ColDef<ProductItem>[] = this.buildCols();
+
+  readonly gridOptions = {
+    context: { openMenu: (e: MouseEvent, p: ProductItem) => this.openMenu(e, p) },
+    rowClass: 'ag-row-hover-cursor',
+    suppressCellFocus: true,
+    suppressPaginationPanel: false,
+  };
+
   constructor() {
     this.load();
-
-    // Atualização ao vivo: qualquer transição de produto recarrega a lista.
     this.realtime.productChanged$
       .pipe(debounceTime(600), takeUntilDestroyed())
       .subscribe(() => this.load());
+  }
+
+  onGridReady(e: GridReadyEvent<ProductItem>): void {
+    this.gridApi = e.api;
+  }
+
+  private buildCols(): ColDef<ProductItem>[] {
+    const t = this.t;
+    const fmt = (d: string) =>
+      new Date(d).toLocaleString('pt-BR', {
+        day: '2-digit', month: '2-digit', year: '2-digit',
+        hour: '2-digit', minute: '2-digit',
+      });
+
+    return [
+      {
+        headerName: t.translate('products.col.product'),
+        flex: 2,
+        minWidth: 180,
+        sortable: true,
+        valueGetter: (p) => p.data?.title ?? '',
+        cellRenderer: (params: ICellRendererParams<ProductItem>) =>
+          `<span><strong>${params.data!.title}</strong><div class="mono">${params.data!.slug}</div></span>`,
+      },
+      {
+        headerName: t.translate('products.col.stage'),
+        field: 'stage',
+        width: 110,
+        cellRenderer: (params: ICellRendererParams<ProductItem>) =>
+          `<span class="tomo-badge tomo-badge--secondary">${t.translate('status.stage.' + params.value)}</span>`,
+      },
+      {
+        headerName: t.translate('products.col.status'),
+        field: 'status',
+        width: 150,
+        cellRenderer: (params: ICellRendererParams<ProductItem>) => {
+          const sev = SEVERITY[params.value as ProductStatus];
+          return `<span class="tomo-badge tomo-badge--${sev ?? 'default'}">${t.translate('status.product.' + params.value)}</span>`;
+        },
+      },
+      {
+        headerName: t.translate('products.col.platform'),
+        field: 'publicationPlatform',
+        width: 115,
+        cellRenderer: (params: ICellRendererParams<ProductItem>) =>
+          params.value ? t.translate('status.platform.' + params.value) : '—',
+      },
+      {
+        headerName: t.translate('products.col.price'),
+        field: 'price',
+        width: 110,
+        valueFormatter: (params) =>
+          params.data?.price && params.data.price > 0
+            ? new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: params.data.currency || 'BRL',
+              }).format(params.data.price)
+            : '—',
+      },
+      {
+        headerName: t.translate('products.col.created'),
+        field: 'createdAtUtc',
+        width: 130,
+        valueFormatter: (params) => (params.value ? fmt(params.value as string) : '—'),
+      },
+      {
+        headerName: '',
+        width: 56,
+        sortable: false,
+        resizable: false,
+        cellRenderer: (params: ICellRendererParams<ProductItem>) => {
+          const btn = document.createElement('button');
+          btn.className = 'tomo-grid-icon-btn';
+          btn.setAttribute('aria-label', t.translate('products.actions.menu'));
+          btn.innerHTML = '<span class="pi pi-ellipsis-v"></span>';
+          btn.addEventListener('click', (e: Event) => {
+            e.stopPropagation();
+            (params.context as { openMenu: (ev: MouseEvent, p: ProductItem) => void })
+              .openMenu(e as MouseEvent, params.data!);
+          });
+          return btn;
+        },
+      },
+    ];
   }
 
   private load(): void {
@@ -135,8 +235,7 @@ export class Products {
     void this.router.navigate(['/products', p.id]);
   }
 
-  /** Abre o menu de ações da linha, montando os itens com habilitação por status/estágio. */
-  openMenu(event: MouseEvent, p: ProductItem, menu: Menu): void {
+  openMenu(event: MouseEvent, p: ProductItem): void {
     const inPublishing = p.status === 'Publishing' && p.stage === 'Publishing';
     const published = p.status === 'Published' || p.status === 'Synchronized' || p.status === 'Unsynchronized';
     const checkoutable = p.status === 'Publishing' || published;
@@ -167,7 +266,7 @@ export class Products {
         command: () => this.sync(p),
       },
     ]);
-    menu.toggle(event);
+    this.actionsMenu.toggle(event);
   }
 
   // ── Dados de Publicação ──
@@ -177,12 +276,10 @@ export class Products {
       const copy = this.parseSalesCopy(d.salesCopyJson);
       this.pubPlatform = d.publicationPlatform ?? 'Kiwify';
       this.pubTitle = d.title;
-      // Descrição = copy de venda gerada (a menos que já tenha sido editada/salva).
       this.pubDescription = d.description?.trim() ? d.description : this.composeDescription(copy);
       this.pubPrice = d.price;
       this.pubCurrency = d.currency || 'BRL';
       this.pubEmailLanguage = d.emailLanguage ?? 'pt-BR';
-      // Categoria sugerida: salva → da copy (IA) → heurística pelo título.
       this.pubCategory = d.category?.trim() || copy.category?.trim() || this.suggestCategory(d.title);
       this.pubLpUrl = d.lpUrl;
       this.loadCover(p.id);
@@ -312,14 +409,9 @@ export class Products {
 
   private parseSalesCopy(json: string | null | undefined): SalesCopy {
     if (!json) return {};
-    try {
-      return JSON.parse(json) as SalesCopy;
-    } catch {
-      return {};
-    }
+    try { return JSON.parse(json) as SalesCopy; } catch { return {}; }
   }
 
-  /** Monta a descrição para a Kiwify a partir da copy de venda (headline + sub + bullets + solução). */
   private composeDescription(copy: SalesCopy): string {
     const parts: string[] = [];
     if (copy.headline?.trim()) parts.push(copy.headline.trim());
@@ -330,7 +422,6 @@ export class Products {
     return parts.join('\n\n');
   }
 
-  /** Sugere uma categoria pelo título quando a IA não a forneceu (fallback heurístico). */
   private suggestCategory(title: string): string {
     const t = title.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
     const rules: [RegExp, string][] = [
@@ -344,16 +435,11 @@ export class Products {
       [/ingles|idioma|estudo|concurso|aprend/, 'Educação'],
       [/beleza|skincare|maquiagem|cabelo/, 'Beleza'],
     ];
-    for (const [re, cat] of rules) {
-      if (re.test(t)) return cat;
-    }
+    for (const [re, cat] of rules) { if (re.test(t)) return cat; }
     return 'Desenvolvimento Pessoal';
   }
 
   private revokeCover(): void {
-    if (this.coverObjectUrl) {
-      URL.revokeObjectURL(this.coverObjectUrl);
-      this.coverObjectUrl = null;
-    }
+    if (this.coverObjectUrl) { URL.revokeObjectURL(this.coverObjectUrl); this.coverObjectUrl = null; }
   }
 }

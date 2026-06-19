@@ -27,6 +27,7 @@
     "jobs": "Jobs",
     "optimizer": "Optimizador",
     "media": "Medios IA",
+    "logs": "Logs",
     "settings": "Configuración",
     "tutorial": "Cómo usar"
   },
@@ -270,6 +271,17 @@
       "idle": "Inactivo",
       "quotaExhausted": "Cuota agotada"
     }
+  },
+  "logs": {
+    "title": "Logs del Servidor",
+    "subtitle": "Stream en tiempo real de las rutinas: jobs, IA, webhooks y errores.",
+    "pause": "Pausar",
+    "resume": "Reanudar",
+    "clear": "Limpiar",
+    "filterAll": "Todos",
+    "entries": "entradas",
+    "paused": "Pausado",
+    "empty": "Esperando logs… Ejecuta un job para ver actividad aquí."
   },
   "login": {
     "subtitle": "Fábrica autónoma de e-books",

@@ -210,6 +210,7 @@ a {
 .kpi {
   display: flex;
   gap: t.$space-3;
+  margin-bottom: t.$space-3;
   align-items: flex-start;
   padding: t.$space-4 t.$space-5;
   background: var(--p-content-background);
@@ -358,5 +359,131 @@ a {
         min-height: 44px;
       }
     }
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Tomo — AG Grid: tema visual + utilitários de células
+   ───────────────────────────────────────────────────────────── */
+
+/* Herda a tipografia do app (Inter) */
+ag-grid-angular,
+.ag-root-wrapper {
+  font-family: t.$font-sans !important;
+  --ag-font-family: #{t.$font-sans};
+}
+
+/* Remove sombra interna do wrapper */
+.ag-root-wrapper { box-shadow: none !important; }
+
+/* Header: uppercase leve */
+.ag-header-cell-text {
+  text-transform: uppercase;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.06em;
+}
+
+/* Linha clicável */
+.tomo-grid-clickable .ag-row { cursor: pointer; }
+
+/* Paginação */
+.ag-paging-panel {
+  border-top: 1px solid var(--p-content-border-color) !important;
+  background: transparent !important;
+  color: var(--p-text-muted-color) !important;
+  font-size: 0.82rem;
+  padding: 8px 12px !important;
+}
+.ag-paging-button { color: var(--p-text-muted-color) !important; }
+.ag-paging-button:not([disabled]):hover {
+  color: var(--p-text-color) !important;
+  background: var(--p-content-hover-background) !important;
+  border-radius: 6px;
+}
+.ag-paging-button[disabled] { opacity: 0.35 !important; }
+
+/* Célula: alinhamento vertical */
+.ag-cell {
+  display: flex !important;
+  align-items: center;
+  overflow: visible;
+}
+
+/* ── Badges (substitutos do p-tag no AG Grid) ─── */
+.tomo-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: t.$radius-pill;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  line-height: 1.5;
+
+  &--success  { background: var(--p-green-100,  #dcfce7); color: var(--p-green-700,  #15803d); }
+  &--info     { background: var(--p-blue-100,   #dbeafe); color: var(--p-blue-700,   #1d4ed8); }
+  &--warn     { background: var(--p-amber-100,  #fef3c7); color: var(--p-amber-700,  #b45309); }
+  &--danger   { background: var(--p-red-100,    #fee2e2); color: var(--p-red-700,    #b91c1c); }
+  &--secondary{ background: var(--p-surface-100,#f1f5f9); color: var(--p-surface-600,#475569); }
+  &--contrast { background: var(--p-surface-800,#1e293b); color: var(--p-surface-50, #f8fafc); }
+  &--default  { background: var(--p-surface-100,#f1f5f9); color: var(--p-surface-600,#475569); }
+}
+:root.app-dark {
+  .tomo-badge--success  { background: rgba(21,128,61,.18);   color: var(--p-green-400,  #4ade80); }
+  .tomo-badge--info     { background: rgba(29,78,216,.18);   color: var(--p-blue-400,   #60a5fa); }
+  .tomo-badge--warn     { background: rgba(180,83,9,.22);    color: var(--p-amber-400,  #fbbf24); }
+  .tomo-badge--danger   { background: rgba(185,28,28,.18);   color: var(--p-red-400,    #f87171); }
+  .tomo-badge--secondary{ background: rgba(71,85,105,.2);    color: var(--p-surface-400,#94a3b8); }
+  .tomo-badge--contrast { background: rgba(248,250,252,.12); color: var(--p-surface-100,#f1f5f9); }
+}
+
+/* ── Botão ícone nas células de ação ─── */
+.tomo-grid-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--p-text-muted-color);
+  transition: background t.$dur-fast t.$ease-out, color t.$dur-fast t.$ease-out;
+  .pi { font-size: 0.95rem; }
+  &:hover { background: var(--p-content-hover-background); color: var(--p-text-color); }
+  &:focus-visible { outline: 2px solid var(--p-primary-color); outline-offset: 2px; }
+}
+
+/* ── Container + botões de ações em linha ─── */
+.tomo-row-actions { display: flex; gap: t.$space-2; align-items: center; }
+
+.tomo-row-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-family: t.$font-sans;
+  cursor: pointer;
+  border: 1px solid var(--p-content-border-color);
+  background: transparent;
+  color: var(--p-text-color);
+  white-space: nowrap;
+  transition: background t.$dur-fast t.$ease-out, border-color t.$dur-fast t.$ease-out;
+  &:not(:disabled):hover { background: var(--p-content-hover-background); }
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+  &--primary {
+    border-color: var(--p-primary-color);
+    color: var(--p-primary-color);
+    &:not(:disabled):hover { background: var(--p-highlight-background); }
+  }
+  &--danger {
+    border-color: transparent;
+    color: var(--p-red-500, #ef4444);
+    &:not(:disabled):hover { background: color-mix(in srgb, var(--p-red-500, #ef4444) 10%, transparent); }
   }
 }

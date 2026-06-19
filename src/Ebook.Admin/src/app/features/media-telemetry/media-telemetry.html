@@ -5,18 +5,11 @@
       <div class="sub">{{ t('media.subtitle') }}</div>
     </div>
     <div class="actions">
-      <p-button
-        [label]="t('media.refresh')"
-        icon="pi pi-refresh"
-        severity="secondary"
-        [loading]="loading()"
-        (onClick)="load()"
-      />
+      <p-button [label]="t('media.refresh')" icon="pi pi-refresh" severity="secondary" [loading]="loading()" (onClick)="load()" />
     </div>
   </div>
 
   @if (data(); as d) {
-    <!-- cards de resumo do cache -->
     <div class="kpi-row anim-in">
       <div class="kpi">
         <div class="kpi__value">{{ d.cacheHitsToday | number }}</div>
@@ -32,45 +25,21 @@
       </div>
     </div>
 
-    <!-- tabela de provedores -->
     <div class="anim-in" style="margin-top: 1.5rem">
       <div class="block__title">{{ t('media.providers') }}</div>
-
       @if (d.providers.length === 0) {
         <div class="empty">{{ t('media.noUsage') }}</div>
       } @else {
-        <p-table [value]="d.providers" [rowHover]="true" size="small">
-          <ng-template #header>
-            <tr>
-              <th>{{ t('media.col.provider') }}</th>
-              <th>{{ t('media.col.today') }}</th>
-              <th>{{ t('media.col.month') }}</th>
-              <th>{{ t('media.col.avgMs') }}</th>
-              <th>{{ t('media.col.bytes') }}</th>
-              <th>{{ t('media.col.status') }}</th>
-            </tr>
-          </ng-template>
-          <ng-template #body let-s>
-            <tr>
-              <td [attr.data-label]="t('media.col.provider')">
-                <strong>{{ s.provider }}</strong>
-              </td>
-              <td [attr.data-label]="t('media.col.today')">
-                <span [pTooltip]="s.dailyLimit > 0 ? t('media.quotaOf', { limit: s.dailyLimit }) : ''">
-                  {{ quotaLabel(s) }}
-                </span>
-              </td>
-              <td [attr.data-label]="t('media.col.month')">{{ s.generatedThisMonth | number }}</td>
-              <td [attr.data-label]="t('media.col.avgMs')">
-                {{ s.avgDurationMsToday > 0 ? (s.avgDurationMsToday | number) + ' ms' : '—' }}
-              </td>
-              <td [attr.data-label]="t('media.col.bytes')">{{ formatBytes(s.totalBytesToday) }}</td>
-              <td [attr.data-label]="t('media.col.status')">
-                <p-tag [value]="providerStatusLabel(s)" [severity]="providerSeverity(s)" />
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
+        <ag-grid-angular
+          [rowData]="d.providers"
+          [columnDefs]="colDefs"
+          [defaultColDef]="defaultColDef"
+          [theme]="theme"
+          domLayout="autoHeight"
+          [suppressPaginationPanel]="true"
+          (gridReady)="onGridReady($event)"
+          style="width:100%"
+        />
       }
     </div>
   } @else if (loading()) {

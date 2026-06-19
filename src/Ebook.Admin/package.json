@@ -32,6 +32,8 @@
     "@jsverse/transloco": "^8.4.0",
     "@microsoft/signalr": "^8.0.7",
     "@primeuix/themes": "^2.0.3",
+    "ag-grid-angular": "^33.3.2",
+    "ag-grid-community": "^33.3.2",
     "primeicons": "^7.0.0",
     "primeng": "^21.1.9",
     "rxjs": "~7.8.0",

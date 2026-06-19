@@ -15,44 +15,22 @@
   </div>
 
   @if (channels(); as list) {
-    <p-table class="anim-in cards-sm" [value]="list" [rowHover]="true" size="small">
-      <ng-template #header>
-        <tr>
-          <th>{{ t('channels.col.niche') }}</th>
-          <th>{{ t('channels.col.name') }}</th>
-          <th>{{ t('channels.col.platform') }}</th>
-          <th>{{ t('channels.col.status') }}</th>
-          <th></th>
-        </tr>
-      </ng-template>
-      <ng-template #body let-c>
-        <tr>
-          <td [attr.data-label]="t('channels.col.niche')"><strong>{{ c.nicheName }}</strong></td>
-          <td [attr.data-label]="t('channels.col.name')">{{ c.name }}</td>
-          <td [attr.data-label]="t('channels.col.platform')">{{ c.platform }}</td>
-          <td [attr.data-label]="t('channels.col.status')">
-            <p-tag
-              [value]="c.connected ? t('channels.connectedTag') : t('channels.disconnectedTag')"
-              [severity]="c.connected ? 'success' : 'warn'"
-            />
-          </td>
-          <td>
-            <p-button
-              [label]="c.connected ? t('channels.edit') : t('channels.connect')"
-              [icon]="c.connected ? 'pi pi-pencil' : 'pi pi-link'"
-              size="small"
-              [outlined]="true"
-              (onClick)="openConnect(c)"
-            />
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template #emptymessage>
-        <tr>
-          <td colspan="5"><div class="empty">{{ t('channels.empty') }}</div></td>
-        </tr>
-      </ng-template>
-    </p-table>
+    @if (list.length === 0) {
+      <div class="empty anim-in">{{ t('channels.empty') }}</div>
+    } @else {
+      <ag-grid-angular
+        class="anim-in"
+        [rowData]="list"
+        [columnDefs]="colDefs"
+        [defaultColDef]="defaultColDef"
+        [theme]="theme"
+        [gridOptions]="gridOptions"
+        domLayout="autoHeight"
+        [suppressPaginationPanel]="true"
+        (gridReady)="onGridReady($event)"
+        style="width:100%"
+      />
+    }
   } @else {
     <app-loading variant="table" [rows]="4" />
   }
@@ -71,14 +49,7 @@
       } @else {
         <div class="field">
           <label>{{ t('channels.col.niche') }}</label>
-          <p-select
-            [options]="availableNiches()"
-            [(ngModel)]="newNicheId"
-            optionLabel="name"
-            optionValue="id"
-            appendTo="body"
-            fluid
-          />
+          <p-select [options]="availableNiches()" [(ngModel)]="newNicheId" optionLabel="name" optionValue="id" appendTo="body" fluid />
         </div>
         <div class="field">
           <label>{{ t('channels.col.name') }}</label>
@@ -88,13 +59,7 @@
     </div>
     <ng-template #footer>
       <p-button [label]="t('common.cancel')" [text]="true" severity="secondary" (onClick)="createDialog.set(false)" />
-      <p-button
-        [label]="t('common.save')"
-        icon="pi pi-check"
-        [loading]="saving()"
-        [disabled]="!newNicheId"
-        (onClick)="create()"
-      />
+      <p-button [label]="t('common.save')" icon="pi pi-check" [loading]="saving()" [disabled]="!newNicheId" (onClick)="create()" />
     </ng-template>
   </p-dialog>
 

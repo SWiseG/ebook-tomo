@@ -43,9 +43,14 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
+    // Registrar o buffer antes do UseSerilog para que o sink possa ser resolvido via DI.
+    builder.Services.AddSingleton<Ebook.Api.Observability.InMemoryLogBuffer>();
+    builder.Services.AddSingleton<Ebook.Api.Observability.SerilogMemorySink>();
+
     builder.Host.UseSerilog((context, services, config) => config
         .ReadFrom.Configuration(context.Configuration)
         .ReadFrom.Services(services)
+        .WriteTo.Sink(services.GetRequiredService<Ebook.Api.Observability.SerilogMemorySink>())
         .Enrich.FromLogContext());
 
     builder.Services.AddApplication();

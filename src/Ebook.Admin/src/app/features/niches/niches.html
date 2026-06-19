@@ -20,75 +20,25 @@
   />
 
   @if (niches(); as list) {
-    <p-table
-      class="anim-in cards-sm"
-      [value]="list"
-      [paginator]="list.length > 12"
-      [rows]="12"
-      [rowHover]="true"
-      size="small"
-    >
-      <ng-template #header>
-        <tr>
-          <th>{{ t('niches.col.niche') }}</th>
-          <th pSortableColumn="score">{{ t('niches.col.score') }} <p-sortIcon field="score" /></th>
-          <th>{{ t('niches.col.cycle') }}</th>
-          <th>{{ t('niches.col.status') }}</th>
-          <th>{{ t('niches.col.discovered') }}</th>
-          <th></th>
-        </tr>
-      </ng-template>
-      <ng-template #body let-n>
-        <tr>
-          <td [attr.data-label]="t('niches.col.niche')">
-            <span>
-              <strong>{{ n.name }}</strong>
-              <div class="mono">{{ n.slug }}</div>
-            </span>
-          </td>
-          <td [attr.data-label]="t('niches.col.score')">{{ n.score | number: '1.2-2' }}</td>
-          <td [attr.data-label]="t('niches.col.cycle')">{{ n.cycleNumber }}</td>
-          <td [attr.data-label]="t('niches.col.status')"><p-tag [value]="t('status.niche.' + n.status)" [severity]="severity(n.status)" /></td>
-          <td [attr.data-label]="t('niches.col.discovered')">{{ n.discoveredAtUtc | date: 'dd/MM/yy' }}</td>
-          <td>
-            <div class="row-actions">
-              @if (n.status === 'Candidate') {
-                <p-button
-                  [label]="t('niches.approve')"
-                  size="small"
-                  [outlined]="true"
-                  [disabled]="busy() === n.id"
-                  (onClick)="approve(n)"
-                />
-              }
-              <p-button
-                [label]="t('niches.generate')"
-                icon="pi pi-sparkles"
-                size="small"
-                [disabled]="busy() === n.id"
-                [loading]="busy() === n.id"
-                (onClick)="generate(n)"
-              />
-              @if (n.status !== 'Discarded' && n.status !== 'Active') {
-                <p-button
-                  icon="pi pi-trash"
-                  size="small"
-                  severity="danger"
-                  [text]="true"
-                  [disabled]="busy() === n.id"
-                  (onClick)="discard(n)"
-                />
-              }
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template #emptymessage>
-        <tr>
-          <td colspan="6"><div class="empty">{{ t('niches.empty') }}</div></td>
-        </tr>
-      </ng-template>
-    </p-table>
+    @if (list.length === 0) {
+      <div class="empty anim-in">{{ t('niches.empty') }}</div>
+    } @else {
+      <ag-grid-angular
+        class="anim-in"
+        [rowData]="list"
+        [columnDefs]="colDefs"
+        [defaultColDef]="defaultColDef"
+        [theme]="theme"
+        [gridOptions]="gridOptions"
+        domLayout="autoHeight"
+        [pagination]="list.length > 12"
+        [paginationPageSize]="12"
+        [paginationPageSizeSelector]="false"
+        [suppressPaginationPanel]="list.length <= 12"
+        (gridReady)="onGridReady($event)"
+        style="width:100%"
+      />
+    }
   } @else {
     <app-loading variant="table" [rows]="6" />
   }

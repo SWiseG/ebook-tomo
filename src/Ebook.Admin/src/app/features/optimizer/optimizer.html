@@ -22,53 +22,21 @@
               {{ t('optimizer.decisions') }}
             }
           </div>
-          <p-table class="cards-sm" [value]="decisions()" [rowHover]="true" size="small">
-            <ng-template #header>
-              <tr>
-                <th>{{ t('optimizer.col.product') }}</th>
-                <th>{{ t('optimizer.col.decision') }}</th>
-                <th>{{ t('optimizer.col.status') }}</th>
-                <th></th>
-              </tr>
-            </ng-template>
-            <ng-template #body let-d>
-              <tr>
-                <td [attr.data-label]="t('optimizer.col.product')">
-                  <span>
-                    <strong>{{ d.productTitle }}</strong>
-                    <div class="rationale">{{ d.rationale }}</div>
-                  </span>
-                </td>
-                <td [attr.data-label]="t('optimizer.col.decision')"><p-tag [value]="t('status.decision.' + d.decision)" [severity]="decisionSeverity(d.decision)" /></td>
-                <td [attr.data-label]="t('optimizer.col.status')"><p-tag [value]="t('status.decisionStatus.' + d.status)" [severity]="statusSeverity(d.status)" /></td>
-                <td>
-                  @if (d.status === 'Proposed') {
-                    <div class="row-actions">
-                      <p-button
-                        [label]="t('optimizer.approve')"
-                        size="small"
-                        [disabled]="busy()"
-                        (onClick)="approve(d)"
-                      />
-                      <p-button
-                        icon="pi pi-times"
-                        size="small"
-                        severity="danger"
-                        [text]="true"
-                        [disabled]="busy()"
-                        (onClick)="veto(d)"
-                      />
-                    </div>
-                  }
-                </td>
-              </tr>
-            </ng-template>
-            <ng-template #emptymessage>
-              <tr>
-                <td colspan="4"><div class="empty">{{ t('optimizer.selectCycle') }}</div></td>
-              </tr>
-            </ng-template>
-          </p-table>
+          @if (decisions().length === 0) {
+            <div class="empty">{{ t('optimizer.selectCycle') }}</div>
+          } @else {
+            <ag-grid-angular
+              [rowData]="decisions()"
+              [columnDefs]="colDefs"
+              [defaultColDef]="defaultColDef"
+              [theme]="theme"
+              [gridOptions]="gridOptions"
+              domLayout="autoHeight"
+              [suppressPaginationPanel]="true"
+              (gridReady)="onGridReady($event)"
+              style="width:100%"
+            />
+          }
         </div>
 
         <aside class="runs">

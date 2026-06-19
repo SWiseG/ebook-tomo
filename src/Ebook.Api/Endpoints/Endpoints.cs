@@ -70,6 +70,17 @@ public static class Endpoints
             .WithTags("Media")
             .WithSummary("Telemetria do Media Gateway: uso por provedor, cache e cotas (E14-08)");
 
+        secured.MapGet("/logs", (
+            Ebook.Api.Observability.InMemoryLogBuffer buffer,
+            long afterId = 0,
+            int limit = 200) =>
+        {
+            var entries = buffer.GetAfter(afterId, Math.Clamp(limit, 1, 500));
+            return Results.Ok(new { lastId = buffer.LastId, entries });
+        })
+        .WithTags("Observability")
+        .WithSummary("Stream de logs em memória (últimas 1000 entradas, polling com afterId)");
+
         secured.MapGet("/jobs", async (string? status, int page, int size, EbookDbContext db, CancellationToken ct) =>
         {
             var query = db.Jobs.AsNoTracking();

@@ -1,0 +1,95 @@
+@use '../../../styles/tokens' as t;
+
+.logs-toolbar {
+  display: flex;
+  align-items: center;
+  gap: t.$space-3;
+  margin-bottom: t.$space-4;
+  flex-wrap: wrap;
+
+  .logs-count { font-size: 0.82rem; }
+}
+
+/* Terminal window */
+.terminal {
+  font-family: t.$font-mono;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  background: var(--p-surface-950, #0f172a);
+  color: var(--p-surface-200, #e2e8f0);
+  border-radius: t.$radius-lg;
+  padding: t.$space-4;
+  height: calc(100vh - 260px);
+  min-height: 300px;
+  overflow-y: auto;
+  border: 1px solid var(--p-surface-800, #1e293b);
+  box-shadow: var(--tomo-shadow-lg);
+  scroll-behavior: smooth;
+
+  &__empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--p-surface-500, #64748b);
+    font-family: t.$font-sans;
+    font-size: 0.9rem;
+  }
+}
+
+/* Dark mode: terminal fica ainda mais escuro */
+:root.app-dark .terminal {
+  background: #080b0f;
+  border-color: #1a2030;
+}
+
+/* Linhas de log */
+.log-line {
+  display: flex;
+  gap: t.$space-2;
+  align-items: baseline;
+  padding: 1px 0;
+  border-radius: 3px;
+  transition: background 0.1s;
+
+  &:hover { background: rgba(255, 255, 255, 0.04); }
+}
+
+.log-time {
+  flex-shrink: 0;
+  color: #64748b;
+  font-size: 0.72rem;
+  min-width: 70px;
+}
+
+.log-level {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 0.7rem;
+  min-width: 46px;
+  letter-spacing: 0.04em;
+}
+
+.log-source {
+  flex-shrink: 0;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.7;
+}
+
+.log-msg {
+  flex: 1;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+/* Cores por nível */
+.log-trace { .log-level { color: #475569; } .log-msg { color: #64748b; } }
+.log-debug  { .log-level { color: #38bdf8; } .log-msg { color: #94a3b8; } }
+.log-info   { .log-level { color: #4ade80; } .log-msg { color: #e2e8f0; } }
+.log-warn   { .log-level { color: #fbbf24; } .log-msg { color: #fef3c7; } background: rgba(251,191,36,.04); }
+.log-error  { .log-level { color: #f87171; } .log-msg { color: #fecaca; } background: rgba(248,113,113,.06); }
