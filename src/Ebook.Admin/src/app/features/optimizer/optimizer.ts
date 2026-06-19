@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, effect, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ButtonModule } from 'primeng/button';
 import { AgGridAngular } from 'ag-grid-angular';
@@ -14,7 +15,7 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
 
 @Component({
   selector: 'app-optimizer',
-  imports: [DatePipe, TranslocoDirective, AgGridAngular, ButtonModule, Loading],
+  imports: [DatePipe, FormsModule, TranslocoDirective, AgGridAngular, ButtonModule, Loading],
   templateUrl: './optimizer.html',
   styleUrl: './optimizer.scss',
 })
@@ -28,15 +29,18 @@ export class Optimizer {
   readonly decisions = signal<OptimizationDecision[]>([]);
   readonly busy = signal(false);
 
+  quickFilter = '';
+
   // AG Grid
   readonly theme = tomoAgTheme;
   gridApi?: GridApi<OptimizationDecision>;
 
   readonly defaultColDef: ColDef = {
-    sortable: false,
+    sortable: true,
     resizable: true,
     suppressMovable: true,
     suppressHeaderMenuButton: true,
+    filter: true,
   };
 
   readonly colDefs: ColDef<OptimizationDecision>[] = this.buildCols();
@@ -58,6 +62,10 @@ export class Optimizer {
   }
 
   onGridReady(e: GridReadyEvent<OptimizationDecision>): void { this.gridApi = e.api; }
+
+  onSearch(): void {
+    this.gridApi?.setGridOption('quickFilterText', this.quickFilter);
+  }
 
   private buildCols(): ColDef<OptimizationDecision>[] {
     const t = this.t;

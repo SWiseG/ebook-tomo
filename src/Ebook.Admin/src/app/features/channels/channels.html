@@ -14,21 +14,27 @@
     </div>
   </div>
 
+  <div class="grid-toolbar anim-in">
+    <label class="grid-search">
+      <i class="pi pi-search"></i>
+      <input type="search" [(ngModel)]="quickFilter" (ngModelChange)="onSearch()" [placeholder]="t('common.search')" />
+    </label>
+  </div>
+
   @if (channels(); as list) {
     @if (list.length === 0) {
       <div class="empty anim-in">{{ t('channels.empty') }}</div>
     } @else {
       <ag-grid-angular
-        class="anim-in"
+        class="tomo-grid-fill anim-in"
         [rowData]="list"
         [columnDefs]="colDefs"
         [defaultColDef]="defaultColDef"
         [theme]="theme"
         [gridOptions]="gridOptions"
-        domLayout="autoHeight"
-        [suppressPaginationPanel]="true"
+        [pagination]="true"
+        [paginationAutoPageSize]="true"
         (gridReady)="onGridReady($event)"
-        style="width:100%"
       />
     }
   } @else {

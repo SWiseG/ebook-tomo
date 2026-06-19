@@ -56,14 +56,18 @@ export class Channels {
   connAccessToken = '';
   connMediaBaseUrl = '';
 
+  quickFilter = '';
+
   // AG Grid
   readonly theme = tomoAgTheme;
+  gridApi?: import('ag-grid-community').GridApi<Channel>;
 
   readonly defaultColDef: ColDef = {
     sortable: true,
     resizable: true,
     suppressMovable: true,
     suppressHeaderMenuButton: true,
+    filter: true,
   };
 
   readonly colDefs: ColDef<Channel>[] = this.buildCols();
@@ -74,7 +78,11 @@ export class Channels {
 
   constructor() { this.load(); }
 
-  onGridReady(_e: GridReadyEvent<Channel>): void {}
+  onGridReady(e: GridReadyEvent<Channel>): void { this.gridApi = e.api; }
+
+  onSearch(): void {
+    this.gridApi?.setGridOption('quickFilterText', this.quickFilter);
+  }
 
   private buildCols(): ColDef<Channel>[] {
     const t = this.t;

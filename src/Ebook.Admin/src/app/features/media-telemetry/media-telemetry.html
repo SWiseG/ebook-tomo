@@ -27,18 +27,24 @@
 
     <div class="anim-in" style="margin-top: 1.5rem">
       <div class="block__title">{{ t('media.providers') }}</div>
+      <div class="grid-toolbar">
+        <label class="grid-search">
+          <i class="pi pi-search"></i>
+          <input type="search" [(ngModel)]="quickFilter" (ngModelChange)="onSearch()" [placeholder]="t('common.search')" />
+        </label>
+      </div>
       @if (d.providers.length === 0) {
         <div class="empty">{{ t('media.noUsage') }}</div>
       } @else {
         <ag-grid-angular
+          class="tomo-grid-fill"
           [rowData]="d.providers"
           [columnDefs]="colDefs"
           [defaultColDef]="defaultColDef"
           [theme]="theme"
-          domLayout="autoHeight"
-          [suppressPaginationPanel]="true"
+          [pagination]="true"
+          [paginationAutoPageSize]="true"
           (gridReady)="onGridReady($event)"
-          style="width:100%"
         />
       }
     </div>

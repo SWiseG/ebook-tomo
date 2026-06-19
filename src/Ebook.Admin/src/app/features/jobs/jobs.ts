@@ -58,6 +58,8 @@ export class Jobs {
     ];
   });
 
+  quickFilter = '';
+
   // AG Grid
   readonly theme = tomoAgTheme;
   gridApi?: GridApi<JobItem>;
@@ -67,6 +69,7 @@ export class Jobs {
     resizable: true,
     suppressMovable: true,
     suppressHeaderMenuButton: true,
+    filter: true,
   };
 
   readonly colDefs: ColDef<JobItem>[] = this.buildCols();
@@ -83,6 +86,10 @@ export class Jobs {
   }
 
   onGridReady(e: GridReadyEvent<JobItem>): void { this.gridApi = e.api; }
+
+  onSearch(): void {
+    this.gridApi?.setGridOption('quickFilterText', this.quickFilter);
+  }
 
   private buildCols(): ColDef<JobItem>[] {
     const t = this.t;

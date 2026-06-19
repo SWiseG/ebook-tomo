@@ -1,5 +1,7 @@
 @use '../../../styles/tokens' as t;
 
+:host { --grid-above: 160px; }
+
 .form-grid {
   display: flex;
   flex-direction: column;

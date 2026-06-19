@@ -6,35 +6,35 @@
     </div>
   </div>
 
-  <p-selectButton
-    class="filter"
-    [options]="statusOptions()"
-    [(ngModel)]="status"
-    optionLabel="label"
-    optionValue="value"
-    [allowEmpty]="false"
-    (onChange)="load()"
-  />
+  <div class="grid-toolbar anim-in">
+    <p-selectButton
+      [options]="statusOptions()"
+      [(ngModel)]="status"
+      optionLabel="label"
+      optionValue="value"
+      [allowEmpty]="false"
+      (onChange)="load()"
+    />
+    <label class="grid-search">
+      <i class="pi pi-search"></i>
+      <input type="search" [(ngModel)]="quickFilter" (ngModelChange)="onSearch()" [placeholder]="t('common.search')" />
+    </label>
+  </div>
 
   @if (page(); as p) {
-    <p class="muted count">{{ t('jobs.count', { count: p.total }) }}</p>
     @if (p.items.length === 0) {
       <div class="empty anim-in">{{ t('jobs.empty') }}</div>
     } @else {
       <ag-grid-angular
-        class="anim-in"
+        class="tomo-grid-fill anim-in"
         [rowData]="p.items"
         [columnDefs]="colDefs"
         [defaultColDef]="defaultColDef"
         [theme]="theme"
         [gridOptions]="gridOptions"
-        domLayout="autoHeight"
-        [pagination]="p.items.length > 15"
-        [paginationPageSize]="15"
-        [paginationPageSizeSelector]="false"
-        [suppressPaginationPanel]="p.items.length <= 15"
+        [pagination]="true"
+        [paginationAutoPageSize]="true"
         (gridReady)="onGridReady($event)"
-        style="width:100%"
       />
     }
   } @else {

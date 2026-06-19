@@ -9,34 +9,35 @@
     </div>
   </div>
 
-  <p-selectButton
-    class="filter"
-    [options]="statusOptions()"
-    [(ngModel)]="status"
-    optionLabel="label"
-    optionValue="value"
-    [allowEmpty]="false"
-    (onChange)="load()"
-  />
+  <div class="grid-toolbar anim-in">
+    <p-selectButton
+      [options]="statusOptions()"
+      [(ngModel)]="status"
+      optionLabel="label"
+      optionValue="value"
+      [allowEmpty]="false"
+      (onChange)="load()"
+    />
+    <label class="grid-search">
+      <i class="pi pi-search"></i>
+      <input type="search" [(ngModel)]="quickFilter" (ngModelChange)="onSearch()" [placeholder]="t('common.search')" />
+    </label>
+  </div>
 
   @if (niches(); as list) {
     @if (list.length === 0) {
       <div class="empty anim-in">{{ t('niches.empty') }}</div>
     } @else {
       <ag-grid-angular
-        class="anim-in"
+        class="tomo-grid-fill anim-in"
         [rowData]="list"
         [columnDefs]="colDefs"
         [defaultColDef]="defaultColDef"
         [theme]="theme"
         [gridOptions]="gridOptions"
-        domLayout="autoHeight"
-        [pagination]="list.length > 12"
-        [paginationPageSize]="12"
-        [paginationPageSizeSelector]="false"
-        [suppressPaginationPanel]="list.length <= 12"
+        [pagination]="true"
+        [paginationAutoPageSize]="true"
         (gridReady)="onGridReady($event)"
-        style="width:100%"
       />
     }
   } @else {

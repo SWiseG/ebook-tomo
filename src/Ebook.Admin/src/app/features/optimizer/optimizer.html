@@ -22,6 +22,12 @@
               {{ t('optimizer.decisions') }}
             }
           </div>
+          <div class="grid-toolbar">
+            <label class="grid-search">
+              <i class="pi pi-search"></i>
+              <input type="search" [(ngModel)]="quickFilter" (ngModelChange)="onSearch()" [placeholder]="t('common.search')" />
+            </label>
+          </div>
           @if (decisions().length === 0) {
             <div class="empty">{{ t('optimizer.selectCycle') }}</div>
           } @else {
@@ -32,7 +38,10 @@
               [theme]="theme"
               [gridOptions]="gridOptions"
               domLayout="autoHeight"
-              [suppressPaginationPanel]="true"
+              [pagination]="true"
+              [paginationAutoPageSize]="false"
+              [paginationPageSize]="10"
+              [paginationPageSizeSelector]="false"
               (gridReady)="onGridReady($event)"
               style="width:100%"
             />

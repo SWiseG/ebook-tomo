@@ -314,6 +314,23 @@
   }
 }
 
+/* ── Badge de erros recentes no item de Logs ── */
+.nav-error-badge {
+  margin-left: auto;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: t.$radius-pill;
+  background: var(--p-red-500, #ef4444);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--app-panel);
+  flex: none;
+}
+
 /* ── Número de build no rodapé da sidebar ── */
 .build-tag {
   display: block;

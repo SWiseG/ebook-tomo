@@ -59,6 +59,8 @@ export class Niches {
     ];
   });
 
+  quickFilter = '';
+
   // AG Grid
   readonly theme = tomoAgTheme;
   gridApi?: GridApi<NicheItem>;
@@ -68,6 +70,7 @@ export class Niches {
     resizable: true,
     suppressMovable: true,
     suppressHeaderMenuButton: true,
+    filter: true,
   };
 
   readonly colDefs: ColDef<NicheItem>[] = this.buildCols();
@@ -94,6 +97,10 @@ export class Niches {
     this.gridApi = e.api;
   }
 
+  onSearch(): void {
+    this.gridApi?.setGridOption('quickFilterText', this.quickFilter);
+  }
+
   private buildCols(): ColDef<NicheItem>[] {
     const t = this.t;
     const fmt = (d: string) =>
@@ -106,7 +113,7 @@ export class Niches {
         minWidth: 160,
         valueGetter: (p) => p.data?.name ?? '',
         cellRenderer: (params: ICellRendererParams<NicheItem>) =>
-          `<span><strong>${params.data!.name}</strong><div class="mono">${params.data!.slug}</div></span>`,
+          `<span class="cell-two-line"><strong>${params.data!.name}</strong><span class="mono">${params.data!.slug}</span></span>`,
       },
       {
         headerName: t.translate('niches.col.score'),

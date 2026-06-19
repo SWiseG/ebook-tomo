@@ -1,6 +1,7 @@
 import { DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -15,7 +16,7 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | undefined
 
 @Component({
   selector: 'app-media-telemetry',
-  imports: [DecimalPipe, TranslocoDirective, AgGridAngular, ButtonModule, TooltipModule, Loading],
+  imports: [DecimalPipe, FormsModule, TranslocoDirective, AgGridAngular, ButtonModule, TooltipModule, Loading],
   templateUrl: './media-telemetry.html',
   styleUrl: './media-telemetry.scss',
 })
@@ -27,21 +28,29 @@ export class MediaTelemetry {
   readonly data = signal<MediaTelemetryData | null>(null);
   readonly loading = signal(false);
 
+  quickFilter = '';
+
   // AG Grid
   readonly theme = tomoAgTheme;
+  gridApi?: import('ag-grid-community').GridApi<MediaProviderStat>;
 
   readonly defaultColDef: ColDef = {
     sortable: true,
     resizable: true,
     suppressMovable: true,
     suppressHeaderMenuButton: true,
+    filter: true,
   };
 
   readonly colDefs: ColDef<MediaProviderStat>[] = this.buildCols();
 
   constructor() { this.load(); }
 
-  onGridReady(_e: GridReadyEvent<MediaProviderStat>): void {}
+  onGridReady(e: GridReadyEvent<MediaProviderStat>): void { this.gridApi = e.api; }
+
+  onSearch(): void {
+    this.gridApi?.setGridOption('quickFilterText', this.quickFilter);
+  }
 
   private buildCols(): ColDef<MediaProviderStat>[] {
     const t = this.t;

@@ -22,6 +22,7 @@ import { AuthService } from '../../core/auth.service';
 import { ThemeService } from '../../core/theme.service';
 import { LayoutService } from '../../core/layout.service';
 import { LanguageService } from '../../core/language.service';
+import { LogsIndicatorService } from '../../core/logs-indicator.service';
 import { RealtimeService } from '../../core/realtime.service';
 import { TomoLogo } from '../../shared/tomo-logo';
 
@@ -59,6 +60,7 @@ export class Shell {
   readonly layout = inject(LayoutService);
   readonly language = inject(LanguageService);
   readonly realtime = inject(RealtimeService);
+  readonly logsIndicator = inject(LogsIndicatorService);
   private readonly router = inject(Router);
   private readonly http = inject(HttpClient);
 

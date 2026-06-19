@@ -35,7 +35,11 @@
               tooltipPosition="right"
               [tooltipDisabled]="!layout.collapsed()"
             >
-              <i [class]="item.icon"></i><span class="label">{{ t(item.label) }}</span>
+              <i [class]="item.icon"></i>
+              <span class="label">{{ t(item.label) }}</span>
+              @if (item.path === '/logs' && logsIndicator.recentErrors() > 0) {
+                <span class="nav-error-badge">{{ logsIndicator.recentErrors() }}</span>
+              }
             </a>
           }
         </div>

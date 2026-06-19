@@ -1,14 +1,6 @@
 @use '../../../styles/tokens' as t;
 
-.filter {
-  display: block;
-  margin-bottom: t.$space-4;
-}
-
-.count {
-  margin: 0 0 t.$space-3;
-  font-size: 0.85rem;
-}
+:host { --grid-above: 155px; }
 
 .error-cell {
   max-width: 320px;

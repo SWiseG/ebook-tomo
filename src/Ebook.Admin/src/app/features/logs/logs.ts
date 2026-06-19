@@ -12,6 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ButtonModule } from 'primeng/button';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { LogsIndicatorService } from '../../core/logs-indicator.service';
 
 interface LogEntry {
   id: number;
@@ -37,6 +38,7 @@ const LEVEL_FILTER_ORDER = ['ALL', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'];
 export class Logs implements AfterViewChecked, OnDestroy {
   private readonly http = inject(HttpClient);
   private readonly t = inject(TranslocoService);
+  private readonly logsIndicator = inject(LogsIndicatorService);
 
   @ViewChild('terminal') terminalRef!: ElementRef<HTMLDivElement>;
 
@@ -76,12 +78,12 @@ export class Logs implements AfterViewChecked, OnDestroy {
           if (res.entries.length > 0) {
             this.entries.update((prev) => {
               const combined = [...prev, ...res.entries];
-              // Keep last 2000 entries in UI
               return combined.length > 2000 ? combined.slice(combined.length - 2000) : combined;
             });
             this.lastId = res.lastId;
             this.shouldScrollToBottom = !this.paused();
           }
+          this.logsIndicator.markVisited(res.lastId);
         },
         error: () => {},
       });

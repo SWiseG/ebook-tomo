@@ -1,5 +1,7 @@
 @use '../../../styles/tokens' as t;
 
+:host { --grid-above: 160px; }
+
 .clickable {
   cursor: pointer;
 }
