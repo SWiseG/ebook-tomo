@@ -37,4 +37,7 @@ public static class SettingKeys
 
     /// <summary>Gerar Reels (vídeo) semanalmente por produto ativo (default false; exige Piper+FFmpeg).</summary>
     public const string VideoEnabled = "video.enabled";
+
+    /// <summary>Loop de aprendizado de estilo (E15): Claude vision analisa capas e grava playbook por nicho (default false; exige CLI Claude com visão).</summary>
+    public const string StyleLearnEnabled = "style.learn.enabled";
 }

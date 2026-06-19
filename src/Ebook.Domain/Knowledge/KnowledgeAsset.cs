@@ -6,7 +6,10 @@ public enum KnowledgeAssetType
 {
     RawResearch,
     KnowledgePack,
-    Summary
+    Summary,
+
+    /// <summary>Playbook de estilo visual por nicho, aprendido pela visão do Claude (E15).</summary>
+    MediaStyle
 }
 
 /// <summary>

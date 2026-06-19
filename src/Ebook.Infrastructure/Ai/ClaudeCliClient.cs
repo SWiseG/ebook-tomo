@@ -18,12 +18,16 @@ public sealed class ClaudeCliClient(IOptions<AiOptions> options, ILogger<ClaudeC
     private static readonly string[] WindowExhaustedMarkers =
         ["usage limit", "rate limit", "limit reached", "out of extended usage"];
 
-    public async Task<Result<string>> CompleteAsync(string prompt, CancellationToken ct = default)
+    /// <param name="allowedTools">
+    /// Lista de ferramentas liberadas no modo headless (ex.: "Read" para análise de imagem por visão).
+    /// Vazio = geração de texto pura, sem ferramentas (comportamento padrão).
+    /// </param>
+    public async Task<Result<string>> CompleteAsync(string prompt, CancellationToken ct = default, string? allowedTools = null)
     {
         await Gate.WaitAsync(ct);
         try
         {
-            return await RunProcessAsync(prompt, ct);
+            return await RunProcessAsync(prompt, allowedTools, ct);
         }
         finally
         {
@@ -31,9 +35,10 @@ public sealed class ClaudeCliClient(IOptions<AiOptions> options, ILogger<ClaudeC
         }
     }
 
-    private async Task<Result<string>> RunProcessAsync(string prompt, CancellationToken ct)
+    private async Task<Result<string>> RunProcessAsync(string prompt, string? allowedTools, CancellationToken ct)
     {
         var command = options.Value.ClaudeCommand;
+        var toolArgs = string.IsNullOrWhiteSpace(allowedTools) ? string.Empty : $" --allowedTools \"{allowedTools}\"";
         var startInfo = new ProcessStartInfo
         {
             RedirectStandardInput = true,
@@ -49,12 +54,12 @@ public sealed class ClaudeCliClient(IOptions<AiOptions> options, ILogger<ClaudeC
         if (OperatingSystem.IsWindows())
         {
             startInfo.FileName = "cmd.exe";
-            startInfo.Arguments = $"/c {command} -p --output-format text";
+            startInfo.Arguments = $"/c {command} -p --output-format text{toolArgs}";
         }
         else
         {
             startInfo.FileName = command;
-            startInfo.Arguments = "-p --output-format text";
+            startInfo.Arguments = $"-p --output-format text{toolArgs}";
         }
 
         using var process = new Process();

@@ -104,6 +104,12 @@ public sealed class KnowledgeRepository(EbookDbContext db) : IKnowledgeRepositor
             .OrderByDescending(a => a.CreatedAtUtc)
             .FirstOrDefaultAsync(ct);
 
+    public Task<KnowledgeAsset?> GetLatestByTypeAsync(Guid nicheId, KnowledgeAssetType type, CancellationToken ct = default) =>
+        db.KnowledgeAssets
+            .Where(a => a.NicheId == nicheId && a.Type == type)
+            .OrderByDescending(a => a.CreatedAtUtc)
+            .FirstOrDefaultAsync(ct);
+
     public void Add(KnowledgeAsset asset) => db.KnowledgeAssets.Add(asset);
 }
 
