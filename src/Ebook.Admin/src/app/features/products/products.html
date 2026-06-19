@@ -13,25 +13,28 @@
     <p class="error">{{ message }}</p>
   }
 
+  <div class="grid-toolbar anim-in">
+    <label class="grid-search">
+      <i class="pi pi-search"></i>
+      <input type="search" [(ngModel)]="quickFilter" (ngModelChange)="onSearch()" [placeholder]="t('common.search')" />
+    </label>
+  </div>
+
   @if (products(); as list) {
     @if (list.length === 0) {
       <div class="empty anim-in">{{ t('products.empty') }}</div>
     } @else {
       <ag-grid-angular
-        class="tomo-grid-clickable anim-in"
+        class="tomo-grid-clickable tomo-grid-fill anim-in"
         [rowData]="list"
         [columnDefs]="colDefs"
         [defaultColDef]="defaultColDef"
         [theme]="theme"
         [gridOptions]="gridOptions"
-        domLayout="autoHeight"
-        [pagination]="list.length > 12"
-        [paginationPageSize]="12"
-        [paginationPageSizeSelector]="false"
-        [suppressPaginationPanel]="list.length <= 12"
+        [pagination]="true"
+        [paginationAutoPageSize]="true"
         (rowClicked)="open($event.data!)"
         (gridReady)="onGridReady($event)"
-        style="width:100%"
       />
     }
   } @else if (!error()) {

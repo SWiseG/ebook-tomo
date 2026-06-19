@@ -406,7 +406,17 @@ ag-grid-angular,
 .ag-cell {
   display: flex !important;
   align-items: center;
-  overflow: visible;
+  overflow: hidden;
+}
+/* Célula com conteúdo de 2 linhas (título + slug) */
+.ag-cell .cell-two-line {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  overflow: hidden;
+  strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mono { font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
 
 /* ── Badges (substitutos do p-tag no AG Grid) ─── */
@@ -436,6 +446,61 @@ ag-grid-angular,
   .tomo-badge--danger   { background: rgba(185,28,28,.18);   color: var(--p-red-400,    #f87171); }
   .tomo-badge--secondary{ background: rgba(71,85,105,.2);    color: var(--p-surface-400,#94a3b8); }
   .tomo-badge--contrast { background: rgba(248,250,252,.12); color: var(--p-surface-100,#f1f5f9); }
+}
+
+/* ── Toolbar acima do grid (filtros à esquerda + search à direita) ─── */
+.grid-toolbar {
+  display: flex;
+  align-items: center;
+  gap: t.$space-3;
+  margin-bottom: t.$space-4;
+}
+
+/* Input de busca rápida */
+.grid-search {
+  display: inline-flex;
+  align-items: center;
+  gap: t.$space-2;
+  padding: 0 t.$space-3;
+  height: 38px;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: t.$radius;
+  background: var(--p-content-background);
+  cursor: text;
+  margin-left: auto;
+  transition: border-color t.$dur-fast t.$ease-out, box-shadow t.$dur-fast t.$ease-out;
+
+  &:focus-within {
+    border-color: var(--p-primary-color);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-primary-color) 14%, transparent);
+  }
+
+  .pi {
+    font-size: 0.82rem;
+    color: var(--p-text-muted-color);
+    flex: none;
+  }
+
+  input {
+    border: none;
+    background: transparent;
+    color: var(--p-text-color);
+    font-family: t.$font-sans;
+    font-size: 0.88rem;
+    width: 200px;
+    padding: 0;
+    outline: none;
+    &::placeholder { color: var(--p-text-muted-color); }
+    &::-webkit-search-cancel-button { display: none; }
+  }
+}
+
+/* Grid de altura fixa que preenche o viewport abaixo dos elementos da página.
+   --grid-above deve ser definido no SCSS de cada página (height dos elementos acima do grid).
+   Fórmula: 100vh − topbar(60) − content-pt(32) − content-pb(48) − --grid-above */
+.tomo-grid-fill {
+  width: 100%;
+  height: calc(100vh - 140px - var(--grid-above, 90px));
 }
 
 /* ── Botão ícone nas células de ação ─── */

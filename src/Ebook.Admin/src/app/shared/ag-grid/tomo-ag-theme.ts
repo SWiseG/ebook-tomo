@@ -20,8 +20,8 @@ export const tomoAgTheme = themeQuartz.withParams({
   headerFontWeight: 600,
 
   // Dimensões
-  headerHeight: 36,
-  rowHeight: 44,
+  headerHeight: 40,
+  rowHeight: 52,
   cellHorizontalPaddingScale: 1.1,
 
   // Bordas do container

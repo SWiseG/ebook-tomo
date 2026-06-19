@@ -113,11 +113,14 @@ export class Products {
   readonly theme = tomoAgTheme;
   gridApi?: GridApi<ProductItem>;
 
+  quickFilter = '';
+
   readonly defaultColDef: ColDef = {
     sortable: true,
     resizable: true,
     suppressMovable: true,
     suppressHeaderMenuButton: true,
+    filter: true,
   };
 
   readonly colDefs: ColDef<ProductItem>[] = this.buildCols();
@@ -140,6 +143,10 @@ export class Products {
     this.gridApi = e.api;
   }
 
+  onSearch(): void {
+    this.gridApi?.setGridOption('quickFilterText', this.quickFilter);
+  }
+
   private buildCols(): ColDef<ProductItem>[] {
     const t = this.t;
     const fmt = (d: string) =>
@@ -156,7 +163,7 @@ export class Products {
         sortable: true,
         valueGetter: (p) => p.data?.title ?? '',
         cellRenderer: (params: ICellRendererParams<ProductItem>) =>
-          `<span><strong>${params.data!.title}</strong><div class="mono">${params.data!.slug}</div></span>`,
+          `<span class="cell-two-line"><strong>${params.data!.title}</strong><span class="mono">${params.data!.slug}</span></span>`,
       },
       {
         headerName: t.translate('products.col.stage'),
