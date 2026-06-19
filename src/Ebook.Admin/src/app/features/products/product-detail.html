@@ -35,6 +35,7 @@
       </div>
     </div>
 
+    <div class="page-body">
     <div class="chips">
       <p-tag [value]="t('status.product.' + d.status)" />
       <p-tag [value]="t('productDetail.stage', { stage: t('status.stage.' + d.stage) })" severity="secondary" />
@@ -208,6 +209,7 @@
           </p-card>
         }
       </aside>
+    </div>
     </div>
   } @else if (!error()) {
     <app-loading variant="detail" />

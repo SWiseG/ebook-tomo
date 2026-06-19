@@ -6,6 +6,7 @@
     </div>
   </div>
 
+  <div class="page-body">
   @if (rows(); as list) {
     <div class="list anim-in">
       @for (row of list; track row.key) {
@@ -45,4 +46,5 @@
   } @else {
     <app-loading variant="table" [rows]="4" />
   }
+  </div>
 </ng-container>

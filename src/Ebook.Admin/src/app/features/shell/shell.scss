@@ -518,8 +518,7 @@
 
 .content {
   flex: 1;
-  padding: t.$space-6 t.$space-6 t.$space-7;
-  max-width: t.$content-max;
+  padding: t.$space-6 t.$space-6 0;
   width: 100%;
 }
 
@@ -559,7 +558,7 @@
     animation: tomo-fade-in t.$dur t.$ease-out;
   }
   .content {
-    padding: t.$space-5 t.$space-4 t.$space-6;
+    padding: t.$space-5 t.$space-4 0;
   }
 }
 

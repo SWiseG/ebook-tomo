@@ -9,6 +9,7 @@
     </div>
   </div>
 
+  <div class="page-body">
   @if (runs(); as list) {
     @if (list.length === 0) {
       <div class="empty">{{ t('optimizer.noRuns') }}</div>
@@ -67,4 +68,5 @@
   } @else {
     <app-loading variant="table" [rows]="5" />
   }
+  </div>
 </ng-container>

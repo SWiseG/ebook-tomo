@@ -6,24 +6,25 @@
   gap: t.$space-3;
   margin-bottom: t.$space-4;
   flex-wrap: wrap;
+  padding: 0 t.$space-6;
 
   .logs-count { font-size: 0.82rem; }
 }
 
-/* Terminal window */
+/* Terminal window — ocupa toda a largura e altura restante do viewport.
+   Fórmula: 100vh − topbar(60) − content-pt(32) − page-head(~84) − toolbar(~54) */
 .terminal {
   font-family: t.$font-mono;
   font-size: 0.78rem;
   line-height: 1.6;
   background: var(--p-surface-950, #0f172a);
   color: var(--p-surface-200, #e2e8f0);
-  border-radius: t.$radius-lg;
-  padding: t.$space-4;
-  height: calc(100vh - 260px);
+  border-radius: 0;
+  padding: t.$space-4 t.$space-6;
+  height: calc(100vh - 60px - 32px - 84px - 54px);
   min-height: 300px;
   overflow-y: auto;
-  border: 1px solid var(--p-surface-800, #1e293b);
-  box-shadow: var(--tomo-shadow-lg);
+  border-top: 1px solid var(--p-surface-800, #1e293b);
   scroll-behavior: smooth;
 
   &__empty {

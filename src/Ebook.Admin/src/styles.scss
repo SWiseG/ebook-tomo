@@ -181,6 +181,19 @@ a {
   }
 }
 
+/* Wrapper para conteúdo de páginas sem grid de tela cheia — adiciona espaço inferior */
+.page-body {
+  padding-bottom: t.$space-7;
+}
+
+/* KPI em linha (usado em media-telemetry e dashboard) */
+.kpi-row {
+  display: flex;
+  gap: t.$space-4;
+  flex-wrap: wrap;
+  margin-bottom: t.$space-4;
+}
+
 .muted {
   color: var(--p-text-muted-color);
 }
@@ -308,6 +321,9 @@ a {
   }
   .page-head .actions {
     width: 100%;
+  }
+  .grid-toolbar {
+    flex-wrap: wrap;
   }
 
   /* diálogos não estouram a viewport no celular */
@@ -495,12 +511,20 @@ ag-grid-angular,
   }
 }
 
-/* Grid de altura fixa que preenche o viewport abaixo dos elementos da página.
-   --grid-above deve ser definido no SCSS de cada página (height dos elementos acima do grid).
-   Fórmula: 100vh − topbar(60) − content-pt(32) − content-pb(48) − --grid-above */
+/* Grid ocupa toda a largura (quebra o padding lateral do content) e toda a altura disponível.
+   --grid-above: altura total dos elementos acima do grid (page-head + toolbar + etc.)
+   Fórmula: 100vh − topbar(60px) − content-pt(32px) − --grid-above */
 .tomo-grid-fill {
-  width: 100%;
-  height: calc(100vh - 140px - var(--grid-above, 90px));
+  width: calc(100% + 2 * #{t.$space-6});
+  margin-left: -#{t.$space-6};
+  height: calc(100vh - #{t.$topbar-h} - #{t.$space-6} - var(--grid-above, 90px));
+}
+@media (max-width: 860px) {
+  .tomo-grid-fill {
+    width: calc(100% + 2 * #{t.$space-4});
+    margin-left: -#{t.$space-4};
+    height: calc(100vh - #{t.$topbar-h} - #{t.$space-5} - var(--grid-above, 90px));
+  }
 }
 
 /* ── Botão ícone nas células de ação ─── */

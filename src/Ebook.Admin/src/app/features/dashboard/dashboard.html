@@ -14,6 +14,7 @@
     <p class="error">{{ message }}</p>
   }
 
+  <div class="page-body">
   @if (summary(); as s) {
     <section class="block anim-in">
       <div class="block__title">{{ t('dashboard.portfolio') }}</div>
@@ -125,4 +126,5 @@
   } @else if (!error()) {
     <app-loading variant="kpi" [rows]="3" />
   }
+  </div>
 </ng-container>

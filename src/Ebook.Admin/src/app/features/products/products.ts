@@ -163,7 +163,7 @@ export class Products {
         sortable: true,
         valueGetter: (p) => p.data?.title ?? '',
         cellRenderer: (params: ICellRendererParams<ProductItem>) =>
-          `<span class="cell-two-line"><strong>${params.data!.title}</strong><span class="mono">${params.data!.slug}</span></span>`,
+          `<strong>${params.data!.title}</strong>`,
       },
       {
         headerName: t.translate('products.col.stage'),

@@ -113,7 +113,7 @@ export class Niches {
         minWidth: 160,
         valueGetter: (p) => p.data?.name ?? '',
         cellRenderer: (params: ICellRendererParams<NicheItem>) =>
-          `<span class="cell-two-line"><strong>${params.data!.name}</strong><span class="mono">${params.data!.slug}</span></span>`,
+          `<strong>${params.data!.name}</strong>`,
       },
       {
         headerName: t.translate('niches.col.score'),
