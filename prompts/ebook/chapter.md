@@ -26,6 +26,9 @@ Resumo do capítulo anterior (para continuidade, NÃO repita):
   - `> [!CASO] ...` para um mini estudo de caso com dado/resultado real.
 - Perto do fim, UM checklist acionável usando itens de tarefa: `- [ ] ação a fazer` (uma linha por item).
 - Listas comuns (não-checklist) com `- `.
+- Quando houver um PROCESSO ou plano passo a passo, use uma lista numerada (vira uma linha do tempo visual): `1. Título curto: o que fazer` — um passo por linha, no máximo 6 passos.
+- Quando houver um NÚMERO de impacto (estatística, percentual, preço), destaque-o em UMA linha: `> [!STAT] 97% | o que esse número significa`.
+- Opcional: UMA citação de autoridade como cartão: `> [!FRASE] frase curta e marcante — Nome do Autor` (só com autor real; é diferente do pull quote).
 - NÃO use negrito/itálico/código inline (`**`, `*`, crases) — são descartados na renderização.
 - NÃO inclua o título de nível `##` do capítulo — ele é adicionado automaticamente.
 

@@ -8,6 +8,7 @@ using Ebook.Application.Content;
 using Ebook.Application.Content.Images;
 using Ebook.Application.Content.Pdf;
 using Ebook.Application.Analytics;
+using Ebook.Application.Knowledge;
 using Ebook.Application.Discovery;
 using Ebook.Application.Media;
 using Ebook.Application.Optimization;
@@ -115,6 +116,7 @@ public static class DependencyInjection
         services.AddHttpClient<ISocialPublisher, MetaGraphPublisher>(c => c.Timeout = TimeSpan.FromSeconds(60));
         services.AddSingleton<ITtsEngine, PiperTtsEngine>();
         services.AddSingleton<IVideoComposer, FfmpegVideoComposer>();
+        services.AddScoped<IStyleAnalyzer, ClaudeVisionStyleAnalyzer>();
 
         // fontes de tendência (E02): client nomeado compartilhado + múltiplas implementações de ITrendSource
         services.AddHttpClient("trends", c =>

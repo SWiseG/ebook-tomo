@@ -7,6 +7,9 @@ public enum MarkdownBlockKind
     Bullets,
     PullQuote,
     Callout,
+    Timeline,  // passos numerados (lista ordenada "1.") → linha do tempo visual
+    Stat,      // número de impacto: "> [!STAT] 97% | descrição"
+    QuoteCard, // citação desenhada com ícone: "> [!FRASE] texto — autor"
     Image   // ilustração gerada por IA (Frente D): 1 por capítulo via IMediaGateway
 }
 
@@ -37,6 +40,15 @@ public sealed record MarkdownBlock
 
     public static MarkdownBlock Image(byte[] bytes) =>
         new() { Kind = MarkdownBlockKind.Image, ImageBytes = bytes };
+
+    public static MarkdownBlock Timeline(IReadOnlyList<string> steps) =>
+        new() { Kind = MarkdownBlockKind.Timeline, Items = steps };
+
+    public static MarkdownBlock Stat(string number, string label) =>
+        new() { Kind = MarkdownBlockKind.Stat, Text = number, Label = label };
+
+    public static MarkdownBlock QuoteCard(string text, string author) =>
+        new() { Kind = MarkdownBlockKind.QuoteCard, Text = text, Label = author };
 }
 
 /// <summary>
@@ -52,6 +64,7 @@ public static class MarkdownParser
         var paragraph = new List<string>();
         var bullets = new List<string>();
         var quote = new List<string>();
+        var steps = new List<string>();
 
         void FlushParagraph()
         {
@@ -79,16 +92,29 @@ public static class MarkdownParser
             }
 
             var first = quote[0];
+            var type = "pull";
             string? label = null;
             if (first.StartsWith("[!INSIGHT]", StringComparison.OrdinalIgnoreCase))
             {
+                type = "callout";
                 label = "Insight rápido";
                 first = first["[!INSIGHT]".Length..].Trim();
             }
             else if (first.StartsWith("[!CASO]", StringComparison.OrdinalIgnoreCase))
             {
+                type = "callout";
                 label = "Estudo de caso";
                 first = first["[!CASO]".Length..].Trim();
+            }
+            else if (first.StartsWith("[!STAT]", StringComparison.OrdinalIgnoreCase))
+            {
+                type = "stat";
+                first = first["[!STAT]".Length..].Trim();
+            }
+            else if (first.StartsWith("[!FRASE]", StringComparison.OrdinalIgnoreCase))
+            {
+                type = "quote";
+                first = first["[!FRASE]".Length..].Trim();
             }
 
             var lines = new List<string>();
@@ -103,8 +129,34 @@ public static class MarkdownParser
             }
 
             var text = string.Join(' ', lines);
-            blocks.Add(label is null ? MarkdownBlock.PullQuote(text) : MarkdownBlock.Callout(label, text));
             quote.Clear();
+
+            switch (type)
+            {
+                case "callout":
+                    blocks.Add(MarkdownBlock.Callout(label!, text));
+                    break;
+                case "stat":
+                    var (number, statLabel) = SplitStat(text);
+                    blocks.Add(MarkdownBlock.Stat(number, statLabel));
+                    break;
+                case "quote":
+                    var (quoteText, author) = SplitAuthor(text);
+                    blocks.Add(MarkdownBlock.QuoteCard(quoteText, author));
+                    break;
+                default:
+                    blocks.Add(MarkdownBlock.PullQuote(text));
+                    break;
+            }
+        }
+
+        void FlushTimeline()
+        {
+            if (steps.Count > 0)
+            {
+                blocks.Add(MarkdownBlock.Timeline([.. steps]));
+                steps.Clear();
+            }
         }
 
         void FlushAll()
@@ -112,6 +164,7 @@ public static class MarkdownParser
             FlushParagraph();
             FlushBullets();
             FlushQuote();
+            FlushTimeline();
         }
 
         foreach (var rawLine in (markdown ?? string.Empty).Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n'))
@@ -135,8 +188,18 @@ public static class MarkdownParser
             {
                 FlushParagraph();
                 FlushBullets();
+                FlushTimeline();
                 var content = line.Length > 1 && line[1] == ' ' ? line[2..] : line[1..];
                 quote.Add(Clean(content));
+                continue;
+            }
+
+            if (TryOrderedItem(line, out var stepText))
+            {
+                FlushParagraph();
+                FlushBullets();
+                FlushQuote();
+                steps.Add(Clean(stepText));
                 continue;
             }
 
@@ -144,12 +207,14 @@ public static class MarkdownParser
             {
                 FlushParagraph();
                 FlushQuote();
+                FlushTimeline();
                 bullets.Add(Clean(line[2..]));
                 continue;
             }
 
             FlushBullets();
             FlushQuote();
+            FlushTimeline();
             paragraph.Add(Clean(line));
         }
 
@@ -174,6 +239,50 @@ public static class MarkdownParser
         level = 0;
         text = string.Empty;
         return false;
+    }
+
+    /// <summary>Item de lista ordenada "1. " a "99. " → vira passo de timeline. Ignora números longos (ex.: anos).</summary>
+    private static bool TryOrderedItem(string line, out string text)
+    {
+        text = string.Empty;
+        var i = 0;
+        while (i < line.Length && char.IsDigit(line[i]))
+        {
+            i++;
+        }
+
+        if (i is >= 1 and <= 2 && i + 1 < line.Length && line[i] == '.' && line[i + 1] == ' ')
+        {
+            text = line[(i + 2)..];
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>"97% | descrição" → ("97%", "descrição"); sem barra → (texto, "").</summary>
+    private static (string Number, string Label) SplitStat(string text)
+    {
+        var idx = text.IndexOf('|');
+        return idx >= 0
+            ? (text[..idx].Trim(), text[(idx + 1)..].Trim())
+            : (text.Trim(), string.Empty);
+    }
+
+    /// <summary>"frase — autor" → ("frase", "autor"); sem travessão → (texto, "").</summary>
+    private static (string Text, string Author) SplitAuthor(string text)
+    {
+        string[] seps = [" — ", " – ", " - "];
+        foreach (var sep in seps)
+        {
+            var idx = text.LastIndexOf(sep, StringComparison.Ordinal);
+            if (idx > 0)
+            {
+                return (text[..idx].Trim(), text[(idx + sep.Length)..].Trim());
+            }
+        }
+
+        return (text.Trim(), string.Empty);
     }
 
     /// <summary>Remove marcadores inline (*, **, `) que o renderizador não interpreta.</summary>
