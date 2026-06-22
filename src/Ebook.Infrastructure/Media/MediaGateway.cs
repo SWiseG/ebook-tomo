@@ -35,7 +35,7 @@ public sealed class MediaGateway(
             {
                 cached.HitCount++;
                 cached.LastHitAtUtc = clock.UtcNow;
-                await RecordUsageAsync(brief.Purpose, MediaProvider.Cache, cacheHit: true, bytes.Length, 0, ct);
+                await RecordUsageAsync(brief.Purpose, MediaProvider.Cache, cacheHit: true, bytes.Length, 0, brief.ProductId, ct);
                 return Result.Success(new MediaResult(bytes, MediaProvider.Cache, CacheHit: true));
             }
 
@@ -78,7 +78,7 @@ public sealed class MediaGateway(
                 Path = path,
                 CreatedAtUtc = clock.UtcNow,
             });
-            await RecordUsageAsync(brief.Purpose, resolver.Provider, cacheHit: false, bytes.Length, (int)stopwatch.ElapsedMilliseconds, ct);
+            await RecordUsageAsync(brief.Purpose, resolver.Provider, cacheHit: false, bytes.Length, (int)stopwatch.ElapsedMilliseconds, brief.ProductId, ct);
 
             logger.LogInformation("Imagem gerada por {Provider} ({Bytes} bytes) para {Purpose}",
                 resolver.Provider, bytes.Length, brief.Purpose);
@@ -103,7 +103,7 @@ public sealed class MediaGateway(
     }
 
     private async Task RecordUsageAsync(
-        string purpose, MediaProvider provider, bool cacheHit, int bytes, int durationMs, CancellationToken ct)
+        string purpose, MediaProvider provider, bool cacheHit, int bytes, int durationMs, Guid? productId, CancellationToken ct)
     {
         db.MediaUsages.Add(new MediaUsageRecord
         {
@@ -113,6 +113,7 @@ public sealed class MediaGateway(
             CacheHit = cacheHit,
             Bytes = bytes,
             DurationMs = durationMs,
+            ProductId = productId,
             CreatedAtUtc = clock.UtcNow,
         });
         await db.SaveChangesAsync(ct);

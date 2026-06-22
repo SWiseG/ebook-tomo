@@ -16,6 +16,12 @@ public sealed record SocialArt(string Headline, string? Subtext, ImageTemplate T
 /// <summary>Conteúdo de um carrossel (capa com headline + 1 slide por texto), feed 1080×1080.</summary>
 public sealed record CarouselArt(string Headline, string? Brand, IReadOnlyList<string> Slides, NichePalette Palette);
 
+/// <summary>Uma métrica de infográfico: número de impacto + rótulo curto.</summary>
+public sealed record InfographicMetric(string Number, string Label);
+
+/// <summary>Conteúdo de um infográfico de métricas (banda com 2–3 números) — docs/13 WS-E.</summary>
+public sealed record InfographicArt(IReadOnlyList<InfographicMetric> Metrics, NichePalette Palette);
+
 /// <summary>
 /// Composição programática de imagens (E09-01). Implementado na Infrastructure (SkiaSharp).
 /// A foto de fundo é opcional; sem ela, usa-se gradiente da paleta.
@@ -31,6 +37,9 @@ public interface IImageComposer
 
     /// <summary>Renderiza um carrossel: capa (headline) + 1 slide por texto. Todos 1080×1080.</summary>
     IReadOnlyList<byte[]> RenderCarousel(CarouselArt art, byte[]? backgroundPhoto = null);
+
+    /// <summary>Infográfico de métricas (banda horizontal com 2–3 números de impacto). Para o corpo do PDF.</summary>
+    byte[] RenderInfographic(InfographicArt art);
 }
 
 /// <summary>

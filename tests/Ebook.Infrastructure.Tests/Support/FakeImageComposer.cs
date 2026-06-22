@@ -10,6 +10,7 @@ public sealed class FakeImageComposer : IImageComposer
     public int CoverCount { get; private set; }
     public int MockupCount { get; private set; }
     public int SocialCount { get; private set; }
+    public int InfographicCount { get; private set; }
 
     public byte[] RenderCover(CoverArt art, byte[]? backgroundPhoto = null)
     {
@@ -34,6 +35,12 @@ public sealed class FakeImageComposer : IImageComposer
         SocialCount++;
         // capa + 1 imagem por slide
         return Enumerable.Range(0, art.Slides.Count + 1).Select(_ => (byte[])[.. Png]).ToList();
+    }
+
+    public byte[] RenderInfographic(InfographicArt art)
+    {
+        InfographicCount++;
+        return [.. Png];
     }
 }
 

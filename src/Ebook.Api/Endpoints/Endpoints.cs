@@ -1,6 +1,8 @@
 using Ebook.Application.Administration.Auth;
 using Ebook.Application.Administration.Dashboard;
 using Ebook.Application.Administration.Media;
+using Ebook.Application.Administration.Provenance;
+using Ebook.Application.Administration.Sources;
 using Ebook.Application.Analytics;
 using Ebook.Application.Common.Messaging;
 using Ebook.Application.Common.Settings;
@@ -75,6 +77,11 @@ public static class Endpoints
             (await dispatcher.QueryAsync(new GetMediaTelemetryQuery(), ct)).ToHttp())
             .WithTags("Media")
             .WithSummary("Telemetria do Media Gateway: uso por provedor, cache e cotas (E14-08)");
+
+        secured.MapGet("/sources/telemetry", async (IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.QueryAsync(new GetSourcesTelemetryQuery(), ct)).ToHttp())
+            .WithTags("Sources")
+            .WithSummary("Telemetria unificada de fontes externas: texto (IA) + imagem (Media Gateway)");
 
         secured.MapGet("/logs", (
             Ebook.Api.Observability.InMemoryLogBuffer buffer,
@@ -290,6 +297,11 @@ public static class Endpoints
             (await dispatcher.QueryAsync(new GetProductMetricsQuery(id), ct)).ToHttp())
             .WithTags("Products")
             .WithSummary("Funil de métricas do produto (visitas → cliques → vendas, 30 dias)");
+
+        secured.MapGet("/products/{id:guid}/provenance", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.QueryAsync(new GetProductProvenanceQuery(id), ct)).ToHttp())
+            .WithTags("Products")
+            .WithSummary("Proveniência do PDF: quem gerou o texto (IA) e as imagens (Media Gateway)");
 
         secured.MapPost("/analytics/aggregate", async (IMetricsAggregator aggregator, CancellationToken ct) =>
         {

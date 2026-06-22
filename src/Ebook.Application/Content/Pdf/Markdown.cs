@@ -7,9 +7,12 @@ public enum MarkdownBlockKind
     Bullets,
     PullQuote,
     Callout,
-    Timeline,  // passos numerados (lista ordenada "1.") → linha do tempo visual
-    Stat,      // número de impacto: "> [!STAT] 97% | descrição"
-    QuoteCard, // citação desenhada com ícone: "> [!FRASE] texto — autor"
+    Timeline,   // passos numerados (lista ordenada "1.") → linha do tempo visual
+    Stat,       // número de impacto: "> [!STAT] 97% | descrição"
+    QuoteCard,  // citação desenhada com ícone: "> [!FRASE] texto — autor"
+    Comparison,  // tabela antes→depois: "> [!VS] Antes | Depois" + linhas "> esquerda | direita"
+    Divider,     // divisor de seção decorativo: linha "---" (ou "***"/"___")
+    Infographic, // banda de métricas composta no Skia: "> [!INFO] 97% | a ; 3x | b ; 30 dias | c"
     Image   // ilustração gerada por IA (Frente D): 1 por capítulo via IMediaGateway
 }
 
@@ -49,6 +52,15 @@ public sealed record MarkdownBlock
 
     public static MarkdownBlock QuoteCard(string text, string author) =>
         new() { Kind = MarkdownBlockKind.QuoteCard, Text = text, Label = author };
+
+    public static MarkdownBlock Comparison(string header, IReadOnlyList<string> rows) =>
+        new() { Kind = MarkdownBlockKind.Comparison, Text = header, Items = rows };
+
+    public static MarkdownBlock Divider() =>
+        new() { Kind = MarkdownBlockKind.Divider };
+
+    public static MarkdownBlock Infographic(IReadOnlyList<string> cells) =>
+        new() { Kind = MarkdownBlockKind.Infographic, Items = cells };
 }
 
 /// <summary>
@@ -92,6 +104,22 @@ public static class MarkdownParser
             }
 
             var first = quote[0];
+
+            // tabela de comparação: o cabeçalho é a 1ª linha (Antes | Depois) e cada linha seguinte é uma fileira
+            if (first.StartsWith("[!VS]", StringComparison.OrdinalIgnoreCase))
+            {
+                var header = first["[!VS]".Length..].Trim();
+                var rows = new List<string>();
+                for (var i = 1; i < quote.Count; i++)
+                {
+                    rows.Add(quote[i]);
+                }
+
+                blocks.Add(MarkdownBlock.Comparison(header, [.. rows]));
+                quote.Clear();
+                return;
+            }
+
             var type = "pull";
             string? label = null;
             if (first.StartsWith("[!INSIGHT]", StringComparison.OrdinalIgnoreCase))
@@ -115,6 +143,11 @@ public static class MarkdownParser
             {
                 type = "quote";
                 first = first["[!FRASE]".Length..].Trim();
+            }
+            else if (first.StartsWith("[!INFO]", StringComparison.OrdinalIgnoreCase))
+            {
+                type = "info";
+                first = first["[!INFO]".Length..].Trim();
             }
 
             var lines = new List<string>();
@@ -143,6 +176,14 @@ public static class MarkdownParser
                 case "quote":
                     var (quoteText, author) = SplitAuthor(text);
                     blocks.Add(MarkdownBlock.QuoteCard(quoteText, author));
+                    break;
+                case "info":
+                    var cells = text.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    if (cells.Length > 0)
+                    {
+                        blocks.Add(MarkdownBlock.Infographic(cells));
+                    }
+
                     break;
                 default:
                     blocks.Add(MarkdownBlock.PullQuote(text));
@@ -174,6 +215,13 @@ public static class MarkdownParser
             if (string.IsNullOrWhiteSpace(line))
             {
                 FlushAll();
+                continue;
+            }
+
+            if (IsDivider(line))
+            {
+                FlushAll();
+                blocks.Add(MarkdownBlock.Divider());
                 continue;
             }
 
@@ -267,6 +315,31 @@ public static class MarkdownParser
         return idx >= 0
             ? (text[..idx].Trim(), text[(idx + 1)..].Trim())
             : (text.Trim(), string.Empty);
+    }
+
+    /// <summary>Linha só de '-', '*' ou '_' (3+ repetidos) → divisor de seção.</summary>
+    private static bool IsDivider(string line)
+    {
+        if (line.Length < 3)
+        {
+            return false;
+        }
+
+        var c = line[0];
+        if (c is not ('-' or '*' or '_'))
+        {
+            return false;
+        }
+
+        foreach (var ch in line)
+        {
+            if (ch != c)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>"frase — autor" → ("frase", "autor"); sem travessão → (texto, "").</summary>

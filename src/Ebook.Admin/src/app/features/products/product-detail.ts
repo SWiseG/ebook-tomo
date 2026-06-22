@@ -19,6 +19,7 @@ import {
   Outline,
   ProductDetail as ProductDetailDto,
   ProductMetrics,
+  ProductProvenance,
   SocialPostItem,
 } from '../../core/api.types';
 import { renderMarkdown } from '../../shared/markdown';
@@ -70,6 +71,11 @@ export class ProductDetail implements OnDestroy {
   kiwifyProductId = '';
   checkoutUrl = '';
   readonly matching = signal(false);
+
+  // Proveniência do PDF (Fase 3B): quem gerou texto/imagens.
+  readonly provenance = signal<ProductProvenance | null>(null);
+  readonly provenanceDialog = signal(false);
+  readonly loadingProvenance = signal(false);
 
   // Calendário social: edição de copy (dialog) + ações do gate.
   readonly editPostDialog = signal(false);
@@ -332,6 +338,32 @@ export class ProductDetail implements OnDestroy {
     if (url) {
       window.open(url, '_blank', 'noopener');
     }
+  }
+
+  openProvenance(): void {
+    this.provenanceDialog.set(true);
+    if (this.provenance()) {
+      return; // já carregado nesta visita
+    }
+    this.loadingProvenance.set(true);
+    this.http.get<ProductProvenance>(`/api/v1/products/${this.id}/provenance`).subscribe({
+      next: (p) => {
+        this.provenance.set(p);
+        this.loadingProvenance.set(false);
+      },
+      error: () => {
+        this.notify.error(this.t.translate('common.actionFailed'));
+        this.loadingProvenance.set(false);
+      },
+    });
+  }
+
+  formatBytes(bytes: number): string {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
   }
 
   downloadPdf(): void {

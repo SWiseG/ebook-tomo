@@ -24,7 +24,8 @@ public sealed record MediaBrief(
     string Query,
     string NicheSlug,
     int Width,
-    int Height);
+    int Height,
+    Guid? ProductId = null); // proveniência (Fase 3B): atribui a imagem ao produto, quando conhecido
 
 public sealed record MediaResult(byte[] Bytes, MediaProvider Provider, bool CacheHit);
 

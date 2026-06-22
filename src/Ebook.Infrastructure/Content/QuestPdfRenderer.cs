@@ -247,6 +247,49 @@ public sealed class QuestPdfRenderer : IPdfRenderer
             : (string.Empty, step);
     }
 
+    // Tabela antes→depois: coluna esquerda neutra (o velho jeito), direita em destaque accent (o método).
+    private static void ComposeComparison(ColumnDescriptor col, string header, IReadOnlyList<string> rows, Style theme)
+    {
+        var (leftTitle, rightTitle) = SplitPair(header);
+        const string neutral = "#F3F4F6";
+        var highlight = Tint(theme.Accent, 0.84f);
+
+        col.Item().PaddingVertical(10).Table(table =>
+        {
+            table.ColumnsDefinition(c =>
+            {
+                c.RelativeColumn();
+                c.RelativeColumn();
+            });
+
+            table.Cell().Background(neutral).Padding(9).Text(leftTitle.Length > 0 ? leftTitle : "Antes")
+                .FontFamily(theme.HeadingFont).FontSize(11).Bold().FontColor("#6B7280");
+            table.Cell().Background(highlight).Padding(9).Text(rightTitle.Length > 0 ? rightTitle : "Depois")
+                .FontFamily(theme.HeadingFont).FontSize(11).Bold().FontColor(theme.Primary);
+
+            foreach (var row in rows)
+            {
+                var (left, right) = SplitPair(row);
+                table.Cell().Background(neutral).BorderTop(1).BorderColor("#FFFFFF").Padding(9)
+                    .Text(left).FontSize(11).FontColor(theme.Text);
+                table.Cell().Background(highlight).BorderTop(1).BorderColor("#FFFFFF").Padding(9)
+                    .Text(right).FontSize(11).FontColor(theme.Text);
+            }
+        });
+    }
+
+    // "esquerda | direita" (tolera "||") → (esquerda, direita).
+    private static (string Left, string Right) SplitPair(string text)
+    {
+        var parts = text.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return parts.Length switch
+        {
+            >= 2 => (parts[0], parts[1]),
+            1 => (parts[0], string.Empty),
+            _ => (text.Trim(), string.Empty),
+        };
+    }
+
     // "Capítulo 1 — Título" → ("Capítulo 1", "Título"); sem separador → (texto, "").
     private static (string Eyebrow, string Title) SplitChapter(string text)
     {
@@ -403,6 +446,36 @@ public sealed class QuestPdfRenderer : IPdfRenderer
                                 .FontFamily(theme.BodyFont).FontSize(11).Bold().FontColor(theme.Accent);
                         }
                     });
+                break;
+
+            case MarkdownBlockKind.Comparison:
+                ComposeComparison(col, block.Text, block.Items, theme);
+                break;
+
+            case MarkdownBlockKind.Divider:
+                // divisor de seção: régua clara à esquerda + ícone accent ao centro + régua à direita
+                col.Item().PaddingVertical(16).Row(row =>
+                {
+                    row.RelativeItem().AlignMiddle().PaddingRight(12)
+                        .LineHorizontal(1).LineColor(Tint(theme.Accent, 0.35f));
+
+                    var dividerIcon = IconRegistry.Colored("sparkles", theme.Accent);
+                    if (dividerIcon is not null)
+                    {
+                        row.ConstantItem(14).AlignMiddle().Svg(dividerIcon);
+                    }
+                    else
+                    {
+                        row.ConstantItem(14).AlignMiddle().AlignCenter().Text("•").FontColor(theme.Accent);
+                    }
+
+                    row.RelativeItem().AlignMiddle().PaddingLeft(12)
+                        .LineHorizontal(1).LineColor(Tint(theme.Accent, 0.35f));
+                });
+                break;
+
+            case MarkdownBlockKind.Infographic:
+                // pré-composto no Skia (PdfJobHandler) e já convertido em Image; bloco cru aqui = ignora
                 break;
 
             case MarkdownBlockKind.Image:

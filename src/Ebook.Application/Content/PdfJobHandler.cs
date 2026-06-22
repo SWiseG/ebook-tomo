@@ -2,6 +2,7 @@ using System.Text.Json;
 using Ebook.Application.Ai;
 using Ebook.Application.Common.Jobs;
 using Ebook.Application.Common.Text;
+using Ebook.Application.Content.Images;
 using Ebook.Application.Content.Pdf;
 using Ebook.Application.Media;
 using Ebook.Domain.Abstractions;
@@ -27,6 +28,7 @@ public sealed class PdfJobHandler(
     IArtifactStore artifactStore,
     IJobQueue jobQueue,
     IMediaGateway mediaGateway,
+    IImageComposer imageComposer,
     IPromptLibrary promptLibrary,
     IUnitOfWork unitOfWork,
     IClock clock,
@@ -95,8 +97,11 @@ public sealed class PdfJobHandler(
         var book = PdfBookComposer.Build(manuscript, product.Title, tagline, cta, theme, palette);
 
         // Frente D: ilustrações por capítulo (geradas em paralelo via Media Gateway)
-        var bodyWithImages = await InjectIllustrationsAsync(book.Body, nicheSlug, ct);
+        var bodyWithImages = await InjectIllustrationsAsync(book.Body, nicheSlug, product.Id, ct);
         book = book with { Body = bodyWithImages };
+
+        // WS-E: infográficos de métricas compostos no Skia (blocos Infographic → imagens)
+        book = book with { Body = ComposeInfographics(book.Body, palette) };
 
         var coverImage = await artifactStore.ReadBytesAsync(ContentPaths.Cover(product.Slug), ct);
         var bytes = renderer.Render(book, coverImage);
@@ -122,6 +127,7 @@ public sealed class PdfJobHandler(
     private async Task<IReadOnlyList<MarkdownBlock>> InjectIllustrationsAsync(
         IReadOnlyList<MarkdownBlock> body,
         string nicheSlug,
+        Guid productId,
         CancellationToken ct)
     {
         var chapters = body
@@ -137,7 +143,7 @@ public sealed class PdfJobHandler(
         // gera todas as imagens em paralelo (cada uma pode vir de um provedor diferente da cadeia)
         var imageTasks = chapters.ToDictionary(
             c => c.Text,
-            c => GenerateIllustrationAsync(c.Text, nicheSlug, ct));
+            c => GenerateIllustrationAsync(c.Text, nicheSlug, productId, ct));
 
         await Task.WhenAll(imageTasks.Values);
 
@@ -163,7 +169,61 @@ public sealed class PdfJobHandler(
         return result;
     }
 
-    private async Task<byte[]?> GenerateIllustrationAsync(string chapterTitle, string nicheSlug, CancellationToken ct)
+    /// <summary>
+    /// WS-E (docs/13): substitui cada bloco Infographic por uma imagem composta no Skia (banda de
+    /// 2–3 métricas com as cores do nicho). Falha de composição apenas descarta o bloco — sem quebrar o PDF.
+    /// </summary>
+    private IReadOnlyList<MarkdownBlock> ComposeInfographics(IReadOnlyList<MarkdownBlock> body, NichePalette palette)
+    {
+        if (!body.Any(b => b.Kind == MarkdownBlockKind.Infographic))
+        {
+            return body;
+        }
+
+        var result = new List<MarkdownBlock>(body.Count);
+        foreach (var block in body)
+        {
+            if (block.Kind != MarkdownBlockKind.Infographic)
+            {
+                result.Add(block);
+                continue;
+            }
+
+            var metrics = block.Items.Select(ParseMetric).OfType<InfographicMetric>().ToList();
+            if (metrics.Count == 0)
+            {
+                continue; // sem métricas válidas: descarta o bloco
+            }
+
+            try
+            {
+                var bytes = imageComposer.RenderInfographic(new InfographicArt(metrics, palette));
+                result.Add(MarkdownBlock.Image(bytes));
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Falha ao compor infográfico; ignorando o bloco");
+            }
+        }
+
+        return result;
+    }
+
+    // "97% | descrição" → InfographicMetric; sem número → null.
+    private static InfographicMetric? ParseMetric(string cell)
+    {
+        var idx = cell.IndexOf('|');
+        if (idx <= 0)
+        {
+            return null;
+        }
+
+        var number = cell[..idx].Trim();
+        var label = cell[(idx + 1)..].Trim();
+        return number.Length > 0 ? new InfographicMetric(number, label) : null;
+    }
+
+    private async Task<byte[]?> GenerateIllustrationAsync(string chapterTitle, string nicheSlug, Guid productId, CancellationToken ct)
     {
         try
         {
@@ -174,7 +234,8 @@ public sealed class PdfJobHandler(
                 Query: nicheSlug,
                 NicheSlug: nicheSlug,
                 Width: 800,
-                Height: 400);
+                Height: 400,
+                ProductId: productId);
 
             var result = await mediaGateway.GenerateAsync(brief, ct);
             return result.IsSuccess ? result.Value.Bytes : null;

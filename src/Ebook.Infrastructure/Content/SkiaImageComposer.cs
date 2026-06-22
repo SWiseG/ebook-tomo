@@ -112,6 +112,73 @@ public sealed class SkiaImageComposer : IImageComposer
         return images;
     }
 
+    public byte[] RenderInfographic(InfographicArt art)
+    {
+        const int w = 1500;
+        const int h = 480;
+        using var surface = SKSurface.Create(new SKImageInfo(w, h));
+        var canvas = surface.Canvas;
+        FillBackground(canvas, w, h, art.Palette, null); // gradiente do nicho
+
+        var metrics = art.Metrics.Take(3).ToList();
+        if (metrics.Count == 0)
+        {
+            return Encode(surface);
+        }
+
+        var accent = SKColor.Parse(art.Palette.Accent);
+        var onDark = SKColor.Parse(art.Palette.OnDark);
+        var cellW = (float)w / metrics.Count;
+
+        using var numFace = Typeface(art.Palette.HeadingFont, SKFontStyleWeight.Bold);
+        using var labelFace = Typeface(art.Palette.BodyFont, SKFontStyleWeight.Normal);
+
+        for (var i = 0; i < metrics.Count; i++)
+        {
+            var cx = cellW * i + cellW / 2f;
+
+            // divisor vertical entre as células
+            if (i > 0)
+            {
+                using var divider = new SKPaint
+                {
+                    Color = accent.WithAlpha(70), IsAntialias = true,
+                    StrokeWidth = 2, Style = SKPaintStyle.Stroke,
+                };
+                canvas.DrawLine(cellW * i, h * 0.24f, cellW * i, h * 0.76f, divider);
+            }
+
+            // número de impacto (accent), encolhido até caber na célula (ex.: "30 dias" é largo)
+            using var numPaint = new SKPaint
+            {
+                Color = accent, IsAntialias = true,
+                Typeface = numFace, TextAlign = SKTextAlign.Center, TextSize = 150,
+            };
+            while (numPaint.TextSize > 56 && numPaint.MeasureText(metrics[i].Number) > cellW - 70)
+            {
+                numPaint.TextSize -= 6;
+            }
+
+            canvas.DrawText(metrics[i].Number, cx, h * 0.44f, numPaint);
+
+            // traço accent sob o número
+            using (var rule = new SKPaint { Color = accent.WithAlpha(170), IsAntialias = true })
+            {
+                canvas.DrawRect(SKRect.Create(cx - 38, h * 0.50f, 76, 6), rule);
+            }
+
+            // rótulo claro, quebrado em linhas dentro da célula
+            using var labelPaint = new SKPaint
+            {
+                Color = onDark.WithAlpha(230), IsAntialias = true,
+                Typeface = labelFace, TextAlign = SKTextAlign.Center, TextSize = 42,
+            };
+            DrawWrapped(canvas, metrics[i].Label, labelPaint, cx, h * 0.64f, cellW - 80, 52);
+        }
+
+        return Encode(surface);
+    }
+
     private static byte[] RenderCarouselSlide(
         int w, int h, NichePalette palette, byte[]? photo, bool cover, int number, string text, string? brand)
     {

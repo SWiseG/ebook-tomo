@@ -1,0 +1,32 @@
+@use '../../../styles/tokens' as t;
+
+// Esqueleto flex para o grid de fontes preencher a altura restante (espelha media-telemetry).
+:host {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-row {
+  flex: none;
+  padding: 0 t.$space-6;
+}
+
+.sources-list {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-top: t.$space-5;
+
+  .block__title {
+    flex: none;
+    padding: 0 t.$space-6;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--p-text-muted-color);
+    margin-bottom: t.$space-3;
+  }
+}

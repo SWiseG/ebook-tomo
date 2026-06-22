@@ -32,6 +32,7 @@
           <p-button [label]="t('productDetail.openLp')" icon="pi pi-external-link" [outlined]="true" (onClick)="openLp()" />
         }
         <p-button [label]="t('productDetail.downloadPdf')" icon="pi pi-download" [outlined]="true" (onClick)="downloadPdf()" />
+        <p-button [label]="t('productDetail.provenance')" icon="pi pi-sitemap" [outlined]="true" severity="secondary" (onClick)="openProvenance()" />
       </div>
     </div>
 
@@ -237,5 +238,56 @@
       <p-button [label]="t('common.cancel')" [text]="true" severity="secondary" (onClick)="editPostDialog.set(false)" />
       <p-button [label]="t('common.save')" icon="pi pi-check" [loading]="savingPost()" (onClick)="saveEditPost()" />
     </ng-template>
+  </p-dialog>
+
+  <!-- Proveniência do PDF: quem gerou o texto (IA) e as imagens (Media Gateway) -->
+  <p-dialog
+    [visible]="provenanceDialog()"
+    (visibleChange)="provenanceDialog.set($event)"
+    [modal]="true"
+    [style]="{ width: '640px' }"
+    [header]="t('productDetail.provenance')"
+  >
+    @if (loadingProvenance()) {
+      <app-loading variant="table" [rows]="4" />
+    } @else if (provenance(); as p) {
+      <div class="prov">
+        <div class="prov__section">
+          <div class="prov__title">
+            <i class="pi pi-pencil"></i>
+            {{ t('productDetail.provText') }}
+            <span class="prov__count">{{ p.textCount }} · {{ p.totalTokens | number }} tokens</span>
+          </div>
+          @for (e of p.text; track $index) {
+            <div class="prov__row">
+              <span class="prov__provider">{{ e.provider }}</span>
+              <span class="prov__purpose">{{ e.purpose }}</span>
+              @if (e.cacheHit) { <span class="tomo-badge tomo-badge--secondary">cache</span> }
+              <span class="prov__meta">{{ e.tokens | number }} tokens</span>
+            </div>
+          } @empty {
+            <div class="prov__empty">{{ t('productDetail.provEmpty') }}</div>
+          }
+        </div>
+
+        <div class="prov__section">
+          <div class="prov__title">
+            <i class="pi pi-image"></i>
+            {{ t('productDetail.provImages') }}
+            <span class="prov__count">{{ p.imageCount }} · {{ formatBytes(p.totalBytes) }}</span>
+          </div>
+          @for (e of p.images; track $index) {
+            <div class="prov__row">
+              <span class="prov__provider">{{ e.provider }}</span>
+              <span class="prov__purpose">{{ e.purpose }}</span>
+              @if (e.cacheHit) { <span class="tomo-badge tomo-badge--secondary">cache</span> }
+              <span class="prov__meta">{{ formatBytes(e.bytes) }}</span>
+            </div>
+          } @empty {
+            <div class="prov__empty">{{ t('productDetail.provEmpty') }}</div>
+          }
+        </div>
+      </div>
+    }
   </p-dialog>
 </ng-container>

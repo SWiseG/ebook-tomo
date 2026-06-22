@@ -122,8 +122,18 @@ Hoje `features/media-telemetry/` + `MediaTelemetryReader` cobrem **só mídia**.
 ## 5.1 Status de execução (2026-06-21)
 
 - ✅ **Fase 1** — `QuestPdfRenderer`: cabeçalho corrente curto, sumário visual (ícone + título por capítulo), abertura de capítulo decorativa (número grande + ícone + rótulo + título + régua), drop cap. Verificado com PDF real; 16 testes de Content OK.
-- ✅ **Fase 5 (parte de elementos visuais, sem chave)** — novos blocos `Timeline` (lista numerada → passos com chip + conector), `Stat` (`> [!STAT] 97% | desc`) e `QuoteCard` (`> [!FRASE] frase — autor`, com ícone de aspas). Parser (`Markdown.cs`) + renderer + prompt `chapter.md` atualizados para a IA emitir os marcadores. Verificado parser→render com PDF real; 166 testes OK.
-- ⏭️ **Pendente Fase 5**: tabela comparativa (antes→depois), infográficos compostos via Skia (WS-E), divisores de seção SVG.
+- ✅ **Fase 5 (elementos visuais, sem chave)** — novos blocos no parser (`Markdown.cs`) + renderer + prompt `chapter.md`:
+  - `Timeline` (lista numerada → passos com chip + conector vertical);
+  - `Stat` (`> [!STAT] 97% | desc` → número de impacto sobre card do nicho);
+  - `QuoteCard` (`> [!FRASE] frase — autor` → citação com ícone de aspas);
+  - `Comparison` (`> [!VS] Antes | Depois` + linhas `> esquerda | direita` → tabela antes→depois com coluna de destaque);
+  - `Divider` (linha `---`/`***`/`___` → divisor de seção com ícone accent ao centro).
+  - Verificado parser→render com PDF real (inclui caminho SVG com `IconRegistry`).
+- ✅ **Fase 5 — WS-E (infográfico Skia)** — bloco `Infographic` (`> [!INFO] 97% | a ; 3x | b ; 30 dias | c`) → banda horizontal de 2–3 métricas composta no `SkiaImageComposer.RenderInfographic` (gradiente do nicho, número de impacto auto-ajustado, traço accent, rótulo, divisores). `PdfJobHandler` converte o bloco em imagem (injeta `IImageComposer`). Verificado visualmente (PNG inspecionado) + 182 testes OK.
+- 🎉 **Fase 5 concluída.**
+- ✅ **Fase 3A — Tela de Fontes (unificada)** — `ISourcesTelemetryReader`/`SourcesTelemetryReader` agregam texto (`AiUsage`: Claude) + imagem (`MediaUsage`: Gemini/Pollinations/Pexels/Skia) por provedor, hoje vs. mês, com cache. Query + endpoint `GET /api/v1/sources/telemetry`. Tela Angular `features/sources` + rota `/sources` + item de nav "Fontes" + i18n (pt-BR/en/es). Verificado: teste de agregação (texto+imagem, hoje vs. mês, cache) + build Angular.
+- ✅ **Fase 3B — Proveniência do PDF** — `ProductId` adicionado ao `MediaBrief` → `MediaGateway` → `MediaUsageRecord` (migration `MediaUsageProductId`: coluna + índice); `PdfJobHandler` passa `product.Id` nas ilustrações. `ProductProvenanceReader` + query + `GET /products/{id}/provenance` agregam texto (`AiUsage`) e imagem (`MediaUsage`) do produto. Action "Proveniência" + dialog na product-detail (texto/imagens, provedor, cache, tokens/bytes) + i18n (pt-BR/en/es). Verificado: teste de atribuição por produto + build Angular. **Obs.:** imagem só fica atribuível em PDFs gerados após o deploy (linhas antigas têm `ProductId` nulo).
+- 🎉 **Fase 3 concluída** (as duas telas pedidas).
 - ⛔ **Fase 2 (imagens)** aguarda chaves de API na Railway (ver §6).
 
 ## 6. Notas de produção (Railway)

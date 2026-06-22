@@ -246,3 +246,40 @@ export interface MediaTelemetry {
   cacheEntriesTotal: number;
   cacheSizeBytes: number;
 }
+
+// Fase 3 — telemetria unificada de fontes externas (texto + imagem)
+export interface SourceStat {
+  provider: string;
+  kind: string; // "Texto" | "Imagem"
+  generatedToday: number;
+  generatedThisMonth: number;
+  tokensToday: number;
+  bytesToday: number;
+  avgDurationMsToday: number;
+}
+
+export interface SourcesTelemetry {
+  sources: SourceStat[];
+  cacheHitsToday: number;
+  mediaCacheEntriesTotal: number;
+  mediaCacheSizeBytes: number;
+}
+
+// Fase 3B — proveniência do PDF (quem fez texto/imagens)
+export interface ProvenanceEntry {
+  purpose: string;
+  provider: string;
+  cacheHit: boolean;
+  tokens: number;
+  bytes: number;
+  atUtc: string;
+}
+
+export interface ProductProvenance {
+  text: ProvenanceEntry[];
+  images: ProvenanceEntry[];
+  textCount: number;
+  imageCount: number;
+  totalTokens: number;
+  totalBytes: number;
+}

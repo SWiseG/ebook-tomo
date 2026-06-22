@@ -1,6 +1,8 @@
 using Ebook.Application.Administration.Auth;
 using Ebook.Application.Administration.Dashboard;
 using Ebook.Application.Administration.Media;
+using Ebook.Application.Administration.Provenance;
+using Ebook.Application.Administration.Sources;
 using Ebook.Application.Ai;
 using Ebook.Application.Common.Jobs;
 using Ebook.Application.Common.Settings;
@@ -93,6 +95,8 @@ public static class DependencyInjection
         services.AddScoped<ISettingsStore, SettingsStore>();
         services.AddScoped<IDashboardReader, DashboardReader>();
         services.AddScoped<IMediaTelemetryReader, MediaTelemetryReader>();
+        services.AddScoped<ISourcesTelemetryReader, SourcesTelemetryReader>();
+        services.AddScoped<IProductProvenanceReader, ProductProvenanceReader>();
         services.AddScoped<IProductReader, ProductReader>();
         services.AddScoped<IAiGateway, AiGateway>();
 

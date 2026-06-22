@@ -51,6 +51,10 @@ export const routes: Routes = [
           import('./features/media-telemetry/media-telemetry').then((m) => m.MediaTelemetry),
       },
       {
+        path: 'sources',
+        loadComponent: () => import('./features/sources/sources').then((m) => m.Sources),
+      },
+      {
         path: 'logs',
         loadComponent: () => import('./features/logs/logs').then((m) => m.Logs),
       },

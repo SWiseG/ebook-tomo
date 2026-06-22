@@ -244,6 +244,7 @@ public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : D
             e.Property(x => x.Purpose).HasMaxLength(100);
             e.Property(x => x.Provider).HasMaxLength(20);
             e.HasIndex(x => new { x.Provider, x.CreatedAtUtc }); // cota diária por provedor
+            e.HasIndex(x => x.ProductId);                        // proveniência por produto (Fase 3B)
         });
 
         modelBuilder.Entity<MediaCacheRecord>(e =>
