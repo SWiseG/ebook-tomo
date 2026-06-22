@@ -373,11 +373,18 @@ public static class Endpoints
             .WithSummary("Smoke test do AI Gateway (cache → Claude CLI via assinatura Pro)");
 
         // Laboratório de LP: gera uma landing page de teste a partir de um nicho (sem criar e-book),
-        // injetando a "memória" (feedback) na copy; devolve HTML + o caminho percorrido.
+        // injetando a "memória" (feedback) na copy. Assíncrono: a geração de IA leva minutos e
+        // estourava o timeout do proxy reverso (~120s) na request síncrona — então só enfileira o
+        // run e devolve o RunId; o painel busca HTML + caminho por polling em /lp-lab/result.
         secured.MapPost("/lp-lab/generate", async (GenerateTestLpRequest request, IDispatcher dispatcher, CancellationToken ct) =>
-            (await dispatcher.SendAsync(new GenerateTestLpCommand(request.NicheId, request.Feedback), ct)).ToHttp())
+            (await dispatcher.SendAsync(new EnqueueTestLpCommand(request.NicheId, request.Feedback), ct)).ToHttp())
             .WithTags("LpLab")
-            .WithSummary("Gera/regenera uma landing page de teste para um nicho");
+            .WithSummary("Enfileira a geração de uma landing page de teste para um nicho");
+
+        secured.MapGet("/lp-lab/result", async (Guid runId, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.QueryAsync(new GetTestLpResultQuery(runId), ct)).ToHttp())
+            .WithTags("LpLab")
+            .WithSummary("Lê o resultado de um run de teste de LP (pending/succeeded/failed)");
 
         secured.MapPost("/lp-lab/memory", async (SaveLpMemoryRequest request, IFileStore fileStore, CancellationToken ct) =>
         {

@@ -192,6 +192,19 @@ export interface GenerateTestLpResult {
   trace: LpTrace;
 }
 
+/** Resposta do enfileiramento de um run de teste de LP (geração assíncrona). */
+export interface EnqueueTestLpResult {
+  runId: string;
+}
+
+/** Estado de um run de teste de LP buscado por polling. status: pending | succeeded | failed. */
+export interface LpLabRun {
+  status: 'pending' | 'succeeded' | 'failed';
+  html: string | null;
+  trace: LpTrace | null;
+  error: string | null;
+}
+
 export type OptimizationDecisionKind = 'Scale' | 'Keep' | 'Iterate' | 'Kill';
 
 export interface OptimizationDecision {
