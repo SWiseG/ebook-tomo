@@ -1,0 +1,120 @@
+<div class="page-head">
+  <div>
+    <h1>Laboratório de Landing Page</h1>
+    <p class="sub">Ferramenta de teste — selecione um nicho, gere a LP, deixe feedback na Memória e regenere.</p>
+  </div>
+</div>
+
+<div class="lab-controls">
+  <p-select
+    [options]="niches()"
+    optionLabel="name"
+    optionValue="id"
+    [(ngModel)]="nicheId"
+    (onChange)="onNicheChange()"
+    [filter]="true"
+    placeholder="Selecione um nicho"
+    styleClass="niche-select"
+  />
+  <p-button
+    label="Gerar / Regenerar"
+    icon="pi pi-sparkles"
+    (onClick)="generate()"
+    [loading]="loading()"
+    [disabled]="!nicheId"
+  />
+  <p-button
+    label="Ver caminho"
+    icon="pi pi-sitemap"
+    severity="secondary"
+    [outlined]="true"
+    (onClick)="traceOpen.set(true)"
+    [disabled]="!trace()"
+  />
+</div>
+
+<div class="lab-grid">
+  <section class="preview">
+    @if (loading()) {
+      <div class="preview-empty"><i class="pi pi-spin pi-spinner"></i><span>Gerando landing page…</span></div>
+    } @else if (previewSrc()) {
+      <iframe [srcdoc]="previewSrc()" title="Pré-visualização da landing page" sandbox="allow-same-origin allow-scripts"></iframe>
+    } @else {
+      <div class="preview-empty">
+        <i class="pi pi-desktop"></i>
+        <span>Selecione um nicho e clique em <strong>Gerar</strong> para pré-visualizar a landing page.</span>
+      </div>
+    }
+  </section>
+
+  <aside class="memory">
+    <label class="memory-label">
+      Memória
+      <span>seu feedback — é injetado na regeneração</span>
+    </label>
+    <textarea
+      pTextarea
+      [(ngModel)]="feedback"
+      rows="14"
+      placeholder="Ex.: o herói está genérico; deixe o CTA mais urgente (sem urgência falsa); a paleta poderia ser mais quente; reforce a prova de método nos bullets…"
+    ></textarea>
+    <div class="memory-actions">
+      <p-button
+        label="Salvar memória"
+        icon="pi pi-save"
+        severity="secondary"
+        (onClick)="saveMemory()"
+        [loading]="savingMemory()"
+        [disabled]="!nicheId"
+      />
+      <p-button
+        label="Regenerar com memória"
+        icon="pi pi-refresh"
+        (onClick)="generate()"
+        [loading]="loading()"
+        [disabled]="!nicheId"
+      />
+    </div>
+  </aside>
+</div>
+
+<p-dialog
+  header="Caminho da landing page"
+  [visible]="traceOpen()"
+  (visibleChange)="traceOpen.set($event)"
+  [modal]="true"
+  [dismissableMask]="true"
+  [style]="{ width: 'min(760px, 94vw)' }"
+>
+  @if (trace(); as t) {
+    <div class="trace">
+      <div class="trace-summary">
+        <span class="chip">Nicho: {{ t.nicheName }}</span>
+        <span class="chip">Categoria: {{ t.category }}</span>
+        <span class="chip">Template: {{ t.template }}</span>
+        @if (t.feedbackUsed) {
+          <span class="chip chip--accent">Memória aplicada</span>
+        }
+      </div>
+
+      <div class="trace-design">
+        <span class="swatch" [style.background]="t.paletteBackground"></span>
+        <span class="swatch" [style.background]="t.paletteAccent"></span>
+        <span class="mono">{{ t.headingFont }} / {{ t.bodyFont }}</span>
+      </div>
+
+      <ol class="trace-steps">
+        @for (s of t.steps; track $index) {
+          <li>
+            <div class="ts-head">
+              <strong>{{ s.stage }}</strong>
+              <span class="ts-actor">{{ s.actor }}</span>
+            </div>
+            <p class="ts-detail">{{ s.detail }}</p>
+            <span class="ts-result">{{ s.result }}</span>
+          </li>
+        }
+      </ol>
+    </div>
+  }
+</p-dialog>

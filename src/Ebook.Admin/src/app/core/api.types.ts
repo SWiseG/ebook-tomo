@@ -166,6 +166,32 @@ export interface OptimizationRun {
   decisionCount: number;
 }
 
+/** Laboratório de LP: um passo do caminho percorrido pela landing page (modal de detalhes). */
+export interface LpTraceStep {
+  stage: string;
+  actor: string;
+  detail: string;
+  result: string;
+}
+
+export interface LpTrace {
+  nicheName: string;
+  category: string;
+  template: string;
+  paletteBackground: string;
+  paletteAccent: string;
+  headingFont: string;
+  bodyFont: string;
+  title: string;
+  feedbackUsed: boolean;
+  steps: LpTraceStep[];
+}
+
+export interface GenerateTestLpResult {
+  html: string;
+  trace: LpTrace;
+}
+
 export type OptimizationDecisionKind = 'Scale' | 'Keep' | 'Iterate' | 'Kill';
 
 export interface OptimizationDecision {

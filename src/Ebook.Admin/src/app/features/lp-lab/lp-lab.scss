@@ -1,0 +1,201 @@
+@use '../../../styles/tokens' as t;
+
+.lab-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.$space-3;
+  align-items: center;
+  margin-bottom: t.$space-5;
+
+  :host ::ng-deep .niche-select {
+    min-width: 260px;
+  }
+}
+
+.lab-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: t.$space-5;
+  align-items: start;
+
+  @media (max-width: 980px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.preview {
+  border: 1px solid var(--p-content-border-color);
+  border-radius: t.$radius-lg;
+  overflow: hidden;
+  background: var(--p-content-background);
+  box-shadow: var(--tomo-shadow-sm);
+  min-height: 72vh;
+
+  iframe {
+    width: 100%;
+    height: 78vh;
+    border: 0;
+    display: block;
+    background: #fff;
+  }
+}
+
+.preview-empty {
+  height: 72vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: t.$space-3;
+  color: var(--p-text-muted-color);
+  text-align: center;
+  padding: t.$space-6;
+
+  i {
+    font-size: 2rem;
+    color: var(--p-primary-color);
+  }
+  span {
+    max-width: 320px;
+  }
+}
+
+.memory {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-3;
+  padding: t.$space-4;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: t.$radius-lg;
+  background: var(--p-content-background);
+  box-shadow: var(--tomo-shadow-sm);
+  position: sticky;
+  top: t.$space-4;
+}
+
+.memory-label {
+  font-weight: 650;
+  display: flex;
+  flex-direction: column;
+
+  span {
+    font-weight: 400;
+    font-size: 0.78rem;
+    color: var(--p-text-muted-color);
+    margin-top: 2px;
+  }
+}
+
+.memory textarea {
+  width: 100%;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.memory-actions {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-2;
+}
+
+/* ── Modal do caminho ── */
+.trace {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-4;
+}
+
+.trace-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.$space-2;
+
+  .chip {
+    padding: 4px 12px;
+    border-radius: t.$radius-pill;
+    background: var(--p-surface-100, rgba(125, 125, 125, 0.12));
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+  .chip--accent {
+    background: var(--p-highlight-background);
+    color: var(--p-primary-color);
+  }
+}
+
+.trace-design {
+  display: flex;
+  align-items: center;
+  gap: t.$space-2;
+
+  .swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 1px solid var(--p-content-border-color);
+  }
+  .mono {
+    font-family: t.$font-mono;
+    font-size: 0.82rem;
+    color: var(--p-text-muted-color);
+  }
+}
+
+.trace-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-2;
+  counter-reset: step;
+
+  li {
+    position: relative;
+    padding: t.$space-3 t.$space-3 t.$space-3 t.$space-6;
+    border: 1px solid var(--p-content-border-color);
+    border-radius: t.$radius;
+    counter-increment: step;
+  }
+  li::before {
+    content: counter(step);
+    position: absolute;
+    left: t.$space-3;
+    top: t.$space-3;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--p-primary-color);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .ts-head {
+    display: flex;
+    align-items: center;
+    gap: t.$space-2;
+    flex-wrap: wrap;
+  }
+  .ts-actor {
+    font-size: 0.74rem;
+    padding: 2px 8px;
+    border-radius: t.$radius-pill;
+    background: var(--p-highlight-background);
+    color: var(--p-primary-color);
+    font-weight: 600;
+  }
+  .ts-detail {
+    margin: 4px 0 0;
+    font-size: 0.85rem;
+    color: var(--p-text-muted-color);
+    word-break: break-word;
+  }
+  .ts-result {
+    font-size: 0.74rem;
+    color: var(--p-text-muted-color);
+    font-style: italic;
+  }
+}

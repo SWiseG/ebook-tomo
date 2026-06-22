@@ -5,11 +5,13 @@ using Ebook.Application.Analytics;
 using Ebook.Application.Common.Messaging;
 using Ebook.Application.Common.Settings;
 using Ebook.Application.Content;
+using Ebook.Application.Content.Lp.Lab;
 using Ebook.Application.DevTools;
 using Ebook.Application.Discovery;
 using Ebook.Application.Optimization;
 using Ebook.Application.Publishing;
 using Ebook.Application.Social;
+using Ebook.Domain.Abstractions;
 using Ebook.Domain.Products;
 using Ebook.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -45,6 +47,10 @@ public sealed record ConnectChannelRequest(
 public sealed record SetApprovalRequest(bool Approved);
 
 public sealed record EditPostRequest(string Caption, string Hashtags);
+
+public sealed record GenerateTestLpRequest(Guid NicheId, string? Feedback);
+
+public sealed record SaveLpMemoryRequest(Guid NicheId, string? Feedback);
 
 public static class Endpoints
 {
@@ -348,5 +354,25 @@ public static class Endpoints
             (await dispatcher.SendAsync(new AiEchoCommand(request.Text), ct)).ToHttp())
             .WithTags("Dev")
             .WithSummary("Smoke test do AI Gateway (cache → Claude CLI via assinatura Pro)");
+
+        // Laboratório de LP: gera uma landing page de teste a partir de um nicho (sem criar e-book),
+        // injetando a "memória" (feedback) na copy; devolve HTML + o caminho percorrido.
+        secured.MapPost("/lp-lab/generate", async (GenerateTestLpRequest request, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(new GenerateTestLpCommand(request.NicheId, request.Feedback), ct)).ToHttp())
+            .WithTags("LpLab")
+            .WithSummary("Gera/regenera uma landing page de teste para um nicho");
+
+        secured.MapPost("/lp-lab/memory", async (SaveLpMemoryRequest request, IFileStore fileStore, CancellationToken ct) =>
+        {
+            await fileStore.WriteTextAsync($"lp-lab/{request.NicheId}/memory.txt", request.Feedback ?? string.Empty, ct);
+            return Results.NoContent();
+        })
+            .WithTags("LpLab")
+            .WithSummary("Salva a memória (feedback) de teste de LP de um nicho");
+
+        secured.MapGet("/lp-lab/memory", async (Guid nicheId, IFileStore fileStore, CancellationToken ct) =>
+            Results.Ok(new { feedback = await fileStore.ReadTextAsync($"lp-lab/{nicheId}/memory.txt", ct) ?? string.Empty }))
+            .WithTags("LpLab")
+            .WithSummary("Lê a memória (feedback) de teste de LP de um nicho");
     }
 }

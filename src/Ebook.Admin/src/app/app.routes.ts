@@ -42,6 +42,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/optimizer/optimizer').then((m) => m.Optimizer),
       },
       {
+        path: 'lp-lab',
+        loadComponent: () => import('./features/lp-lab/lp-lab').then((m) => m.LpLab),
+      },
+      {
         path: 'media',
         loadComponent: () =>
           import('./features/media-telemetry/media-telemetry').then((m) => m.MediaTelemetry),
