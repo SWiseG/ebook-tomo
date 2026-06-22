@@ -283,3 +283,17 @@ export interface ProductProvenance {
   totalTokens: number;
   totalBytes: number;
 }
+
+// Fase 7 — auditoria de conversão por IA
+export interface AuditItem {
+  item: string;
+  pass: boolean;
+  note: string;
+}
+
+export interface ConversionAudit {
+  verdict: string; // pass | warn | fail
+  score: number;
+  summary: string;
+  items: AuditItem[];
+}

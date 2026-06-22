@@ -55,8 +55,29 @@ public sealed class FakeAiGateway : IAiGateway
             }
             """,
         "ebook.chapter" => "Conteúdo do capítulo gerado pela IA fake.\n\nSegundo parágrafo com exemplo prático.",
+        "ebook.visual-plan" => """
+            {
+              "chapters": [
+                { "title": "Mapeie seu dinheiro", "mode": "photo", "query": "person budgeting notebook", "prompt": "person reviewing finances at a desk, editorial photo, no text" },
+                { "title": "Crie sua reserva", "mode": "illustration", "query": "financial safety net", "prompt": "conceptual safety net catching coins, editorial illustration, no text" }
+              ]
+            }
+            """,
         "ebook.review" => """
             { "introduction": "Introdução envolvente sobre dinheiro.", "conclusion": "Conclusão com CTA: comece hoje." }
+            """,
+        "ebook.audit" => """
+            {
+              "verdict": "warn",
+              "score": 72,
+              "summary": "Boa estrutura; falta prova social em mais capítulos.",
+              "items": [
+                { "item": "Promessa clara (4 U's)", "pass": true, "note": "Headline específica e urgente." },
+                { "item": "Hook por capítulo", "pass": true, "note": "Aberturas nomeiam a dor." },
+                { "item": "Prova social/autoridade", "pass": false, "note": "Só 1 capítulo traz caso real." },
+                { "item": "CTA final forte", "pass": true, "note": "CTA único e específico no fim." }
+              ]
+            }
             """,
         "ebook.sales-copy" => """
             {

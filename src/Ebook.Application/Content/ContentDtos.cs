@@ -22,3 +22,11 @@ public sealed record SalesCopyPriceDto(decimal Anchor, decimal Current);
 
 /// <summary>Saída da passada de revisão (tiers Commercial/Premium): moldura editorial do manuscrito.</summary>
 public sealed record ReviewDto(string Introduction, string Conclusion);
+
+/// <summary>
+/// Plano visual do e-book (Fase 4 — Diretor de Arte por IA): por capítulo, o tipo de imagem ideal
+/// (foto vs ilustração) e a query/prompt concretos. Insumo do <c>PdfJobHandler</c> ao gerar as imagens.
+/// </summary>
+public sealed record VisualPlanDto(IReadOnlyList<VisualDirectiveDto> Chapters);
+
+public sealed record VisualDirectiveDto(string Title, string Mode, string Query, string Prompt);

@@ -105,4 +105,33 @@ public class MediaGatewayTests
         Assert.True(result.IsFailure);
         Assert.Equal(MediaErrors.NoProvider.Code, result.Error.Code);
     }
+
+    // Fase 4: o tipo pedido reordena a cadeia (foto vs ilustração), mesmo contra a ordem de registro.
+    [Fact]
+    public async Task Kind_Photo_prioriza_banco_de_fotos_sobre_generativo()
+    {
+        var pollinations = new FakeMediaResolver(MediaProvider.Pollinations, Png); // generativo, registrado 1º
+        var pexels = new FakeMediaResolver(MediaProvider.Pexels, Png);             // foto, registrado 2º
+        using var provider = Build(pollinations, pexels);
+
+        var result = await GenerateAsync(provider, Brief() with { Kind = MediaKind.Photo });
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(MediaProvider.Pexels, result.Value.Provider); // foto venceu apesar de vir depois
+        Assert.Equal(0, pollinations.Calls);                       // generativo nem foi chamado
+    }
+
+    [Fact]
+    public async Task Kind_Illustration_prioriza_generativo_sobre_foto()
+    {
+        var pexels = new FakeMediaResolver(MediaProvider.Pexels, Png);             // foto, registrado 1º
+        var pollinations = new FakeMediaResolver(MediaProvider.Pollinations, Png); // generativo, registrado 2º
+        using var provider = Build(pexels, pollinations);
+
+        var result = await GenerateAsync(provider, Brief() with { Kind = MediaKind.Illustration });
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(MediaProvider.Pollinations, result.Value.Provider);
+        Assert.Equal(0, pexels.Calls);
+    }
 }

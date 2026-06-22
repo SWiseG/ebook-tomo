@@ -303,6 +303,11 @@ public static class Endpoints
             .WithTags("Products")
             .WithSummary("Proveniência do PDF: quem gerou o texto (IA) e as imagens (Media Gateway)");
 
+        secured.MapGet("/products/{id:guid}/audit", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.QueryAsync(new GetConversionAuditQuery(id), ct)).ToHttp())
+            .WithTags("Products")
+            .WithSummary("Auditoria de conversão por IA: pontua o e-book contra o checklist de persuasão (Fase 7)");
+
         secured.MapPost("/analytics/aggregate", async (IMetricsAggregator aggregator, CancellationToken ct) =>
         {
             var rows = await aggregator.AggregateAsync(DateTime.UtcNow.Date, ct);

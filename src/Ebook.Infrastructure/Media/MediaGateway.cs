@@ -43,8 +43,8 @@ public sealed class MediaGateway(
             await db.SaveChangesAsync(ct);
         }
 
-        // 2. cadeia de provedores (na ordem de registro)
-        foreach (var resolver in resolvers)
+        // 2. cadeia de provedores (ordenada pelo tipo desejado — Fase 4)
+        foreach (var resolver in Prioritize(brief.Kind))
         {
             if (!resolver.Enabled || await OverQuotaAsync(resolver, ct))
             {
@@ -87,6 +87,28 @@ public sealed class MediaGateway(
 
         return Result.Failure<MediaResult>(MediaErrors.NoProvider);
     }
+
+    // Fase 4: ordena a cadeia conforme o tipo desejado (foto vs ilustração); piso local sempre por último.
+    private IEnumerable<IMediaResolver> Prioritize(MediaKind kind) => kind switch
+    {
+        MediaKind.Photo => resolvers.OrderBy(r => RankPhoto(r.Provider)),
+        MediaKind.Illustration => resolvers.OrderBy(r => RankIllustration(r.Provider)),
+        _ => resolvers,
+    };
+
+    private static int RankPhoto(MediaProvider p) => p switch
+    {
+        MediaProvider.Pexels or MediaProvider.Unsplash or MediaProvider.Pixabay => 0, // fotos primeiro
+        MediaProvider.LocalSkia => 2,                                                 // piso por último
+        _ => 1,                                                                       // generativos no meio
+    };
+
+    private static int RankIllustration(MediaProvider p) => p switch
+    {
+        MediaProvider.Pexels or MediaProvider.Unsplash or MediaProvider.Pixabay => 1, // fotos depois
+        MediaProvider.LocalSkia => 2,                                                 // piso por último
+        _ => 0,                                                                       // generativos primeiro
+    };
 
     private async Task<bool> OverQuotaAsync(IMediaResolver resolver, CancellationToken ct)
     {

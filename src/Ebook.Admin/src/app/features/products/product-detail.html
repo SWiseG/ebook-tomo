@@ -33,6 +33,7 @@
         }
         <p-button [label]="t('productDetail.downloadPdf')" icon="pi pi-download" [outlined]="true" (onClick)="downloadPdf()" />
         <p-button [label]="t('productDetail.provenance')" icon="pi pi-sitemap" [outlined]="true" severity="secondary" (onClick)="openProvenance()" />
+        <p-button [label]="t('productDetail.audit')" icon="pi pi-verified" [outlined]="true" severity="secondary" (onClick)="openAudit()" />
       </div>
     </div>
 
@@ -287,6 +288,36 @@
             <div class="prov__empty">{{ t('productDetail.provEmpty') }}</div>
           }
         </div>
+      </div>
+    }
+  </p-dialog>
+
+  <!-- Auditoria de conversão por IA (Fase 7) -->
+  <p-dialog
+    [visible]="auditDialog()"
+    (visibleChange)="auditDialog.set($event)"
+    [modal]="true"
+    [style]="{ width: '600px' }"
+    [header]="t('productDetail.audit')"
+  >
+    @if (loadingAudit()) {
+      <app-loading variant="table" [rows]="4" />
+    } @else if (audit(); as a) {
+      <div class="audit">
+        <div class="audit__head">
+          <span class="tomo-badge tomo-badge--{{ verdictSeverity(a.verdict) }} audit__verdict">{{ a.verdict }}</span>
+          <span class="audit__score">{{ a.score }}/100</span>
+        </div>
+        <p class="audit__summary">{{ a.summary }}</p>
+        @for (it of a.items; track $index) {
+          <div class="audit__row" [class.audit__row--fail]="!it.pass">
+            <i class="pi" [class.pi-check-circle]="it.pass" [class.pi-times-circle]="!it.pass"></i>
+            <div class="audit__body">
+              <span class="audit__item">{{ it.item }}</span>
+              <span class="audit__note">{{ it.note }}</span>
+            </div>
+          </div>
+        }
       </div>
     }
   </p-dialog>

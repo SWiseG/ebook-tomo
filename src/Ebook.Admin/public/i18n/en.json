@@ -326,6 +326,7 @@
     "provText": "Text (AI)",
     "provImages": "Images",
     "provEmpty": "No records.",
+    "audit": "Audit conversion",
     "manuscript": "Manuscript",
     "manuscriptPending": "Manuscript not generated yet.",
     "cover": "Cover",

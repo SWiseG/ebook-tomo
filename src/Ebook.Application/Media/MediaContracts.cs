@@ -17,6 +17,19 @@ public enum MediaProvider
 }
 
 /// <summary>
+/// Tipo de imagem desejado (Fase 4 — Diretor de Arte por IA). Roteia a cadeia: <see cref="Photo"/>
+/// prioriza bancos de foto (Pexels/Unsplash/Pixabay); <see cref="Illustration"/> prioriza geração
+/// (Gemini/Cloudflare/HuggingFace/Pollinations). <see cref="Auto"/> = ordem de registro padrão.
+/// O piso local (Skia) é sempre o último recurso, independentemente do tipo.
+/// </summary>
+public enum MediaKind
+{
+    Auto,
+    Photo,
+    Illustration
+}
+
+/// <summary>
 /// Pedido de imagem. <see cref="Prompt"/> = descrição rica (provedores generativos);
 /// <see cref="Query"/> = palavras-chave curtas (busca de banco de fotos). Dimensões em px.
 /// </summary>
@@ -27,7 +40,8 @@ public sealed record MediaBrief(
     string NicheSlug,
     int Width,
     int Height,
-    Guid? ProductId = null); // proveniência (Fase 3B): atribui a imagem ao produto, quando conhecido
+    Guid? ProductId = null, // proveniência (Fase 3B): atribui a imagem ao produto, quando conhecido
+    MediaKind Kind = MediaKind.Auto); // roteamento por tipo (Fase 4): foto vs ilustração
 
 public sealed record MediaResult(byte[] Bytes, MediaProvider Provider, bool CacheHit);
 

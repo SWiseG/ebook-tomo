@@ -326,6 +326,7 @@
     "provText": "Texto (IA)",
     "provImages": "Imágenes",
     "provEmpty": "Sin registros.",
+    "audit": "Auditar conversión",
     "manuscript": "Manuscrito",
     "manuscriptPending": "Manuscrito aún no generado.",
     "cover": "Portada",
