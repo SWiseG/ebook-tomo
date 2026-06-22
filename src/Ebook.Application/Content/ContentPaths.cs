@@ -23,6 +23,9 @@ public static class ContentPaths
 
     public static string Mockup(string slug) => $"products/{slug}/images/mockup.png";
 
+    /// <summary>Ilustração de herói da landing page, gerada por IA (E14). <c>IArtifactStore</c>.</summary>
+    public static string LpHero(string slug) => $"products/{slug}/images/lp-hero.png";
+
     /// <summary>Bundle da landing page (HTML auto-contido) no <c>IArtifactStore</c> (/data/artifacts).</summary>
     public static string LpBundle(string slug) => $"products/{slug}/lp/index.html";
 

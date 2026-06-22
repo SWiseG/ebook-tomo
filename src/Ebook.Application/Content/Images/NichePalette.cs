@@ -54,7 +54,8 @@ public static class NicheStyleCatalog
             return NicheCategory.Marketing;
         }
 
-        if (HasAny(s, "desenvolv", "autoajuda", "auto-ajuda", "coaching", "produtiv", "habito", "mindset", "proposito", "autoconhec", "motiva", "disciplina"))
+        if (HasAny(s, "desenvolv", "autoajuda", "auto-ajuda", "coaching", "produtiv", "habito", "mindset", "proposito", "autoconhec", "motiva", "disciplina",
+            "relacion", "casal", "casamento", "namoro", "amor", "afetiv"))
         {
             return NicheCategory.SelfHelp;
         }
@@ -90,6 +91,28 @@ public static class NicheStyleCatalog
         NicheCategory.Fiction => new("#3B0764", "#D8B4FE", "#FAF5FF", "Playfair Display", "Lora"),
         NicheCategory.Education => new("#0C4A6E", "#7DD3FC", "#F0F9FF", "Merriweather", "Inter"),
         NicheCategory.General or _ => new("#1F2937", "#CBA15A", "#F9FAFB", "Manrope", "Merriweather"),
+    };
+
+    /// <summary>
+    /// Disclaimer legal honesto por categoria (Fase 5 / docs/12). Texto fixo de proteção — não é
+    /// conteúdo gerado por IA nem promessa; protege a operação e respeita CDC/órgãos reguladores.
+    /// </summary>
+    public static string DisclaimerFor(NicheCategory category) => category switch
+    {
+        NicheCategory.Finance =>
+            "Este conteúdo é educacional e não constitui recomendação de investimento. Resultados variam conforme a aplicação individual.",
+        NicheCategory.Health =>
+            "Este conteúdo é educacional e não substitui orientação médica, nutricional ou de profissional de saúde. Consulte um especialista.",
+        NicheCategory.SelfHelp =>
+            "Este conteúdo é educacional e não substitui acompanhamento psicológico ou terapêutico profissional. Os resultados variam.",
+        NicheCategory.Marketing =>
+            "Este conteúdo é educacional. Resultados dependem de esforço, mercado e aplicação; não há garantia de ganhos.",
+        NicheCategory.Education =>
+            "Este conteúdo é educacional e complementar; os resultados variam conforme a dedicação individual.",
+        NicheCategory.Fiction =>
+            "Obra de ficção. Nomes, personagens e acontecimentos são fruto da imaginação do autor.",
+        _ =>
+            "Este conteúdo é educacional. Os resultados podem variar de pessoa para pessoa.",
     };
 
     private static bool HasAny(string normalized, params string[] needles)

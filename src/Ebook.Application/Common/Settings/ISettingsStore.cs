@@ -23,6 +23,27 @@ public static class SettingKeys
     /// <summary>Base URL pública para links de checkout/pixel na LP. Vazio = caminhos relativos.</summary>
     public const string LpBaseUrl = "lp.baseUrl";
 
+    /// <summary>
+    /// Prazo REAL da oferta (ISO-8601 UTC) para o contador da LP. Vazio = sem contador
+    /// (nunca usar urgência falsa). Só renderiza se o prazo for futuro no momento do render.
+    /// </summary>
+    public const string LpOfferDeadlineUtc = "lp.offerDeadlineUtc";
+
+    /// <summary>Razão social no rodapé legal da LP. Vazio = usa o título do produto.</summary>
+    public const string LegalCompanyName = "legal.companyName";
+
+    /// <summary>CNPJ exibido no rodapé legal da LP. Vazio = omitido.</summary>
+    public const string LegalCnpj = "legal.cnpj";
+
+    /// <summary>E-mail de contato (vira link mailto no rodapé). Vazio = omitido.</summary>
+    public const string LegalContactEmail = "legal.contactEmail";
+
+    /// <summary>URL da política de privacidade (rodapé). Vazio = omitido.</summary>
+    public const string LegalPrivacyUrl = "legal.privacyUrl";
+
+    /// <summary>URL dos termos de uso (rodapé). Vazio = omitido.</summary>
+    public const string LegalTermsUrl = "legal.termsUrl";
+
     /// <summary>Publicar na Kiwify automaticamente ao iniciar a publicação (default false = manual-assistido).</summary>
     public const string KiwifyAutoPublish = "kiwify.autoPublish";
 

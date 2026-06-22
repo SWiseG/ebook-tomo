@@ -196,7 +196,7 @@ public sealed class ReviewJobHandler(
                 ["language"] = "pt-BR"
             },
             Tier: product.QualityTier,
-            MaxOutputTokensEst: 1000,
+            MaxOutputTokensEst: 1800,
             ProductId: product.Id), ct);
 
         if (ai.IsFailure)

@@ -20,9 +20,17 @@ KnowledgePack (JSON — use dores, desejos, objeções e o vocabulário exato do
 - painSection: nomeie a dor real e agite o custo de não resolver (PAS).
 - solutionSection: posicione o e-book como o caminho claro, com a grande promessa.
 - 4 a 7 bullets de benefício. FAQ (3+) que quebra objeções REAIS do nicho.
-- Preço em BRL coerente com o nicho: "anchor" (referência) maior que "current" (venda).
-- 1 a 3 bônus que aumentam o valor percebido. Uma variante A ativa.
+- Preço em BRL coerente com o nicho: "anchor" (referência) maior que "current" (venda). "installments": 12 (Kiwify parcela em até 12x).
 - "category": categoria pt-BR adequada à plataforma (ex.: "Saúde", "Finanças", "Relacionamentos", "Desenvolvimento Pessoal", "Negócios e Carreira", "Educação", "Espiritualidade", "Beleza", "Culinária").
+- **proofPill**: pílula curta de credibilidade enquadrada por BENEFÍCIO (ex.: "Método passo a passo · garantia de 7 dias"). NUNCA números de usuários/vendas (seriam inventados).
+- **trustBadges**: 3 a 4 selos FACTUAIS e verdadeiros para um e-book digital na Kiwify. Use apenas itens reais como: "Garantia de 7 dias", "Acesso imediato", "Pague com Pix, cartão ou boleto", "Leia no celular ou computador".
+- **steps**: 3 a 5 etapas do método ("Como funciona"), derivadas do CONTEÚDO REAL do livro (use o knowledgePack/promessa). Cada uma: label curto (ex.: "Passo 1"), title e description.
+- **bonusItems**: 2 a 4 bônus reais que acompanham o e-book, cada um com name, description e value (valor percebido em BRL, coerente — para ancoragem; o bônus precisa ser entregável de verdade).
+- **guarantee**: reversão de risco HONESTA. days = 7 (direito de arrependimento, CDC art. 49). title + body acolhedores ("o risco é nosso").
+- **finalCta**: fechamento emocional (headline + body curto + button com verbo de comando).
+
+## HONESTIDADE INEGOCIÁVEL
+Este produto é vendido de verdade. **NUNCA invente** depoimentos, avaliações (rating), número de alunos/clientes, estatísticas de resultado ou menções de imprensa. NÃO preencha os campos "rating", "stats", "testimonials", "mediaLogos" nem "author" — eles só existem para dados reais futuros e devem ser OMITIDOS. Toda a persuasão deve vir de copy verdadeira: clareza, benefício, método real, garantia real e bônus reais.
 
 Responda APENAS com JSON válido (sem cercas de markdown, sem texto extra), exatamente neste formato:
 
@@ -34,7 +42,13 @@ Responda APENAS com JSON válido (sem cercas de markdown, sem texto extra), exat
   "painSection": "",
   "solutionSection": "",
   "faq": [{ "q": "", "a": "" }],
-  "price": { "anchor": 47, "current": 27 },
+  "price": { "anchor": 47, "current": 27, "installments": 12 },
   "bonuses": [""],
+  "proofPill": "",
+  "trustBadges": ["", ""],
+  "steps": [{ "label": "Passo 1", "title": "", "description": "" }],
+  "bonusItems": [{ "name": "", "description": "", "value": 47 }],
+  "guarantee": { "title": "", "body": "", "days": 7 },
+  "finalCta": { "headline": "", "body": "", "button": "" },
   "variants": [{ "id": "A", "headline": "", "active": true }]
 }
