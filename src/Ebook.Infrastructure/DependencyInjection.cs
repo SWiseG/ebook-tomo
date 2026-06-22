@@ -56,6 +56,8 @@ public static class DependencyInjection
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<AdminAuthOptions>(configuration.GetSection(AdminAuthOptions.SectionName));
         services.Configure<PexelsOptions>(configuration.GetSection(PexelsOptions.SectionName));
+        services.Configure<Media.UnsplashOptions>(configuration.GetSection(Media.UnsplashOptions.SectionName));
+        services.Configure<Media.PixabayOptions>(configuration.GetSection(Media.PixabayOptions.SectionName));
         services.Configure<Media.MediaOptions>(configuration.GetSection(Media.MediaOptions.SectionName));
         services.Configure<KiwifyOptions>(configuration.GetSection(KiwifyOptions.SectionName));
         services.Configure<MetaOptions>(configuration.GetSection(MetaOptions.SectionName));
@@ -77,12 +79,15 @@ public static class DependencyInjection
         // Media Gateway (E14): cadeia free-first de geração de imagem por trás do seam IPhotoProvider.
         // Pexels deixa de ser o IPhotoProvider direto e vira o último elo da cadeia (banco de fotos).
         services.AddHttpClient<PexelsPhotoProvider>(c => c.Timeout = TimeSpan.FromSeconds(15));
-        // ordem de registro = ordem da cadeia: generativos com chave → Pollinations (grátis) → Pexels (fotos)
+        // ordem de registro = ordem da cadeia (qualidade-primeiro dentro do grátis):
+        // generativos premium (com chave) → bancos de foto (com chave) → Pollinations (grátis) → Skia (piso).
         services.AddHttpClient<IMediaResolver, Media.GeminiImageResolver>(c => c.Timeout = TimeSpan.FromSeconds(90));
         services.AddHttpClient<IMediaResolver, Media.CloudflareImageResolver>(c => c.Timeout = TimeSpan.FromSeconds(90));
         services.AddHttpClient<IMediaResolver, Media.HuggingFaceImageResolver>(c => c.Timeout = TimeSpan.FromSeconds(90));
-        services.AddHttpClient<IMediaResolver, Media.PollinationsMediaResolver>(c => c.Timeout = TimeSpan.FromSeconds(60));
         services.AddScoped<IMediaResolver, Media.PexelsMediaResolver>();
+        services.AddHttpClient<IMediaResolver, Media.UnsplashMediaResolver>(c => c.Timeout = TimeSpan.FromSeconds(20));
+        services.AddHttpClient<IMediaResolver, Media.PixabayMediaResolver>(c => c.Timeout = TimeSpan.FromSeconds(20));
+        services.AddHttpClient<IMediaResolver, Media.PollinationsMediaResolver>(c => c.Timeout = TimeSpan.FromSeconds(60));
         services.AddSingleton<IMediaResolver, Media.LocalSkiaImageResolver>(); // piso garantido — nunca falha
         services.AddScoped<IMediaGateway, Media.MediaGateway>();
         services.AddScoped<IPhotoProvider, Media.MediaGatewayPhotoProvider>();

@@ -134,11 +134,18 @@ Hoje `features/media-telemetry/` + `MediaTelemetryReader` cobrem **só mídia**.
 - ✅ **Fase 3A — Tela de Fontes (unificada)** — `ISourcesTelemetryReader`/`SourcesTelemetryReader` agregam texto (`AiUsage`: Claude) + imagem (`MediaUsage`: Gemini/Pollinations/Pexels/Skia) por provedor, hoje vs. mês, com cache. Query + endpoint `GET /api/v1/sources/telemetry`. Tela Angular `features/sources` + rota `/sources` + item de nav "Fontes" + i18n (pt-BR/en/es). Verificado: teste de agregação (texto+imagem, hoje vs. mês, cache) + build Angular.
 - ✅ **Fase 3B — Proveniência do PDF** — `ProductId` adicionado ao `MediaBrief` → `MediaGateway` → `MediaUsageRecord` (migration `MediaUsageProductId`: coluna + índice); `PdfJobHandler` passa `product.Id` nas ilustrações. `ProductProvenanceReader` + query + `GET /products/{id}/provenance` agregam texto (`AiUsage`) e imagem (`MediaUsage`) do produto. Action "Proveniência" + dialog na product-detail (texto/imagens, provedor, cache, tokens/bytes) + i18n (pt-BR/en/es). Verificado: teste de atribuição por produto + build Angular. **Obs.:** imagem só fica atribuível em PDFs gerados após o deploy (linhas antigas têm `ProductId` nulo).
 - 🎉 **Fase 3 concluída** (as duas telas pedidas).
+- ✅ **Fase 2 — Imagens (código pronto; ativa com chaves na Railway)** — prompt de ilustração reescrito (cena concreta com sujeito real, não mais "abstract"); novos resolvers `UnsplashMediaResolver` + `PixabayMediaResolver` (gated por chave, testados: sem chave = desligados, nunca tocam a rede); **cadeia reordenada** para qualidade-primeiro dentro do grátis (generativo premium → fotos Pexels/Unsplash/Pixabay → Pollinations → Skia) — sem regressão sem chaves; query de foto de-sluga o nicho; enum `MediaProvider` + bindings de config. **Sem chaves, o comportamento é igual ao de hoje** (Pollinations→Skia); o salto de qualidade depende das env vars na Railway (ver §6).
 - ⛔ **Fase 2 (imagens)** aguarda chaves de API na Railway (ver §6).
 
 ## 6. Notas de produção (Railway)
 
 Deploy em produção é na **Railway**. Itens que exigem ação fora do código (avisar o usuário quando chegar a hora):
-- **Chaves de API** dos provedores generativos/foto (Gemini, Cloudflare, HuggingFace, Unsplash, Pixabay) → variáveis de ambiente na Railway (`Media__Gemini__ApiKey`, etc.). Sem elas, a cadeia cai em Pollinations/Skia (causa das imagens ruins).
+- **Chaves de API** dos provedores de foto e generativos → env vars na Railway. Sem elas, a cadeia cai em Pollinations/Skia (causa das imagens ruins). Lista exata (Fase 2):
+  - **Fotos** (ativam sozinhas com a chave): `Pexels__ApiKey`, `Unsplash__AccessKey`, `Pixabay__ApiKey`.
+  - **Generativo premium** (precisa de `Enabled=true` **e** chave):
+    - `Media__Gemini__Enabled=true` + `Media__Gemini__ApiKey=...`
+    - `Media__Cloudflare__Enabled=true` + `Media__Cloudflare__ApiKey=...` + `Media__Cloudflare__AccountId=...`
+    - `Media__HuggingFace__Enabled=true` + `Media__HuggingFace__ApiKey=...`
+  - Ordem da cadeia: Gemini → Cloudflare → HuggingFace → Pexels → Unsplash → Pixabay → Pollinations → Skia.
 - Migrations novas (ex.: `ProductId` em `MediaUsage`) rodam no startup (`Migrate()`); só exigem deploy.
 - Bundles de assets (ilustrações CC0) versionados no repo → entram no build da imagem, sem ação manual.

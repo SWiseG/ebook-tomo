@@ -11,6 +11,8 @@ public enum MediaProvider
     HuggingFace,
     Pollinations,
     Pexels,
+    Unsplash,
+    Pixabay,
     LocalSkia
 }
 

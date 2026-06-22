@@ -231,7 +231,7 @@ public sealed class PdfJobHandler(
             var brief = new MediaBrief(
                 Purpose: "chapter-illustration",
                 Prompt: prompt,
-                Query: nicheSlug,
+                Query: nicheSlug.Replace('-', ' '), // palavras-chave p/ bancos de foto (Pexels/Unsplash/Pixabay)
                 NicheSlug: nicheSlug,
                 Width: 800,
                 Height: 400,

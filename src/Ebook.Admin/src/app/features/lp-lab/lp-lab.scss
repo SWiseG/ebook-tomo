@@ -5,6 +5,7 @@
   flex-wrap: wrap;
   gap: t.$space-3;
   align-items: center;
+  padding-inline: t.$space-5;
   margin-bottom: t.$space-5;
 
   :host ::ng-deep .niche-select {
@@ -15,6 +16,7 @@
 .lab-grid {
   display: grid;
   grid-template-columns: 1fr 340px;
+  padding-inline: t.$space-5;
   gap: t.$space-5;
   align-items: start;
 
