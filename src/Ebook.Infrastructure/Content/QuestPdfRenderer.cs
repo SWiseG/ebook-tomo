@@ -190,9 +190,11 @@ public sealed class QuestPdfRenderer : IPdfRenderer
             return;
         }
 
+        // A capitular sai do fluxo numa célula que se ajusta ao glifo (AutoItem): um ConstantItem fixo
+        // estoura quando a 1ª letra é larga (W/M) e maior que a caixa — "conflicting size constraints".
         col.Item().PaddingBottom(8).Row(row =>
         {
-            row.ConstantItem(42).Text(text[..1])
+            row.AutoItem().PaddingRight(8).Text(text[..1])
                 .FontFamily(theme.HeadingFont).FontSize(46).Bold().FontColor(theme.Accent);
             row.RelativeItem().PaddingTop(10).Text(text[1..]).Justify();
         });
@@ -412,15 +414,17 @@ public sealed class QuestPdfRenderer : IPdfRenderer
                 break;
 
             case MarkdownBlockKind.Stat:
-                // número de impacto: dígito grande (display) + descrição, sobre card claro do accent
+                // número de impacto: dígito grande (display) + descrição, sobre card claro do accent.
+                // Itens relativos (não AutoItem): um "número" longo emitido pela IA quebra de linha em
+                // vez de estourar o card ("conflicting size constraints" / item com largura negativa).
                 col.Item().PaddingVertical(10).Background(Tint(theme.Accent, 0.86f)).Padding(16).Row(row =>
                 {
-                    row.AutoItem().AlignMiddle().Text(block.Text)
+                    row.RelativeItem(2).AlignMiddle().Text(block.Text)
                         .FontFamily(theme.HeadingFont).FontSize(34).Bold().FontColor(theme.Primary);
                     if (block.Label.Length > 0)
                     {
                         row.ConstantItem(14);
-                        row.RelativeItem().AlignMiddle().Text(block.Label)
+                        row.RelativeItem(3).AlignMiddle().Text(block.Label)
                             .FontColor(theme.Text).FontSize(12).LineHeight(1.4f);
                     }
                 });
