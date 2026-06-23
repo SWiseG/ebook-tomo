@@ -11,8 +11,9 @@ namespace Ebook.Infrastructure.Content;
 /// </summary>
 public sealed class SkiaImageComposer : IImageComposer
 {
+    // Capa 2:3 (1600×2400) — proporção padrão de e-book Kiwify/Hotmart (docs/14 WP-7).
     private const int CoverWidth = 1600;
-    private const int CoverHeight = 2560;
+    private const int CoverHeight = 2400;
 
     public byte[] RenderCover(CoverArt art, byte[]? backgroundPhoto = null)
     {
@@ -26,7 +27,7 @@ public sealed class SkiaImageComposer : IImageComposer
             canvas.DrawRect(SKRect.Create(margin, 360, 230, 16), accent);
         }
 
-        using var titleFace = Typeface(art.Palette.HeadingFont, SKFontStyleWeight.Bold);
+        using var titleFace = Typeface(art.Palette.Display, SKFontStyleWeight.Bold);
         using var titlePaint = new SKPaint
         {
             Color = SKColor.Parse(art.Palette.OnDark), IsAntialias = true,
@@ -66,7 +67,7 @@ public sealed class SkiaImageComposer : IImageComposer
         var canvas = surface.Canvas;
         FillBackground(canvas, w, h, art.Palette, backgroundPhoto);
 
-        using var headFace = Typeface(art.Palette.HeadingFont, SKFontStyleWeight.Bold);
+        using var headFace = Typeface(art.Palette.Display, SKFontStyleWeight.Bold);
         using var headPaint = new SKPaint
         {
             Color = SKColor.Parse(art.Palette.OnDark), IsAntialias = true,
@@ -197,7 +198,7 @@ public sealed class SkiaImageComposer : IImageComposer
             canvas.DrawText($"{number:00}", 90, 170, badgePaint);
         }
 
-        using var headFace = Typeface(palette.HeadingFont, cover ? SKFontStyleWeight.Bold : SKFontStyleWeight.SemiBold);
+        using var headFace = Typeface(cover ? palette.Display : palette.HeadingFont, cover ? SKFontStyleWeight.Bold : SKFontStyleWeight.SemiBold);
         using var headPaint = new SKPaint
         {
             Color = SKColor.Parse(palette.OnDark), IsAntialias = true,

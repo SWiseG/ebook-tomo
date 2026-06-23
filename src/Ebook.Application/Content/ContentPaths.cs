@@ -47,6 +47,10 @@ public static class ContentPaths
     /// <summary>Override opcional de paleta por nicho, no FileStore de conteúdo (E09-03).</summary>
     public static string PaletteConfig(string nicheSlug) => $"niches/{nicheSlug}/palette.json";
 
+    /// <summary>Paleta gerada por produto (docs/14 WP-2), no FileStore de conteúdo. Tem prioridade
+    /// sobre a paleta do nicho — dá variedade por produto mantendo PDF, LP e capa coerentes.</summary>
+    public static string ProductPalette(string slug) => $"products/{slug}/palette.json";
+
     /// <summary>Lê e desserializa o outline.json; falha tipada quando ausente ou inválido.</summary>
     public static async Task<Result<OutlineDto>> ReadOutlineAsync(IFileStore fileStore, string slug, CancellationToken ct)
     {

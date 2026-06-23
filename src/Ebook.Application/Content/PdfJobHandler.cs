@@ -31,6 +31,7 @@ public sealed class PdfJobHandler(
     IImageComposer imageComposer,
     IAiGateway aiGateway,
     IPromptLibrary promptLibrary,
+    IPaletteResolver paletteResolver,
     IUnitOfWork unitOfWork,
     IClock clock,
     ILogger<PdfJobHandler> logger) : IJobHandler
@@ -93,7 +94,7 @@ public sealed class PdfJobHandler(
 
         var nicheSlug = await NicheSlugAsync(product, ct);
         var theme = PdfThemeSelector.ForNiche(nicheSlug);
-        var palette = Images.PaletteCatalog.ForNiche(nicheSlug);
+        var palette = await paletteResolver.ResolveAsync(product.Slug, nicheSlug, ct);
         var cta = await BuildCtaAsync(product, ct);
         var book = PdfBookComposer.Build(manuscript, product.Title, tagline, cta, theme, palette);
 

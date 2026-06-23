@@ -46,6 +46,7 @@ public sealed class GenerateTestLpHandler(
     IImageComposer composer,
     IPhotoProvider photos,
     IMediaGateway mediaGateway,
+    IPaletteResolver paletteResolver,
     ISettingsStore settings,
     ILogger<GenerateTestLpHandler> logger) : ICommandHandler<GenerateTestLpCommand, GenerateTestLpResult>
 {
@@ -60,7 +61,7 @@ public sealed class GenerateTestLpHandler(
         }
 
         var category = NicheStyleCatalog.Classify(niche.Slug);
-        var palette = PaletteCatalog.ForNiche(niche.Slug);
+        var palette = await paletteResolver.ResolveAsync(null, niche.Slug, ct);
         var template = LpTemplateSelector.ForNiche(niche.Slug);
         steps.Add(new LpTraceStep("Nicho selecionado", "Operador (teste)", niche.Name, $"categoria {category}"));
 

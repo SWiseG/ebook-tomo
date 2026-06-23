@@ -31,6 +31,7 @@ public sealed class LpJobHandler(
     ISettingsStore settings,
     IMediaGateway mediaGateway,
     IPromptLibrary promptLibrary,
+    IPaletteResolver paletteResolver,
     IUnitOfWork unitOfWork,
     IClock clock,
     ILogger<LpJobHandler> logger) : IJobHandler
@@ -79,7 +80,7 @@ public sealed class LpJobHandler(
     {
         var niche = await niches.GetByIdAsync(product.NicheId, ct);
         var nicheSlug = niche?.Slug ?? product.Slug;
-        var palette = await ResolvePaletteAsync(nicheSlug, ct);
+        var palette = await paletteResolver.ResolveAsync(product.Slug, nicheSlug, ct);
 
         var copy = await ReadCopyAsync(product.Slug, ct);
         var cover = await artifactStore.ReadBytesAsync(ContentPaths.Cover(product.Slug), ct);
@@ -207,20 +208,5 @@ public sealed class LpJobHandler(
             && parsed > clock.UtcNow
                 ? parsed
                 : null;
-    }
-
-    private async Task<NichePalette> ResolvePaletteAsync(string nicheSlug, CancellationToken ct)
-    {
-        var config = await fileStore.ReadTextAsync(ContentPaths.PaletteConfig(nicheSlug), ct);
-        if (config is not null)
-        {
-            var parsed = AiJson.Parse<NichePalette>(config, "palette");
-            if (parsed.IsSuccess && !string.IsNullOrWhiteSpace(parsed.Value.Background))
-            {
-                return parsed.Value;
-            }
-        }
-
-        return PaletteCatalog.ForNiche(nicheSlug);
     }
 }

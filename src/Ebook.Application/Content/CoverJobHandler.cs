@@ -21,6 +21,7 @@ public sealed class CoverJobHandler(
     IArtifactRepository artifacts,
     IImageComposer composer,
     IPhotoProvider photos,
+    IPaletteResolver paletteResolver,
     IFileStore fileStore,
     IArtifactStore artifactStore,
     IJobQueue jobQueue,
@@ -62,7 +63,7 @@ public sealed class CoverJobHandler(
     {
         var niche = await niches.GetByIdAsync(product.NicheId, ct);
         var nicheSlug = niche?.Slug ?? product.Slug;
-        var palette = await ResolvePaletteAsync(nicheSlug, ct);
+        var palette = await paletteResolver.ResolveAsync(product.Slug, nicheSlug, ct);
 
         var outline = await ContentPaths.ReadOutlineAsync(fileStore, product.Slug, ct);
         var title = outline.IsSuccess ? outline.Value.Title : product.Title;
@@ -80,21 +81,6 @@ public sealed class CoverJobHandler(
 
         logger.LogInformation("Capa e mockup gerados para {Slug} (foto de fundo: {HasPhoto})",
             product.Slug, photo is not null);
-    }
-
-    private async Task<NichePalette> ResolvePaletteAsync(string nicheSlug, CancellationToken ct)
-    {
-        var config = await fileStore.ReadTextAsync(ContentPaths.PaletteConfig(nicheSlug), ct);
-        if (config is not null)
-        {
-            var parsed = AiJson.Parse<NichePalette>(config, "palette");
-            if (parsed.IsSuccess && !string.IsNullOrWhiteSpace(parsed.Value.Background))
-            {
-                return parsed.Value;
-            }
-        }
-
-        return PaletteCatalog.ForNiche(nicheSlug);
     }
 
     private async Task AddArtifactIfNewAsync(Guid productId, ArtifactType type, StoredFile stored, CancellationToken ct)

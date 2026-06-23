@@ -17,6 +17,7 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddScoped<IDispatcher, Dispatcher>();
+        services.AddScoped<Content.Images.IPaletteResolver, Content.Images.PaletteResolver>();
         services.AddScoped<IKnowledgeService, KnowledgeService>();
         services.AddScoped<IOptimizationService, OptimizationService>();
         services.AddScoped<IOptimizationExecutor, OptimizationExecutor>();

@@ -37,6 +37,13 @@ public class FontEmbeddingTests
         Assert.NotNull(FontRegistry.Resolve("Merriweather", bold: true));
         Assert.NotNull(FontRegistry.Resolve("Playfair Display"));
 
+        // fontes display da capa (docs/14 WP-3) — single-weight resolve mesmo pedindo bold (fallback)
+        Assert.NotNull(FontRegistry.Resolve("Anton"));
+        Assert.NotNull(FontRegistry.Resolve("Archivo Black", bold: true));
+        Assert.NotNull(FontRegistry.Resolve("Bebas Neue"));
+        Assert.NotNull(FontRegistry.Resolve("Fjalla One"));
+        Assert.NotNull(FontRegistry.Resolve("Barlow Condensed", bold: true));
+
         // PDF com paleta de nicho (fontes embarcadas) renderiza um documento válido
         var palette = NicheStyleCatalog.For(NicheCategory.Finance);
         var book = new PdfBook(
