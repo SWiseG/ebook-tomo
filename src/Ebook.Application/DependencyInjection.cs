@@ -18,6 +18,8 @@ public static class DependencyInjection
     {
         services.AddScoped<IDispatcher, Dispatcher>();
         services.AddScoped<Content.Images.IPaletteResolver, Content.Images.PaletteResolver>();
+        services.AddScoped<Content.Images.IPaletteDirector, Content.Images.PaletteDirector>();
+        services.AddScoped<Content.Images.ICoverDirector, Content.Images.CoverDirector>();
         services.AddScoped<IKnowledgeService, KnowledgeService>();
         services.AddScoped<IOptimizationService, OptimizationService>();
         services.AddScoped<IOptimizationExecutor, OptimizationExecutor>();

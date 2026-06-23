@@ -40,6 +40,7 @@ public static class TestHost
         services.AddSingleton<IMediaGateway, FakeMediaGateway>();
         services.AddSingleton<IPromptLibrary, NullPromptLibrary>();
         services.AddSingleton<IStyleAnalyzer, FakeStyleAnalyzer>();
+        services.AddSingleton<Application.Content.Images.ICoverQa, FakeCoverQa>();
 
         // Catálogo Kiwify falso (sem rede): a sincronização usa-o em vez da API real.
         services.AddSingleton<FakeKiwifyCatalog>();

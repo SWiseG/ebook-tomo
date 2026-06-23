@@ -1,17 +1,17 @@
-using System.Text;
+﻿using System.Text;
 using Ebook.Application.Content.Images;
 using SkiaSharp;
 
 namespace Ebook.Infrastructure.Content;
 
 /// <summary>
-/// Composição programática de imagens com SkiaSharp (E09-01): capa de e-book,
-/// mockup 3D de marketing e cards sociais (feed 1080×1080, story 1080×1920).
+/// ComposiÃ§Ã£o programÃ¡tica de imagens com SkiaSharp (E09-01): capa de e-book,
+/// mockup 3D de marketing e cards sociais (feed 1080Ã—1080, story 1080Ã—1920).
 /// Fundo por foto (com overlay) ou gradiente da paleta do nicho.
 /// </summary>
 public sealed class SkiaImageComposer : IImageComposer
 {
-    // Capa 2:3 (1600×2400) — proporção padrão de e-book Kiwify/Hotmart (docs/14 WP-7).
+    // Capa 2:3 (1600Ã—2400) â€” proporÃ§Ã£o padrÃ£o de e-book Kiwify/Hotmart (docs/14 WP-7).
     private const int CoverWidth = 1600;
     private const int CoverHeight = 2400;
 
@@ -19,44 +19,194 @@ public sealed class SkiaImageComposer : IImageComposer
     {
         using var surface = SKSurface.Create(new SKImageInfo(CoverWidth, CoverHeight));
         var canvas = surface.Canvas;
-        FillBackground(canvas, CoverWidth, CoverHeight, art.Palette, backgroundPhoto);
 
-        const float margin = 130f;
-        using (var accent = new SKPaint { Color = SKColor.Parse(art.Palette.Accent), IsAntialias = true })
+        const float margin = 120f;
+        const float contentW = CoverWidth - 2 * margin;
+        var bg = SKColor.Parse(art.Palette.Background);
+        var accent = SKColor.Parse(art.Palette.Accent);
+        var onDark = SKColor.Parse(art.Palette.OnDark);
+
+        // Fundo: ilustraÃ§Ã£o visÃ­vel com scrims de gradiente nas zonas de texto (nÃ£o mais o overlay
+        // chapado que matava a imagem). Sem foto â†’ gradiente rico da paleta (docs/14 WP-6).
+        FillCoverBackground(canvas, CoverWidth, CoverHeight, art.Palette, backgroundPhoto);
+
+        // â”€â”€ Topo: eyebrow + rÃ©gua + tÃ­tulo display + subtÃ­tulo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        var hasSeal = !string.IsNullOrWhiteSpace(art.Seal);
+
+        var top = 230f;
+        if (!string.IsNullOrWhiteSpace(art.Eyebrow))
         {
-            canvas.DrawRect(SKRect.Create(margin, 360, 230, 16), accent);
+            using var eyeFace = Typeface(art.Palette.HeadingFont, SKFontStyleWeight.Bold);
+            using var eyePaint = new SKPaint
+            {
+                Color = accent, IsAntialias = true, TextSize = 40, Typeface = eyeFace, TextAlign = SKTextAlign.Left,
+            };
+            DrawTracked(canvas, art.Eyebrow.ToUpperInvariant(), eyePaint, margin, top, 7f);
+            top += 28;
         }
+
+        using (var rule = new SKPaint { Color = accent, IsAntialias = true })
+        {
+            canvas.DrawRect(SKRect.Create(margin, top, 200, 14), rule);
+        }
+        top += 70;
 
         using var titleFace = Typeface(art.Palette.Display, SKFontStyleWeight.Bold);
         using var titlePaint = new SKPaint
         {
-            Color = SKColor.Parse(art.Palette.OnDark), IsAntialias = true,
-            TextSize = 124, Typeface = titleFace, TextAlign = SKTextAlign.Left
+            Color = onDark, IsAntialias = true, TextSize = 132, Typeface = titleFace, TextAlign = SKTextAlign.Left,
         };
-        var y = DrawWrapped(canvas, art.Title, titlePaint, margin, 540, CoverWidth - 2 * margin, 150);
+        // com selo no canto superior direito, o tÃ­tulo quebra ANTES da coluna do selo (nÃ£o some sob ele)
+        var titleMaxW = hasSeal ? CoverWidth - margin - 300 - 30 - margin : contentW;
+        var y = DrawWrapped(canvas, art.Title, titlePaint, margin, top + 110, titleMaxW, 150);
 
         if (!string.IsNullOrWhiteSpace(art.Subtitle))
         {
             using var subFace = Typeface(art.Palette.BodyFont, SKFontStyleWeight.Normal);
             using var subPaint = new SKPaint
             {
-                Color = SKColor.Parse(art.Palette.Accent), IsAntialias = true,
-                TextSize = 58, Typeface = subFace, TextAlign = SKTextAlign.Left
+                Color = accent, IsAntialias = true, TextSize = 56, Typeface = subFace, TextAlign = SKTextAlign.Left,
             };
-            DrawWrapped(canvas, art.Subtitle, subPaint, margin, y + 50, CoverWidth - 2 * margin, 78);
+            DrawWrapped(canvas, art.Subtitle, subPaint, margin, y + 56, contentW, 76);
         }
 
-        if (!string.IsNullOrWhiteSpace(art.Brand))
+        // â”€â”€ Selo de confianÃ§a: emblema accent no canto superior direito (como os exemplos) â”€â”€â”€â”€â”€â”€â”€
+        if (!string.IsNullOrWhiteSpace(art.Seal))
         {
-            using var brandFace = Typeface(art.Palette.BodyFont, SKFontStyleWeight.Normal);
-            using var brandPaint = new SKPaint
-            {
-                Color = SKColor.Parse(art.Palette.OnDark).WithAlpha(200), IsAntialias = true,
-                TextSize = 46, Typeface = brandFace, TextAlign = SKTextAlign.Left
-            };
-            canvas.DrawText(art.Brand, margin, CoverHeight - 150, brandPaint);
+            DrawSeal(canvas, CoverWidth - margin - 150, 360, 150, art.Palette, art.Seal!);
         }
 
+        // â”€â”€ Base: caixas de benefÃ­cio empilhadas, ancoradas acima do rodapÃ© de autor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        var author = art.Author ?? art.Brand;
+        var footerTop = CoverHeight - (string.IsNullOrWhiteSpace(author) ? 150f : 220f);
+
+        if (art.Features is { Count: > 0 } features)
+        {
+            var boxes = features.Take(4).ToList();
+            const float boxH = 150f;
+            const float gap = 26f;
+            var blockH = boxes.Count * boxH + (boxes.Count - 1) * gap;
+            var by = footerTop - 60 - blockH;
+            foreach (var feature in boxes)
+            {
+                DrawFeatureBox(canvas, margin, by, contentW, boxH, art.Palette, feature);
+                by += boxH + gap;
+            }
+        }
+
+        // â”€â”€ RodapÃ©: rÃ©gua fina + autor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        if (!string.IsNullOrWhiteSpace(author))
+        {
+            using (var rule = new SKPaint { Color = accent.WithAlpha(160), IsAntialias = true })
+            {
+                canvas.DrawRect(SKRect.Create(margin, footerTop, 120, 6), rule);
+            }
+
+            using var authorFace = Typeface(art.Palette.HeadingFont, SKFontStyleWeight.Bold);
+            using var authorPaint = new SKPaint
+            {
+                Color = onDark.WithAlpha(225), IsAntialias = true,
+                TextSize = 44, Typeface = authorFace, TextAlign = SKTextAlign.Left,
+            };
+            canvas.DrawText(Shorten(author!, 48), margin, footerTop + 64, authorPaint);
+        }
+
+        return Encode(surface);
+    }
+
+    // Caixa de benefÃ­cio clara (alto contraste sobre a ilustraÃ§Ã£o) com Ã­cone accent + texto escuro.
+    private static void DrawFeatureBox(SKCanvas canvas, float x, float y, float w, float h, NichePalette palette, CoverFeature feature)
+    {
+        var bg = SKColor.Parse(palette.Background);
+        var accent = SKColor.Parse(palette.Accent);
+        var rect = new SKRoundRect(SKRect.Create(x, y, w, h), 18);
+
+        using (var panel = new SKPaint { Color = SKColors.White.WithAlpha(238), IsAntialias = true })
+        {
+            canvas.DrawRoundRect(rect, panel);
+        }
+        using (var stripe = new SKPaint { Color = accent, IsAntialias = true })
+        {
+            canvas.DrawRoundRect(new SKRoundRect(SKRect.Create(x, y, 12, h), 6), stripe);
+        }
+
+        // disco accent + "check" desenhado (sem dependÃªncia de SVG no Skia)
+        var cx = x + 78;
+        var cy = y + h / 2f;
+        using (var disc = new SKPaint { Color = accent, IsAntialias = true })
+        {
+            canvas.DrawCircle(cx, cy, 38, disc);
+        }
+        using (var tick = new SKPaint
+        {
+            Color = bg, IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 8,
+            StrokeCap = SKStrokeCap.Round, StrokeJoin = SKStrokeJoin.Round,
+        })
+        {
+            using var path = new SKPath();
+            path.MoveTo(cx - 17, cy + 1);
+            path.LineTo(cx - 4, cy + 15);
+            path.LineTo(cx + 19, cy - 15);
+            canvas.DrawPath(path, tick);
+        }
+
+        using var face = Typeface(palette.HeadingFont, SKFontStyleWeight.SemiBold);
+        using var textPaint = new SKPaint
+        {
+            Color = bg, IsAntialias = true, TextSize = 40, Typeface = face, TextAlign = SKTextAlign.Left,
+        };
+        var textX = x + 140;
+        var textW = w - 140 - 40;
+        // centraliza verticalmente o texto (1 ou 2 linhas) na caixa
+        var lines = WrapLines(feature.Text, textPaint, textW, max: 2);
+        var startY = cy - (lines.Count - 1) * 25 + 14;
+        foreach (var line in lines)
+        {
+            canvas.DrawText(line, textX, startY, textPaint);
+            startY += 50;
+        }
+    }
+
+    // Emblema circular: anel accent + texto curto em caixa-alta centrado (selo de confianÃ§a).
+    private static void DrawSeal(SKCanvas canvas, float cx, float cy, float r, NichePalette palette, string text)
+    {
+        var accent = SKColor.Parse(palette.Accent);
+        var onDark = SKColor.Parse(palette.OnDark);
+
+        using (var fill = new SKPaint { Color = SKColor.Parse(palette.Background).WithAlpha(235), IsAntialias = true })
+        {
+            canvas.DrawCircle(cx, cy, r, fill);
+        }
+        using (var ring = new SKPaint { Color = accent, IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 8 })
+        {
+            canvas.DrawCircle(cx, cy, r, ring);
+            canvas.DrawCircle(cx, cy, r - 18, new SKPaint { Color = accent.WithAlpha(120), IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 3 });
+        }
+
+        using var face = Typeface(palette.HeadingFont, SKFontStyleWeight.Bold);
+        using var textPaint = new SKPaint
+        {
+            Color = onDark, IsAntialias = true, TextSize = 34, Typeface = face, TextAlign = SKTextAlign.Center,
+        };
+        var lines = WrapLines(text.ToUpperInvariant(), textPaint, r * 1.5f, max: 3);
+        var startY = cy - (lines.Count - 1) * 22 + 10;
+        foreach (var line in lines)
+        {
+            canvas.DrawText(line, cx, startY, textPaint);
+            startY += 44;
+        }
+    }
+
+    public byte[] FitCover(byte[] imageBytes)
+    {
+        using var bmp = SKBitmap.Decode(imageBytes);
+        if (bmp is null)
+        {
+            return imageBytes;
+        }
+
+        using var surface = SKSurface.Create(new SKImageInfo(CoverWidth, CoverHeight));
+        DrawCovering(surface.Canvas, bmp, CoverWidth, CoverHeight);
         return Encode(surface);
     }
 
@@ -138,7 +288,7 @@ public sealed class SkiaImageComposer : IImageComposer
         {
             var cx = cellW * i + cellW / 2f;
 
-            // divisor vertical entre as células
+            // divisor vertical entre as cÃ©lulas
             if (i > 0)
             {
                 using var divider = new SKPaint
@@ -149,7 +299,7 @@ public sealed class SkiaImageComposer : IImageComposer
                 canvas.DrawLine(cellW * i, h * 0.24f, cellW * i, h * 0.76f, divider);
             }
 
-            // número de impacto (accent), encolhido até caber na célula (ex.: "30 dias" é largo)
+            // nÃºmero de impacto (accent), encolhido atÃ© caber na cÃ©lula (ex.: "30 dias" Ã© largo)
             using var numPaint = new SKPaint
             {
                 Color = accent, IsAntialias = true,
@@ -162,13 +312,13 @@ public sealed class SkiaImageComposer : IImageComposer
 
             canvas.DrawText(metrics[i].Number, cx, h * 0.44f, numPaint);
 
-            // traço accent sob o número
+            // traÃ§o accent sob o nÃºmero
             using (var rule = new SKPaint { Color = accent.WithAlpha(170), IsAntialias = true })
             {
                 canvas.DrawRect(SKRect.Create(cx - 38, h * 0.50f, 76, 6), rule);
             }
 
-            // rótulo claro, quebrado em linhas dentro da célula
+            // rÃ³tulo claro, quebrado em linhas dentro da cÃ©lula
             using var labelPaint = new SKPaint
             {
                 Color = onDark.WithAlpha(230), IsAntialias = true,
@@ -219,7 +369,7 @@ public sealed class SkiaImageComposer : IImageComposer
                 Color = SKColor.Parse(palette.OnDark).WithAlpha(210), IsAntialias = true,
                 TextSize = 40, Typeface = bodyFace, TextAlign = SKTextAlign.Center,
             };
-            canvas.DrawText("arraste →", w / 2f, h - 110, hintPaint);
+            canvas.DrawText("arraste â†’", w / 2f, h - 110, hintPaint);
 
             if (!string.IsNullOrWhiteSpace(brand))
             {
@@ -278,6 +428,110 @@ public sealed class SkiaImageComposer : IImageComposer
 
         canvas.DrawBitmap(cover, dest);
         return Encode(surface);
+    }
+
+    // Fundo da CAPA (docs/14 WP-6): ilustraÃ§Ã£o visÃ­vel + scrims de gradiente sÃ³ nas zonas de texto
+    // (topo p/ tÃ­tulo, base p/ features/autor). Substitui o overlay chapado que apagava a imagem.
+    private static void FillCoverBackground(SKCanvas canvas, int w, int h, NichePalette palette, byte[]? photo)
+    {
+        var bg = SKColor.Parse(palette.Background);
+
+        if (photo is not null)
+        {
+            using var bmp = SKBitmap.Decode(photo);
+            if (bmp is not null)
+            {
+                DrawCovering(canvas, bmp, w, h);
+
+                using (var tint = new SKPaint { Color = bg.WithAlpha(55), IsAntialias = true })
+                {
+                    canvas.DrawRect(SKRect.Create(0, 0, w, h), tint); // coesÃ£o sutil com a paleta
+                }
+                using (var topScrim = new SKPaint
+                {
+                    IsAntialias = true,
+                    Shader = SKShader.CreateLinearGradient(
+                        new SKPoint(0, 0), new SKPoint(0, h * 0.46f),
+                        [bg.WithAlpha(238), bg.WithAlpha(0)], null, SKShaderTileMode.Clamp),
+                })
+                {
+                    canvas.DrawRect(SKRect.Create(0, 0, w, h * 0.46f), topScrim);
+                }
+                using (var botScrim = new SKPaint
+                {
+                    IsAntialias = true,
+                    Shader = SKShader.CreateLinearGradient(
+                        new SKPoint(0, h * 0.48f), new SKPoint(0, h),
+                        [bg.WithAlpha(0), bg.WithAlpha(242)], null, SKShaderTileMode.Clamp),
+                })
+                {
+                    canvas.DrawRect(SKRect.Create(0, h * 0.48f, w, h * 0.52f), botScrim);
+                }
+
+                return;
+            }
+        }
+
+        using var coverGradient = new SKPaint
+        {
+            IsAntialias = true,
+            Shader = SKShader.CreateLinearGradient(
+                new SKPoint(0, 0), new SKPoint(w, h),
+                [bg, Darken(bg)], null, SKShaderTileMode.Clamp),
+        };
+        canvas.DrawRect(SKRect.Create(0, 0, w, h), coverGradient);
+    }
+
+    // EspaÃ§amento de letra (tracking) no eyebrow via thin space â€” toque editorial premium.
+    private static void DrawTracked(SKCanvas canvas, string text, SKPaint paint, float x, float y, float tracking)
+    {
+        foreach (var ch in text)
+        {
+            var s = ch.ToString();
+            canvas.DrawText(s, x, y, paint);
+            x += paint.MeasureText(s) + tracking;
+        }
+    }
+
+
+    private static string Shorten(string value, int max) =>
+        value.Length <= max ? value : value[..(max - 1)].TrimEnd() + "â€¦";
+
+    // Quebra em atÃ© `max` linhas que cabem em maxWidth; estoura a Ãºltima com "â€¦" se exceder.
+    private static List<string> WrapLines(string text, SKPaint paint, float maxWidth, int max)
+    {
+        var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var all = new List<string>();
+        var line = new StringBuilder();
+        foreach (var word in words)
+        {
+            var candidate = line.Length == 0 ? word : $"{line} {word}";
+            if (line.Length > 0 && paint.MeasureText(candidate) > maxWidth)
+            {
+                all.Add(line.ToString());
+                line.Clear();
+                line.Append(word);
+            }
+            else
+            {
+                line.Clear();
+                line.Append(candidate);
+            }
+        }
+
+        if (line.Length > 0)
+        {
+            all.Add(line.ToString());
+        }
+
+        if (all.Count <= max)
+        {
+            return all;
+        }
+
+        var capped = all.Take(max).ToList();
+        capped[max - 1] = capped[max - 1].TrimEnd() + "â€¦";
+        return capped;
     }
 
     private static void FillBackground(SKCanvas canvas, int w, int h, NichePalette palette, byte[]? photo)
@@ -351,8 +605,8 @@ public sealed class SkiaImageComposer : IImageComposer
         return y;
     }
 
-    // fonte embarcada (FontRegistry) primeiro — no Linux headless FromFamilyName não acha as famílias
-    // profissionais; o registry usa SKTypeface.FromFile. Fallback: família do sistema, depois Default.
+    // fonte embarcada (FontRegistry) primeiro â€” no Linux headless FromFamilyName nÃ£o acha as famÃ­lias
+    // profissionais; o registry usa SKTypeface.FromFile. Fallback: famÃ­lia do sistema, depois Default.
     private static SKTypeface Typeface(string family, SKFontStyleWeight weight) =>
         FontRegistry.Resolve(family, weight >= SKFontStyleWeight.SemiBold)
         ?? SKTypeface.FromFamilyName(family, weight, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)

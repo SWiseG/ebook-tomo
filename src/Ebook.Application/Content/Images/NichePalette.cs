@@ -88,6 +88,13 @@ public static class NicheStyleCatalog
         return NicheCategory.General;
     }
 
+    /// <summary>Fontes embarcadas (FontRegistry). A IA de paleta só pode escolher destas (docs/14 WP-2/3).</summary>
+    public static readonly IReadOnlySet<string> AllowedFonts = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "Inter", "Manrope", "Lora", "Merriweather", "Fraunces", "Playfair Display",
+        "Anton", "Archivo Black", "Bebas Neue", "Fjalla One", "Barlow Condensed",
+    };
+
     public static NichePalette Palette(string nicheNameOrSlug) => For(Classify(nicheNameOrSlug));
 
     // Cor dominante (Background) + destaque (Accent, ~10%) + texto claro (OnDark) + título PDF +

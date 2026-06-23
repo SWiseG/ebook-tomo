@@ -26,7 +26,14 @@ public enum MediaKind
 {
     Auto,
     Photo,
-    Illustration
+    Illustration,
+
+    /// <summary>
+    /// Capa COMPLETA com texto gerada pela IA (docs/14 WP-5). Roteia só para modelos generativos
+    /// capazes de tipografia (Gemini primeiro); bancos de foto são excluídos (não rendem texto).
+    /// O resultado passa por QA de visão antes de ser aceito.
+    /// </summary>
+    CoverWithText
 }
 
 /// <summary>

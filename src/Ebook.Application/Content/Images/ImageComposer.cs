@@ -7,8 +7,23 @@ public enum ImageTemplate
     Story
 }
 
-/// <summary>Conteúdo da capa do e-book.</summary>
-public sealed record CoverArt(string Title, string? Subtitle, string? Brand, NichePalette Palette);
+/// <summary>Um benefício destacado na capa (caixa com ícone + texto curto) — docs/14 WP-4/6.</summary>
+public sealed record CoverFeature(string Text, string Icon = "check");
+
+/// <summary>
+/// Conteúdo da capa do e-book. Campos ricos (eyebrow, features, seal, author) são opcionais —
+/// preenchidos pelo Diretor de Capa por IA (docs/14 WP-4). Ausentes, a capa degrada para o
+/// essencial (título + subtítulo), mantendo compatibilidade.
+/// </summary>
+public sealed record CoverArt(
+    string Title,
+    string? Subtitle,
+    string? Brand,
+    NichePalette Palette,
+    string? Eyebrow = null,
+    IReadOnlyList<CoverFeature>? Features = null,
+    string? Seal = null,
+    string? Author = null);
 
 /// <summary>Conteúdo de um card social (feed 1080×1080 ou story 1080×1920).</summary>
 public sealed record SocialArt(string Headline, string? Subtext, ImageTemplate Template, NichePalette Palette);
@@ -29,6 +44,10 @@ public sealed record InfographicArt(IReadOnlyList<InfographicMetric> Metrics, Ni
 public interface IImageComposer
 {
     byte[] RenderCover(CoverArt art, byte[]? backgroundPhoto = null);
+
+    /// <summary>Normaliza uma imagem (ex.: capa full-AI, docs/14 WP-5) para o tamanho exato de capa
+    /// 2:3 (cover-crop). Garante dimensões consistentes independentemente do que o modelo devolveu.</summary>
+    byte[] FitCover(byte[] imageBytes);
 
     /// <summary>Mockup 3D do e-book para marketing, a partir da capa já renderizada.</summary>
     byte[] RenderMockup(byte[] coverPng, NichePalette palette);

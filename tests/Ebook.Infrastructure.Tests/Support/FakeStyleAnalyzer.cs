@@ -1,3 +1,4 @@
+using Ebook.Application.Content.Images;
 using Ebook.Application.Knowledge;
 using Ebook.Domain.Common;
 
@@ -19,4 +20,11 @@ public sealed class FakeStyleAnalyzer : IStyleAnalyzer
             """;
         return Task.FromResult(Result.Success(json));
     }
+}
+
+/// <summary>QA de capa fake: reprova (o full-AI sempre cai na composição Skia nos testes).</summary>
+public sealed class FakeCoverQa : ICoverQa
+{
+    public Task<CoverQaVerdict> ReviewAsync(byte[] coverPng, string title, CancellationToken ct = default) =>
+        Task.FromResult(new CoverQaVerdict(Legible: false, TitleMatches: false, Score: 0, Issues: "fake"));
 }

@@ -18,6 +18,8 @@ public sealed class FakeImageComposer : IImageComposer
         return [.. Png];
     }
 
+    public byte[] FitCover(byte[] imageBytes) => imageBytes;
+
     public byte[] RenderMockup(byte[] coverPng, NichePalette palette)
     {
         MockupCount++;

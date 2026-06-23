@@ -93,7 +93,19 @@ public sealed class MediaGateway(
     {
         MediaKind.Photo => resolvers.OrderBy(r => RankPhoto(r.Provider)),
         MediaKind.Illustration => resolvers.OrderBy(r => RankIllustration(r.Provider)),
+        // Capa com texto: só generativos (Gemini primeiro); bancos de foto fora (não rendem texto).
+        MediaKind.CoverWithText => resolvers.Where(r => !IsPhotoBank(r.Provider)).OrderBy(r => RankCover(r.Provider)),
         _ => resolvers,
+    };
+
+    private static bool IsPhotoBank(MediaProvider p) =>
+        p is MediaProvider.Pexels or MediaProvider.Unsplash or MediaProvider.Pixabay;
+
+    private static int RankCover(MediaProvider p) => p switch
+    {
+        MediaProvider.Gemini => 0,        // melhor em tipografia
+        MediaProvider.LocalSkia => 2,     // piso (sem texto real) — QA reprova e cai no Skia rico
+        _ => 1,                           // demais generativos
     };
 
     private static int RankPhoto(MediaProvider p) => p switch

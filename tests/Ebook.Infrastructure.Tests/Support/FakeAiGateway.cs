@@ -55,6 +55,24 @@ public sealed class FakeAiGateway : IAiGateway
             }
             """,
         "ebook.chapter" => "Conteúdo do capítulo gerado pela IA fake.\n\nSegundo parágrafo com exemplo prático.",
+        "ebook.palette" => """
+            { "background": "#0E2A47", "accent": "#E0B978", "onDark": "#F5F8FC",
+              "headingFont": "Manrope", "bodyFont": "Merriweather", "displayFont": "Archivo Black" }
+            """,
+        "cover.plan" => """
+            {
+              "eyebrow": "Guia Completo",
+              "subtitle": "Do caos ao controle em 30 dias",
+              "features": [
+                { "text": "Elimine dívidas e organize seu orçamento", "icon": "money" },
+                { "text": "Crie sua reserva de emergência", "icon": "shield" },
+                { "text": "Invista com confiança", "icon": "chart" }
+              ],
+              "seal": "MÉTODO VALIDADO",
+              "scene": "a person reviewing finances at a tidy desk, warm light, editorial photo, no text",
+              "layout": "classic"
+            }
+            """,
         "ebook.visual-plan" => """
             {
               "chapters": [

@@ -22,6 +22,28 @@ public class SkiaImageComposerTests
     }
 
     [Fact]
+    public void RenderCover_rica_com_eyebrow_features_e_selo_produz_png_valido()
+    {
+        var composer = new SkiaImageComposer();
+        var art = new CoverArt(
+            "Marketing Digital do Zero ao Resultado Estratégico", "O guia completo", "Marca", Palette,
+            Eyebrow: "Guia Completo",
+            Features:
+            [
+                new CoverFeature("Atraia, nutra e converta com método"),
+                new CoverFeature("SEO e tráfego pago que vendem"),
+                new CoverFeature("Funil completo passo a passo"),
+            ],
+            Seal: "Método Validado",
+            Author: "Por Especialista");
+
+        var png = composer.RenderCover(art);
+
+        Assert.True(IsPng(png));
+        Assert.True(png.Length > 1000);
+    }
+
+    [Fact]
     public void RenderMockup_a_partir_da_capa_produz_png_valido()
     {
         var composer = new SkiaImageComposer();

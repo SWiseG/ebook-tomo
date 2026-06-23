@@ -126,6 +126,7 @@ public static class DependencyInjection
         services.AddSingleton<ITtsEngine, PiperTtsEngine>();
         services.AddSingleton<IVideoComposer, FfmpegVideoComposer>();
         services.AddScoped<IStyleAnalyzer, ClaudeVisionStyleAnalyzer>();
+        services.AddScoped<Application.Content.Images.ICoverQa, ClaudeVisionCoverQa>();
 
         // fontes de tendência (E02): client nomeado compartilhado + múltiplas implementações de ITrendSource
         services.AddHttpClient("trends", c =>

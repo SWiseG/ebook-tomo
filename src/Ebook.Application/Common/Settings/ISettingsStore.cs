@@ -24,6 +24,13 @@ public static class SettingKeys
     public const string LpBaseUrl = "lp.baseUrl";
 
     /// <summary>
+    /// Capa INTEIRA gerada por IA com texto (docs/14 WP-5). Default false: usa a composição Skia rica
+    /// (determinística, sempre legível). Ative só com um modelo generativo capaz de texto configurado
+    /// (ex.: Gemini); o resultado ainda passa por QA de visão e cai no Skia se reprovar.
+    /// </summary>
+    public const string CoverAiFullCover = "cover.aiFullCover";
+
+    /// <summary>
     /// Prazo REAL da oferta (ISO-8601 UTC) para o contador da LP. Vazio = sem contador
     /// (nunca usar urgência falsa). Só renderiza se o prazo for futuro no momento do render.
     /// </summary>

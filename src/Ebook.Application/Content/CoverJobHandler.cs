@@ -1,7 +1,10 @@
 using System.Text.Json;
+using Ebook.Application.Ai;
 using Ebook.Application.Common.Jobs;
+using Ebook.Application.Common.Settings;
 using Ebook.Application.Common.Text;
 using Ebook.Application.Content.Images;
+using Ebook.Application.Media;
 using Ebook.Domain.Abstractions;
 using Ebook.Domain.Common;
 using Ebook.Domain.Niches;
@@ -21,7 +24,13 @@ public sealed class CoverJobHandler(
     IArtifactRepository artifacts,
     IImageComposer composer,
     IPhotoProvider photos,
+    IMediaGateway mediaGateway,
     IPaletteResolver paletteResolver,
+    IPaletteDirector paletteDirector,
+    ICoverDirector coverDirector,
+    ICoverQa coverQa,
+    IPromptLibrary promptLibrary,
+    ISettingsStore settings,
     IFileStore fileStore,
     IArtifactStore artifactStore,
     IJobQueue jobQueue,
@@ -63,15 +72,39 @@ public sealed class CoverJobHandler(
     {
         var niche = await niches.GetByIdAsync(product.NicheId, ct);
         var nicheSlug = niche?.Slug ?? product.Slug;
-        var palette = await paletteResolver.ResolveAsync(product.Slug, nicheSlug, ct);
 
         var outline = await ContentPaths.ReadOutlineAsync(fileStore, product.Slug, ct);
         var title = outline.IsSuccess ? outline.Value.Title : product.Title;
         var subtitle = outline.IsSuccess ? outline.Value.Subtitle : null;
+        var topics = outline.IsSuccess
+            ? string.Join("; ", outline.Value.Chapters.Select(c => c.Title))
+            : title;
 
-        var photo = await photos.TryGetBackgroundAsync(niche?.Name ?? product.Title, ct);
+        // Paleta por IA (docs/14 WP-2): gera+persiste a identidade do produto ANTES de resolver, para
+        // que capa, PDF e LP (que rodam depois) leiam a MESMA paleta. Best-effort: falha → catálogo.
+        await paletteDirector.EnsureAsync(product.Slug, nicheSlug, title, ct);
+        var palette = await paletteResolver.ResolveAsync(product.Slug, nicheSlug, ct);
 
-        var coverPng = composer.RenderCover(new CoverArt(title, subtitle, niche?.Name, palette), photo);
+        // Diretor de capa por IA (docs/14 WP-4): eyebrow, benefícios, selo e a CENA do fundo.
+        var plan = await coverDirector.PlanAsync(title, subtitle, nicheSlug, topics, ct);
+
+        // Fundo: ilustração editorial da cena planejada (IA, free-first); sem cena/provedor, cai na
+        // foto de banco por nome do nicho. Os scrims do RenderCover deixam a imagem visível.
+        var background = await ResolveBackgroundAsync(plan, niche?.Name ?? product.Title, nicheSlug, product.Id, ct);
+
+        var art = new CoverArt(
+            title,
+            string.IsNullOrWhiteSpace(plan?.Subtitle) ? subtitle : plan!.Subtitle,
+            niche?.Name,
+            palette,
+            Eyebrow: plan?.Eyebrow,
+            Features: plan?.Features.Select(f => new CoverFeature(f.Text, f.Icon)).ToList(),
+            Seal: plan?.Seal);
+
+        // Caminho full-AI (docs/14 WP-5), gated: a IA gera a capa INTEIRA com texto; QA de visão
+        // (WP-8) confere o título e, se reprovar (ou estiver desligado), usa a composição Skia rica.
+        var coverPng = await TryFullAiCoverAsync(title, plan, palette, nicheSlug, product.Id, ct)
+            ?? composer.RenderCover(art, background);
         var coverStored = await artifactStore.WriteBytesAsync(ContentPaths.Cover(product.Slug), coverPng, ct);
         await AddArtifactIfNewAsync(product.Id, ArtifactType.Cover, coverStored, ct);
 
@@ -79,8 +112,73 @@ public sealed class CoverJobHandler(
         var mockupStored = await artifactStore.WriteBytesAsync(ContentPaths.Mockup(product.Slug), mockupPng, ct);
         await AddArtifactIfNewAsync(product.Id, ArtifactType.Mockup, mockupStored, ct);
 
-        logger.LogInformation("Capa e mockup gerados para {Slug} (foto de fundo: {HasPhoto})",
-            product.Slug, photo is not null);
+        logger.LogInformation("Capa e mockup gerados para {Slug} (plano IA: {HasPlan}, fundo: {HasBg})",
+            product.Slug, plan is not null, background is not null);
+    }
+
+    // Ilustração de fundo da capa: cena concreta planejada pela IA via Media Gateway (free-first),
+    // com fallback para a foto de banco por nome do nicho. Best-effort: null → gradiente da paleta.
+    private async Task<byte[]?> ResolveBackgroundAsync(
+        Content.Images.CoverPlanDto? plan, string nicheName, string nicheSlug, Guid productId, CancellationToken ct)
+    {
+        if (!string.IsNullOrWhiteSpace(plan?.Scene))
+        {
+            var media = await mediaGateway.GenerateAsync(
+                new MediaBrief("cover-bg", plan!.Scene, nicheName, nicheSlug, 1600, 2400, productId, MediaKind.Photo), ct);
+            if (media.IsSuccess)
+            {
+                return media.Value.Bytes;
+            }
+        }
+
+        return await photos.TryGetBackgroundAsync(nicheName, ct);
+    }
+
+    // Capa INTEIRA por IA (docs/14 WP-5): gated por setting; precisa do plano (eyebrow/features/cena).
+    // Gera via modelo capaz de texto → QA de visão (WP-8) → aceita (normaliza p/ 1600×2400) ou null
+    // (o chamador então usa a composição Skia). Best-effort: qualquer falha → null.
+    private async Task<byte[]?> TryFullAiCoverAsync(
+        string title, Content.Images.CoverPlanDto? plan, NichePalette palette, string nicheSlug, Guid productId, CancellationToken ct)
+    {
+        if (plan is null || !await settings.GetOrDefaultAsync(SettingKeys.CoverAiFullCover, false, ct))
+        {
+            return null;
+        }
+
+        var prompt = await promptLibrary.RenderAsync("media/cover-full", new Dictionary<string, string>
+        {
+            ["title"] = title,
+            ["subtitle"] = plan.Subtitle,
+            ["eyebrow"] = plan.Eyebrow,
+            ["seal"] = plan.Seal,
+            ["features"] = string.Join("; ", plan.Features.Select(f => f.Text)),
+            ["scene"] = plan.Scene,
+            ["background"] = palette.Background,
+            ["accent"] = palette.Accent,
+            ["onDark"] = palette.OnDark,
+            ["displayFont"] = palette.Display,
+        }, ct);
+        if (prompt.IsFailure)
+        {
+            return null;
+        }
+
+        var media = await mediaGateway.GenerateAsync(
+            new MediaBrief("cover-full", prompt.Value, nicheSlug, nicheSlug, 1600, 2400, productId, MediaKind.CoverWithText), ct);
+        if (media.IsFailure)
+        {
+            return null;
+        }
+
+        var verdict = await coverQa.ReviewAsync(media.Value.Bytes, title, ct);
+        if (!verdict.Accepted)
+        {
+            logger.LogInformation("Capa full-AI reprovada no QA ({Issues}); usando composição Skia.", verdict.Issues);
+            return null;
+        }
+
+        logger.LogInformation("Capa full-AI aprovada (score {Score}) via {Provider}.", verdict.Score, media.Value.Provider);
+        return composer.FitCover(media.Value.Bytes);
     }
 
     private async Task AddArtifactIfNewAsync(Guid productId, ArtifactType type, StoredFile stored, CancellationToken ct)
