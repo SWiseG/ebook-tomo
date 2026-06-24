@@ -1,5 +1,7 @@
 using Ebook.Application.Content.Images;
 using Ebook.Application.Content.Pdf;
+using Microsoft.Extensions.Logging;
+using QuestPDF.Drawing.Exceptions;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -11,7 +13,7 @@ namespace Ebook.Infrastructure.Content;
 /// do nicho (docs/11), com hierarquia profissional (capa, sumário, cabeçalho/rodapé, página de CTA).
 /// Fontes embarcadas via <see cref="FontRegistry"/>; ausentes, há fallback (Lato padrão do QuestPDF).
 /// </summary>
-public sealed class QuestPdfRenderer : IPdfRenderer
+public sealed class QuestPdfRenderer(ILogger<QuestPdfRenderer>? logger = null) : IPdfRenderer
 {
     static QuestPdfRenderer()
     {
@@ -25,7 +27,29 @@ public sealed class QuestPdfRenderer : IPdfRenderer
         // paleta do nicho tem prioridade (coerência com a capa); sem ela, cai no tema (compat)
         var theme = book.Palette is { } palette ? Style.From(palette) : Style.For(book.Theme);
 
-        return Document.Create(doc =>
+        try
+        {
+            return BuildDocument(book, theme, coverImage, safeMode: false).GeneratePdf();
+        }
+        catch (DocumentLayoutException ex)
+        {
+            // Rede de segurança (autonomia): conteúdo de IA pode, em casos raros, criar um conflito de
+            // layout. Em vez de mandar o job para dead-letter, re-renderiza em MODO SEGURO (só texto,
+            // sem imagens/tabelas/cards) — sempre produz um PDF válido, ainda que mais simples.
+            logger?.LogWarning(ex, "Layout do PDF estourou para \"{Title}\"; re-renderizando em modo seguro.", book.Title);
+            return RenderSafeMode(book, coverImage);
+        }
+    }
+
+    /// <summary>Render em modo seguro (só texto) — sempre produz PDF válido. <c>internal</c> p/ teste.</summary>
+    internal byte[] RenderSafeMode(PdfBook book, byte[]? coverImage = null)
+    {
+        var theme = book.Palette is { } palette ? Style.From(palette) : Style.For(book.Theme);
+        return BuildDocument(book, theme, coverImage, safeMode: true).GeneratePdf();
+    }
+
+    private static IDocument BuildDocument(PdfBook book, Style theme, byte[]? coverImage, bool safeMode) =>
+        Document.Create(doc =>
         {
             doc.Page(cover => ComposeCover(cover, book, theme, coverImage));
             doc.Page(content =>
@@ -39,9 +63,103 @@ public sealed class QuestPdfRenderer : IPdfRenderer
                     t.DefaultTextStyle(s => s.FontSize(9).FontColor("#9CA3AF"));
                     t.CurrentPageNumber();
                 });
-                content.Content().Column(col => ComposeBody(col, book, theme));
+                content.Content().Column(col =>
+                {
+                    if (safeMode)
+                    {
+                        ComposeBodySafe(col, book, theme);
+                    }
+                    else
+                    {
+                        ComposeBody(col, book, theme);
+                    }
+                });
             });
-        }).GeneratePdf();
+        });
+
+    // Modo seguro: só texto (heading/parágrafo/bullets) — nenhum contêiner de tamanho fixo, imagem,
+    // tabela ou card. Não pode gerar "conflicting size constraints". Garante um PDF mesmo no pior caso.
+    private static void ComposeBodySafe(ColumnDescriptor col, PdfBook book, Style theme)
+    {
+        foreach (var block in book.Body)
+        {
+            switch (block.Kind)
+            {
+                case MarkdownBlockKind.Heading when block.Level == 2:
+                    col.Item().PageBreak();
+                    col.Item().PaddingBottom(12).Text(block.Text)
+                        .FontFamily(theme.HeadingFont).FontSize(24).Bold().FontColor(theme.Primary);
+                    break;
+
+                case MarkdownBlockKind.Heading:
+                    col.Item().PaddingTop(10).PaddingBottom(4).Text(block.Text)
+                        .FontFamily(theme.HeadingFont).FontSize(16).SemiBold().FontColor(theme.Primary);
+                    break;
+
+                case MarkdownBlockKind.Bullets:
+                    foreach (var item in block.Items)
+                    {
+                        var (_, _, text) = ParseTask(item);
+                        col.Item().PaddingLeft(6).Text($"• {text}");
+                    }
+
+                    break;
+
+                case MarkdownBlockKind.Timeline:
+                    var n = 1;
+                    foreach (var step in block.Items)
+                    {
+                        col.Item().PaddingBottom(4).Text($"{n++}. {step}");
+                    }
+
+                    break;
+
+                case MarkdownBlockKind.Comparison:
+                    foreach (var row in block.Items)
+                    {
+                        col.Item().Text(row.Replace("|", " → ", StringComparison.Ordinal));
+                    }
+
+                    break;
+
+                case MarkdownBlockKind.Stat:
+                    col.Item().PaddingBottom(6).Text(
+                        block.Label.Length > 0 ? $"{block.Text} — {block.Label}" : block.Text).Bold();
+                    break;
+
+                case MarkdownBlockKind.PullQuote:
+                case MarkdownBlockKind.QuoteCard:
+                    col.Item().PaddingVertical(6).Text($"“{block.Text}”").Italic();
+                    if (block.Label.Length > 0)
+                    {
+                        col.Item().Text($"— {block.Label}");
+                    }
+
+                    break;
+
+                case MarkdownBlockKind.Callout:
+                    if (block.Label.Length > 0)
+                    {
+                        col.Item().Text(block.Label).Bold().FontColor(theme.Primary);
+                    }
+
+                    col.Item().PaddingBottom(6).Text(block.Text);
+                    break;
+
+                case MarkdownBlockKind.Image:
+                case MarkdownBlockKind.Infographic:
+                case MarkdownBlockKind.Divider:
+                    break; // omitidos no modo seguro
+
+                case MarkdownBlockKind.Paragraph:
+                default:
+                    col.Item().PaddingBottom(8).Text(block.Text).Justify();
+                    break;
+            }
+        }
+
+        col.Item().PageBreak();
+        ComposeCta(col, book, theme);
     }
 
     private static void ComposeCover(PageDescriptor cover, PdfBook book, Style theme, byte[]? coverImage)
@@ -485,7 +603,10 @@ public sealed class QuestPdfRenderer : IPdfRenderer
             case MarkdownBlockKind.Image:
                 if (block.ImageBytes is { Length: > 256 } img)
                 {
-                    col.Item().PaddingVertical(14).MaxHeight(190).Image(img).FitWidth();
+                    // FitArea (não FitWidth): encaixa QUALQUER proporção dentro da caixa limitada
+                    // (largura total × 190) preservando o aspecto. FitWidth fixava a altura pelo
+                    // aspecto e conflitava com MaxHeight em imagens retrato/quadradas (AspectRatio).
+                    col.Item().PaddingVertical(14).MaxHeight(190).AlignCenter().Image(img).FitArea();
                 }
 
                 break;
