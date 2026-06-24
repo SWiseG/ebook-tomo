@@ -17,3 +17,5 @@ Devolva SOMENTE JSON, em INGLÊS (vai para geradores de imagem):
   "imageStyle": "clean documentary photography, natural light",
   "subjectGuidance": "real people managing money, tidy desks, notebooks"
 }
+
+Estilo APRENDIDO do nicho (realimente se houver; ignore se "(nenhum)"): {{learned}}

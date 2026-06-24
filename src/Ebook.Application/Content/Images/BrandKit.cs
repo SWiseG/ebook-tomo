@@ -58,14 +58,18 @@ public sealed class BrandResolver(IFileStore fileStore) : IBrandResolver
 /// <summary>Gera (IA) e persiste a direção de arte do produto. Idempotente; falha → catálogo.</summary>
 public interface IBrandDirector
 {
-    Task EnsureAsync(string productSlug, string nicheSlug, string title, CancellationToken ct = default);
+    Task EnsureAsync(string productSlug, string nicheSlug, Guid nicheId, string title, CancellationToken ct = default);
 }
 
-public sealed class BrandDirector(IAiGateway aiGateway, IFileStore fileStore, ILogger<BrandDirector> logger) : IBrandDirector
+public sealed class BrandDirector(
+    IAiGateway aiGateway,
+    IFileStore fileStore,
+    Knowledge.IStylePlaybookReader playbook,
+    ILogger<BrandDirector> logger) : IBrandDirector
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    public async Task EnsureAsync(string productSlug, string nicheSlug, string title, CancellationToken ct = default)
+    public async Task EnsureAsync(string productSlug, string nicheSlug, Guid nicheId, string title, CancellationToken ct = default)
     {
         var path = ContentPaths.ProductBrand(productSlug);
         if (fileStore.Exists(path))
@@ -74,14 +78,29 @@ public sealed class BrandDirector(IAiGateway aiGateway, IFileStore fileStore, IL
         }
 
         var category = NicheStyleCatalog.Classify(nicheSlug);
+        // docs/17 P3-12/14: realimenta a direção de arte com o estilo APRENDIDO do nicho (E15).
+        var learned = await playbook.HintsAsync(nicheId, ct);
+
         var ai = await aiGateway.CompleteAsync(new AiRequest(
             Purpose: "ebook.brand",
             PromptTemplate: "ebook/brand",
-            Variables: new Dictionary<string, string> { ["niche"] = nicheSlug, ["title"] = title, ["category"] = category.ToString() },
+            Variables: new Dictionary<string, string>
+            {
+                ["niche"] = nicheSlug, ["title"] = title, ["category"] = category.ToString(),
+                ["learned"] = string.IsNullOrWhiteSpace(learned) ? "(nenhum)" : learned!,
+            },
             MaxOutputTokensEst: 300), ct);
 
         if (ai.IsFailure)
         {
+            // sem IA, mas com estilo aprendido: persiste o catálogo + dicas aprendidas.
+            if (!string.IsNullOrWhiteSpace(learned))
+            {
+                var basef = BrandCatalog.For(category);
+                await fileStore.WriteTextAsync(path,
+                    JsonSerializer.Serialize(basef with { ImageStyle = $"{basef.ImageStyle}; {learned}" }, JsonOptions), ct);
+            }
+
             return;
         }
 

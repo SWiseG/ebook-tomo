@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<Content.Images.IBrandResolver, Content.Images.BrandResolver>();
         services.AddScoped<Content.Images.IBrandDirector, Content.Images.BrandDirector>();
         services.AddScoped<IKnowledgeService, KnowledgeService>();
+        services.AddScoped<Knowledge.IStylePlaybookReader, Knowledge.StylePlaybookReader>();
         services.AddScoped<IOptimizationService, OptimizationService>();
         services.AddScoped<IOptimizationExecutor, OptimizationExecutor>();
 

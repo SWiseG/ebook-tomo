@@ -53,6 +53,14 @@ public sealed class OptimizationExecutor(
 
                 ApplySuggestedPrice(product, decision.ActionsJson);
                 product.CompleteIteration();
+
+                // docs/17 P3-11: nova onda de divulgação (calendário social) ao iterar. Chave por
+                // decisão p/ não colidir com o calendário original.
+                await jobQueue.EnqueueAsync(new JobRequest(
+                    Social.SocialJobs.Calendar,
+                    JsonSerializer.Serialize(new Social.CalendarJobPayload(product.Id), JsonOptions),
+                    $"social-calendar:iterate:{decision.Id}",
+                    ProductId: product.Id), ct);
                 break;
 
             case OptimizationDecisionKind.Scale:

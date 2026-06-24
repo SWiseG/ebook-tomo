@@ -85,7 +85,7 @@ public sealed class CoverJobHandler(
         // Paleta por IA (docs/14 WP-2): gera+persiste a identidade do produto ANTES de resolver, para
         // que capa, PDF e LP (que rodam depois) leiam a MESMA paleta. Best-effort: falha → catálogo.
         await paletteDirector.EnsureAsync(product.Slug, nicheSlug, title, ct);
-        await brandDirector.EnsureAsync(product.Slug, nicheSlug, title, ct); // docs/15 Frente A
+        await brandDirector.EnsureAsync(product.Slug, nicheSlug, product.NicheId, title, ct); // docs/15 A + docs/17 P3
         var palette = await paletteResolver.ResolveAsync(product.Slug, nicheSlug, ct);
         var brand = await brandResolver.ResolveAsync(product.Slug, nicheSlug, ct);
 

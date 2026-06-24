@@ -1,6 +1,7 @@
 using Ebook.Application.Ai;
 using Ebook.Application.Content;
 using Ebook.Application.Content.Images;
+using Ebook.Application.Knowledge;
 using Ebook.Domain.Abstractions;
 using Ebook.Domain.Common;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -24,7 +25,8 @@ public class BrandKitTests
     {
         var store = new FakeStore();
         var ai = new StubAi("""{ "mood": "bold", "imageStyle": "vivid editorial", "subjectGuidance": "entrepreneurs" }""");
-        await new BrandDirector(ai, store, NullLogger<BrandDirector>.Instance).EnsureAsync("p", "marketing", "T");
+        await new BrandDirector(ai, store, new NoPlaybook(), NullLogger<BrandDirector>.Instance)
+            .EnsureAsync("p", "marketing", Guid.NewGuid(), "T");
 
         var brand = await new BrandResolver(store).ResolveAsync("p", "marketing");
         Assert.Equal("vivid editorial", brand.ImageStyle);
@@ -35,6 +37,11 @@ public class BrandKitTests
     {
         var brand = await new BrandResolver(new FakeStore()).ResolveAsync(null, "financas-autonomos");
         Assert.Equal(BrandCatalog.For(NicheCategory.Finance).ImageStyle, brand.ImageStyle);
+    }
+
+    private sealed class NoPlaybook : IStylePlaybookReader
+    {
+        public Task<string?> HintsAsync(Guid nicheId, CancellationToken ct = default) => Task.FromResult<string?>(null);
     }
 
     private sealed class StubAi(string c) : IAiGateway
