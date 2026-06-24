@@ -19,14 +19,27 @@ public sealed class GeminiImageResolver(HttpClient http, IOptions<MediaOptions> 
     public async Task<byte[]?> TryGenerateAsync(MediaBrief brief, CancellationToken ct)
     {
         var o = options.Value.Gemini;
-        var model = string.IsNullOrWhiteSpace(o.Model) ? "imagen-3.0-generate-002" : o.Model;
-        var url = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:predict";
+        // default = Nano Banana (Gemini 2.5 Flash Image). Modelos "gemini-*" usam generateContent;
+        // "imagen-*" usam :predict. Endpoint e parse divergem por família.
+        var model = string.IsNullOrWhiteSpace(o.Model) ? "gemini-2.5-flash-image" : o.Model;
+        var isGemini = model.StartsWith("gemini", StringComparison.OrdinalIgnoreCase);
 
-        var payload = JsonSerializer.Serialize(new
-        {
-            instances = new[] { new { prompt = brief.Prompt } },
-            parameters = new { sampleCount = 1, aspectRatio = AspectRatio(brief.Width, brief.Height) },
-        });
+        var url = isGemini
+            ? $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+            : $"https://generativelanguage.googleapis.com/v1beta/models/{model}:predict";
+
+        var aspect = AspectRatio(brief.Width, brief.Height);
+        var payload = isGemini
+            ? JsonSerializer.Serialize(new
+            {
+                contents = new[] { new { parts = new[] { new { text = $"{brief.Prompt} Aspect ratio {aspect}." } } } },
+                generationConfig = new { responseModalities = new[] { "IMAGE" } },
+            })
+            : JsonSerializer.Serialize(new
+            {
+                instances = new[] { new { prompt = brief.Prompt } },
+                parameters = new { sampleCount = 1, aspectRatio = aspect },
+            });
 
         using var request = new HttpRequestMessage(HttpMethod.Post, url)
         {
@@ -42,16 +55,45 @@ public sealed class GeminiImageResolver(HttpClient http, IOptions<MediaOptions> 
 
         await using var stream = await response.Content.ReadAsStreamAsync(ct);
         using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
-        if (doc.RootElement.TryGetProperty("predictions", out var preds) && preds.GetArrayLength() > 0
-            && preds[0].TryGetProperty("bytesBase64Encoded", out var b64) && b64.ValueKind == JsonValueKind.String)
+        var b64 = isGemini ? ExtractGemini(doc.RootElement) : ExtractImagen(doc.RootElement);
+        if (b64 is null)
         {
-            try
+            return null;
+        }
+
+        try
+        {
+            return Convert.FromBase64String(b64);
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
+    }
+
+    // imagen :predict → predictions[0].bytesBase64Encoded
+    private static string? ExtractImagen(JsonElement root) =>
+        root.TryGetProperty("predictions", out var preds) && preds.GetArrayLength() > 0
+        && preds[0].TryGetProperty("bytesBase64Encoded", out var b) && b.ValueKind == JsonValueKind.String
+            ? b.GetString()
+            : null;
+
+    // gemini generateContent → candidates[0].content.parts[].inlineData.data
+    private static string? ExtractGemini(JsonElement root)
+    {
+        if (!root.TryGetProperty("candidates", out var cands) || cands.GetArrayLength() == 0
+            || !cands[0].TryGetProperty("content", out var content)
+            || !content.TryGetProperty("parts", out var parts))
+        {
+            return null;
+        }
+
+        foreach (var part in parts.EnumerateArray())
+        {
+            if (part.TryGetProperty("inlineData", out var inline)
+                && inline.TryGetProperty("data", out var d) && d.ValueKind == JsonValueKind.String)
             {
-                return Convert.FromBase64String(b64.GetString()!);
-            }
-            catch (FormatException)
-            {
-                return null;
+                return d.GetString();
             }
         }
 

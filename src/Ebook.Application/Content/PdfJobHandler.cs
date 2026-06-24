@@ -253,8 +253,8 @@ public sealed class PdfJobHandler(
                 Prompt: prompt,
                 Query: query,
                 NicheSlug: nicheSlug,
-                Width: 800,
-                Height: 400,
+                Width: 1280,
+                Height: 640,
                 ProductId: productId,
                 Kind: directive is null ? MediaKind.Auto : isPhoto ? MediaKind.Photo : MediaKind.Illustration);
 

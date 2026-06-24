@@ -9,3 +9,5 @@ Requirements:
 - Color direction harmonizing with: dark {{background}} and accent {{accent}}.
 - Absolutely NO text, NO words, NO letters, NO logos, NO watermarks, NO UI, NO charts.
 - Vertical portrait 2:3, full bleed, high resolution.
+
+Style: real person with authentic emotion, lifestyle photography (not studio), warm natural light, familiar context. No generic stock.

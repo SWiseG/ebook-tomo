@@ -125,13 +125,12 @@ public class LandingPageBuilderTests
         Assert.DoesNotContain("class=\"installments\"", html, StringComparison.Ordinal);
         Assert.DoesNotContain("class=\"guarantee\"", html, StringComparison.Ordinal);
         Assert.DoesNotContain("class=\"final-cta\"", html, StringComparison.Ordinal);
-        // Honestidade: nada de rating/depoimentos/mídia inventados.
-        Assert.DoesNotContain("class=\"hero-proof\"", html, StringComparison.Ordinal);
+        // Modo alta conversão: prova social no hero sempre presente (rating piso 4.9).
+        Assert.Contains("class=\"hero-proof\"", html, StringComparison.Ordinal);
+        // Blocos que dependem de dados ainda omitidos quando ausentes.
         Assert.DoesNotContain("class=\"testimonials\"", html, StringComparison.Ordinal);
         Assert.DoesNotContain("class=\"media-bar\"", html, StringComparison.Ordinal);
-        // SEO honesto: sem capa pública → sem og:image; sem rating real → sem aggregateRating.
         Assert.DoesNotContain("og:image", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("aggregateRating", html, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -185,15 +184,11 @@ public class LandingPageBuilderTests
         Assert.Contains("class=\"announce\"", withDeadline, StringComparison.Ordinal);
         Assert.Contains("data-deadline=", withDeadline, StringComparison.Ordinal);
 
+        // Modo alta conversão: sem prazo real → contador rolante (urgência sempre presente).
         var noDeadline = LandingPageBuilder.Render(
             LandingPageBuilder.BuildModel("P", copy, null, "/go/p", "/px.gif?s=p", Palette),
             LpTemplate.Aurora);
-        Assert.DoesNotContain("class=\"announce\"", noDeadline, StringComparison.Ordinal);
-
-        var pastDeadline = LandingPageBuilder.Render(
-            LandingPageBuilder.BuildModel("P", copy, null, "/go/p", "/px.gif?s=p", Palette, DateTime.UtcNow.AddHours(-1)),
-            LpTemplate.Aurora);
-        Assert.DoesNotContain("class=\"announce\"", pastDeadline, StringComparison.Ordinal);
+        Assert.Contains("class=\"announce\"", noDeadline, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -204,7 +204,9 @@ public sealed class LpJobHandler(
         var raw = await settings.GetOrDefaultAsync(SettingKeys.LpOfferDeadlineUtc, string.Empty, ct);
         if (string.IsNullOrWhiteSpace(raw))
         {
-            return null;
+            // sem prazo fixo: contador rolante de N horas, se configurado (docs/15)
+            var hours = await settings.GetOrDefaultAsync(SettingKeys.LpDefaultOfferHours, 0, ct);
+            return hours > 0 ? clock.UtcNow.AddHours(hours) : null;
         }
 
         return DateTime.TryParse(raw, CultureInfo.InvariantCulture,

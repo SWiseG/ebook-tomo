@@ -606,7 +606,7 @@ public sealed class QuestPdfRenderer(ILogger<QuestPdfRenderer>? logger = null) :
                     // FitArea (não FitWidth): encaixa QUALQUER proporção dentro da caixa limitada
                     // (largura total × 190) preservando o aspecto. FitWidth fixava a altura pelo
                     // aspecto e conflitava com MaxHeight em imagens retrato/quadradas (AspectRatio).
-                    col.Item().PaddingVertical(14).MaxHeight(190).AlignCenter().Image(img).FitArea();
+                    col.Item().PaddingVertical(16).MaxHeight(320).AlignCenter().Image(img).FitArea();
                 }
 
                 break;

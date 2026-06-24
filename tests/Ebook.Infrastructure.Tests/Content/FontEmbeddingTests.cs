@@ -43,6 +43,9 @@ public class FontEmbeddingTests
         Assert.NotNull(FontRegistry.Resolve("Bebas Neue"));
         Assert.NotNull(FontRegistry.Resolve("Fjalla One"));
         Assert.NotNull(FontRegistry.Resolve("Barlow Condensed", bold: true));
+        Assert.NotNull(FontRegistry.Resolve("Space Grotesk"));
+        Assert.NotNull(FontRegistry.Resolve("Cormorant"));
+        Assert.NotNull(FontRegistry.Resolve("DM Sans"));
 
         // PDF com paleta de nicho (fontes embarcadas) renderiza um documento válido
         var palette = NicheStyleCatalog.For(NicheCategory.Finance);

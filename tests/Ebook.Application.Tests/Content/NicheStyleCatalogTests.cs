@@ -31,7 +31,8 @@ public class NicheStyleCatalogTests
     {
         // docs/11: nunca Times New Roman/Arial. Toda categoria usa fonte profissional embarcada.
         var banned = new[] { "Arial", "Times New Roman", "Comic Sans MS", "Papyrus" };
-        var allowed = new[] { "Inter", "Manrope", "Merriweather", "Lora", "Fraunces", "Playfair Display" };
+        var allowed = new[] { "Inter", "Manrope", "Merriweather", "Lora", "Fraunces", "Playfair Display",
+            "Space Grotesk", "Cormorant", "DM Sans" };
 
         foreach (var category in Enum.GetValues<NicheCategory>())
         {

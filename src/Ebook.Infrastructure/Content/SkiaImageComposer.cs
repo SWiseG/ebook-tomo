@@ -82,7 +82,7 @@ public sealed class SkiaImageComposer : IImageComposer
 
         if (art.Features is { Count: > 0 } features)
         {
-            var boxes = features.Take(4).ToList();
+            var boxes = features.Take(3).ToList();
             const float boxH = 150f;
             const float gap = 26f;
             var blockH = boxes.Count * boxH + (boxes.Count - 1) * gap;

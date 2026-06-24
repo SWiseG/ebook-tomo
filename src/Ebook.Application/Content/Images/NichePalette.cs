@@ -93,6 +93,7 @@ public static class NicheStyleCatalog
     {
         "Inter", "Manrope", "Lora", "Merriweather", "Fraunces", "Playfair Display",
         "Anton", "Archivo Black", "Bebas Neue", "Fjalla One", "Barlow Condensed",
+        "Space Grotesk", "Cormorant", "DM Sans",
     };
 
     public static NichePalette Palette(string nicheNameOrSlug) => For(Classify(nicheNameOrSlug));
@@ -101,11 +102,12 @@ public static class NicheStyleCatalog
     // corpo + fonte de IMPACTO da capa (DisplayFont, docs/14 WP-3). Todas embarcadas (FontRegistry).
     public static NichePalette For(NicheCategory category) => category switch
     {
+        // docs/16 §6: navy+dourado (confiança) · sálvia+terracota+creme (wellness) · slate+neon (tech)
         NicheCategory.Finance => new("#0E2A47", "#E0B978", "#F5F8FC", "Manrope", "Merriweather", "Archivo Black"),
-        NicheCategory.Health => new("#14532D", "#7BE0A6", "#ECFDF5", "Lora", "Inter", "Fjalla One"),
-        NicheCategory.SelfHelp => new("#7C2D12", "#FDBA74", "#FFF7ED", "Fraunces", "Inter", "Anton"),
+        NicheCategory.Health => new("#2F4A3C", "#C2654A", "#F5F0E8", "Fraunces", "DM Sans", "Cormorant"),
+        NicheCategory.SelfHelp => new("#7C2D12", "#FDBA74", "#FFF7ED", "Fraunces", "DM Sans", "Anton"),
         NicheCategory.Marketing => new("#111827", "#F2552C", "#F9FAFB", "Manrope", "Inter", "Anton"),
-        NicheCategory.Tech => new("#1E1B4B", "#8B93F8", "#EEF2FF", "Inter", "Inter", "Archivo Black"),
+        NicheCategory.Tech => new("#0F172A", "#5EEAD4", "#E2E8F0", "Space Grotesk", "Inter", "Space Grotesk"),
         NicheCategory.Fiction => new("#3B0764", "#D8B4FE", "#FAF5FF", "Playfair Display", "Lora", "Playfair Display"),
         NicheCategory.Education => new("#0C4A6E", "#7DD3FC", "#F0F9FF", "Merriweather", "Inter", "Barlow Condensed"),
         NicheCategory.General or _ => new("#1F2937", "#CBA15A", "#F9FAFB", "Manrope", "Merriweather", "Bebas Neue"),

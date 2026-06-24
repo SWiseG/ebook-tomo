@@ -8,8 +8,8 @@ Devolva os elementos de venda da capa. Regras:
 - `eyebrow`: rótulo curto de categoria/credibilidade em 1-3 palavras (ex.: "Guia Completo",
   "Método Comprovado", "Edição 2026"). SEM ponto final.
 - `subtitle`: refine a promessa em UMA linha curta e concreta (≤ 70 caracteres).
-- `features`: 3 a 4 benefícios curtos (≤ 48 caracteres cada), começando por verbo de ação no
-  imperativo (ex.: "Elimine dívidas e organize seu orçamento"). Foque em RESULTADO, não em tópico.
+- `features`: EXATAMENTE 3 benefícios MUITO curtos (≤ 34 caracteres cada), verbo de ação no
+  imperativo (ex.: "Elimine suas dívidas"). Foque no RESULTADO. Menos é mais — a capa não pode poluir.
   Cada um com um `icon` da lista: check, star, shield, chart, rocket, target, bulb, lock, heart, money.
 - `seal`: selo de confiança em 2-3 palavras CAIXA-ALTA (ex.: "MÉTODO VALIDADO", "BASEADO EM CIÊNCIA",
   "PASSO A PASSO").

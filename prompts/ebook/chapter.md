@@ -17,6 +17,12 @@ Resumo do capítulo anterior (para continuidade, NÃO repita):
 - **Prova e autoridade**: traga ao menos um exemplo, caso, número ou analogia que sustente o ponto (gatilhos de Cialdini: prova social, autoridade, reciprocidade).
 - **Reciprocidade antes do pedido**: entregue valor real ao longo do capítulo; o micro-CTA vem só no fim.
 
+## Elementos visuais (OBRIGATÓRIO — capítulo rico, não muro de texto)
+Inclua, NO MÍNIMO: 1 número `> [!STAT] número | significado`; 1 disposição dinâmica (lista numerada
+de passos → timeline, OU tabela `> [!VS] Antes | Depois`); 1 caixa `> [!INSIGHT]`/`> [!CASO]`; 1 pull
+quote `> frase`. Distribua-os ao longo do capítulo (não amontoe no fim) — um recurso visual a cada
+~2-3 parágrafos.
+
 ## Formatação (Markdown — use SÓ o que está aqui)
 - Parágrafos curtos: no máximo 4 linhas cada. Frases diretas.
 - Subtítulos com `###` para separar as 2–3 seções do capítulo.

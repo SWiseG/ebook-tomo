@@ -15,9 +15,15 @@ Regras:
 - Respeite a PSICOLOGIA da categoria (ex.: finanças → azul/verde de confiança + dourado; saúde →
   verdes; marketing → grafite + laranja/vermelho energético; autoajuda → terrosos quentes).
 - Garanta contraste AA entre `onDark` e `background`, e entre `accent` e `background`.
+- Heurística de cor por intenção (docs/16 §6, regra 60/30/10 — destaque/accent = sempre o CTA):
+  Confiança/Financeiro → navy+cinza+dourado · Energia/Promo → coral+amarelo · Luxo → preto+dourado+creme ·
+  Wellness/Saúde → sálvia+creme+terracota · Tech → slate+neon (mint/violeta) · Editorial → off-white+tinta+1 saturada.
+  Evite roxo/azul de SaaS em produto emocional.
 - Fontes: escolha APENAS desta lista exata (case-sensitive):
   Inter, Manrope, Lora, Merriweather, Fraunces, Playfair Display, Anton, Archivo Black, Bebas Neue,
-  Fjalla One, Barlow Condensed.
+  Fjalla One, Barlow Condensed, Space Grotesk, Cormorant, DM Sans.
+  Pares por nicho (docs/16 §5): Saúde→Fraunces/Cormorant+DM Sans · Tech→Space Grotesk+Inter ·
+  Finanças→Manrope+Merriweather · Fitness→Bebas Neue/Anton+Barlow · Editorial→Lora+Inter.
   - `displayFont`: fonte de IMPACTO da capa — display/condensada/black (ex.: Anton, Archivo Black,
     Bebas Neue, Fjalla One, Barlow Condensed, ou Playfair Display para nichos elegantes).
   - `headingFont`: títulos do PDF — refinada e legível (ex.: Manrope, Fraunces, Merriweather, Lora).

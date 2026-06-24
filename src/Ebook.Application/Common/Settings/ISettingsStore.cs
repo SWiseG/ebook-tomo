@@ -36,6 +36,10 @@ public static class SettingKeys
     /// </summary>
     public const string LpOfferDeadlineUtc = "lp.offerDeadlineUtc";
 
+    /// <summary>Horas de validade rolante da oferta quando NÃO há prazo fixo (docs/15). 0 = sem
+    /// contador. Ex.: 72 → o contador da LP sempre mostra ~72h a partir do render.</summary>
+    public const string LpDefaultOfferHours = "lp.defaultOfferHours";
+
     /// <summary>Razão social no rodapé legal da LP. Vazio = usa o título do produto.</summary>
     public const string LegalCompanyName = "legal.companyName";
 

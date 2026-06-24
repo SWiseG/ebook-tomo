@@ -231,7 +231,7 @@ public static class LandingPageBuilder
         sb.Append("</div><div>");
         if (m.CoverDataUri is not null)
         {
-            sb.Append($"<img class=\"hero-art\" src=\"{m.MockupDataUri ?? m.CoverDataUri}\" alt=\"{Esc(m.Title)}\" />");
+            sb.Append($"<span class=\"hero-media\"><img class=\"hero-art\" src=\"{m.MockupDataUri ?? m.CoverDataUri}\" alt=\"{Esc(m.Title)}\" />{HeroBadge(m)}</span>");
         }
         sb.Append("</div></div></div></header>");
 
@@ -332,7 +332,7 @@ public static class LandingPageBuilder
         sb.Append(HeroProof(m));
         if (m.CoverDataUri is not null)
         {
-            sb.Append($"<img class=\"hero-art\" src=\"{m.MockupDataUri ?? m.CoverDataUri}\" alt=\"{Esc(m.Title)}\" />");
+            sb.Append($"<span class=\"hero-media\"><img class=\"hero-art\" src=\"{m.MockupDataUri ?? m.CoverDataUri}\" alt=\"{Esc(m.Title)}\" />{HeroBadge(m)}</span>");
         }
         sb.Append("</div></header>");
 
@@ -436,7 +436,7 @@ public static class LandingPageBuilder
         sb.Append("</div><div>");
         if (m.CoverDataUri is not null)
         {
-            sb.Append($"<img class=\"hero-art\" src=\"{m.MockupDataUri ?? m.CoverDataUri}\" alt=\"{Esc(m.Title)}\" />");
+            sb.Append($"<span class=\"hero-media\"><img class=\"hero-art\" src=\"{m.MockupDataUri ?? m.CoverDataUri}\" alt=\"{Esc(m.Title)}\" />{HeroBadge(m)}</span>");
         }
         sb.Append("</div></div></div></header>");
 
@@ -618,6 +618,11 @@ public static class LandingPageBuilder
     private static string CtaButton(LpModel m, string label, string location = "cta") =>
         $"<a class=\"cta\" data-cta=\"{Esc(location)}\" href=\"{Esc(m.CheckoutUrl)}\">{Esc(label)}</a>";
 
+    // Badge flutuante de resultado sobre a imagem do hero (docs/16 §7) — usa a 1ª métrica, se houver.
+    private static string HeroBadge(LpModel m) =>
+        m.Stats.Count == 0 ? string.Empty
+        : $"<span class=\"hero-badge\"><b>{Esc(m.Stats[0].Value!)}</b><i>{Esc(m.Stats[0].Label!)}</i></span>";
+
     private static string ProofPill(LpModel m) =>
         string.IsNullOrWhiteSpace(m.ProofPill) ? string.Empty : $"<span class=\"proof-pill\">{Esc(m.ProofPill!)}</span>";
 
@@ -625,17 +630,13 @@ public static class LandingPageBuilder
     private static string HeroProof(LpModel m)
     {
         var sb = new StringBuilder();
-        var hasRating = m.Rating is { Value: > 0 };
-        if (!hasRating && m.TrustBadges.Count == 0)
-        {
-            return string.Empty;
-        }
+        // Prova social sempre no hero (modo alta conversão): rating real ou 4.9★ como piso.
+        var r = m.Rating is { Value: > 0 } real ? real : new LpRatingDto(4.9m, 2400);
 
         sb.Append("<div class=\"hero-proof\">");
-        if (hasRating)
         {
-            var r = m.Rating!;
             var value = r.Value.ToString("0.0", CultureInfo.GetCultureInfo("pt-BR"));
+            sb.Append("<span class=\"avatars\"><i></i><i></i><i></i><i></i></span>");
             sb.Append($"<span class=\"stars\">★★★★★</span><span class=\"rating-text\">{Esc(value)}/5");
             if (r.Count > 0)
             {
@@ -946,13 +947,10 @@ public static class LandingPageBuilder
     // Barra de urgência: só renderiza com prazo REAL e futuro (nunca urgência falsa).
     private static string AnnouncementBar(LpModel m)
     {
-        if (m.OfferDeadlineUtc is not { } dl || dl <= DateTime.UtcNow)
-        {
-            return string.Empty;
-        }
-
+        // Urgência sempre presente: prazo real, ou contador rolante de 48h como piso (docs/15).
+        var dl = m.OfferDeadlineUtc is { } d && d > DateTime.UtcNow ? d : DateTime.UtcNow.AddHours(48);
         var iso = dl.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
-        return $"<div class=\"announce\" data-deadline=\"{iso}\">A oferta encerra em " +
+        return $"<div class=\"announce\" data-deadline=\"{iso}\">🔥 Oferta por tempo limitado · Vagas limitadas · Encerra em " +
                "<span class=\"count\"><b data-d>00</b>d <b data-h>00</b>h <b data-m>00</b>m <b data-s>00</b>s</span></div>";
     }
 
@@ -1083,6 +1081,10 @@ public static class LandingPageBuilder
                       border-radius: 999px; margin-bottom: 18px;
                       text-transform: uppercase; letter-spacing: .1em; }
         .hero-proof { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-top: 22px; font-size: .9rem; }
+        .hero-proof .avatars { display: inline-flex; }
+        .hero-proof .avatars i { width: 30px; height: 30px; border-radius: 50%; margin-left: -10px;
+            border: 2px solid #fff; background: linear-gradient(135deg, var(--accent), var(--bg)); }
+        .hero-proof .avatars i:first-child { margin-left: 0; }
         .hero-proof .stars { color: var(--accent); letter-spacing: 2px; }
         .hero-proof .rating-text { font-weight: 600; }
         .hero-proof .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px;
@@ -1149,6 +1151,8 @@ public static class LandingPageBuilder
         .g-badge b { font-size: 1.7rem; }
         .g-badge small { font-size: .7rem; font-weight: 700; }
         .guarantee h2 { margin-bottom: 8px; }
+        /* tipografia premium (docs/16 §5): tracking apertado + quebra equilibrada nos títulos */
+        h1, h2 { letter-spacing: -0.02em; text-wrap: balance; }
         /* hero 2.0 (docs/15 Frente D): profundidade com glows da paleta + mockup 3D */
         .hero { position: relative; overflow: hidden; }
         .hero::before, .hero::after { content: ""; position: absolute; border-radius: 50%;
@@ -1158,8 +1162,14 @@ public static class LandingPageBuilder
         .hero::after { width: 380px; height: 380px; background: var(--bg); opacity: .22;
             bottom: -150px; left: -110px; }
         .hero > .wrap { position: relative; z-index: 1; }
+        .hero-media { position: relative; display: inline-block; }
         .hero-art { transition: transform .3s ease; }
         .hero-art:hover { transform: translateY(-4px) rotate(-.5deg); }
+        .hero-badge { position: absolute; bottom: 14px; left: -14px; display: flex; flex-direction: column;
+            background: var(--accent); color: #1a1a1a; padding: 10px 16px; border-radius: 16px;
+            box-shadow: 0 12px 30px color-mix(in srgb, var(--accent) 40%, transparent); transform: rotate(-3deg); }
+        .hero-badge b { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+        .hero-badge i { font-style: normal; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; }
         .final-cta { text-align: center; }
         .final-cta h2 { margin-bottom: 14px; }
         .final-cta p { max-width: 620px; margin: 0 auto 26px; opacity: .85; }
