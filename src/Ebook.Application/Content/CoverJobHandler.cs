@@ -27,6 +27,8 @@ public sealed class CoverJobHandler(
     IMediaGateway mediaGateway,
     IPaletteResolver paletteResolver,
     IPaletteDirector paletteDirector,
+    IBrandResolver brandResolver,
+    IBrandDirector brandDirector,
     ICoverDirector coverDirector,
     ICoverQa coverQa,
     IPromptLibrary promptLibrary,
@@ -83,14 +85,16 @@ public sealed class CoverJobHandler(
         // Paleta por IA (docs/14 WP-2): gera+persiste a identidade do produto ANTES de resolver, para
         // que capa, PDF e LP (que rodam depois) leiam a MESMA paleta. Best-effort: falha → catálogo.
         await paletteDirector.EnsureAsync(product.Slug, nicheSlug, title, ct);
+        await brandDirector.EnsureAsync(product.Slug, nicheSlug, title, ct); // docs/15 Frente A
         var palette = await paletteResolver.ResolveAsync(product.Slug, nicheSlug, ct);
+        var brand = await brandResolver.ResolveAsync(product.Slug, nicheSlug, ct);
 
         // Diretor de capa por IA (docs/14 WP-4): eyebrow, benefícios, selo e a CENA do fundo.
         var plan = await coverDirector.PlanAsync(title, subtitle, nicheSlug, topics, ct);
 
         // Fundo: ilustração editorial da cena planejada (IA, free-first); sem cena/provedor, cai na
         // foto de banco por nome do nicho. Os scrims do RenderCover deixam a imagem visível.
-        var background = await ResolveBackgroundAsync(plan, niche?.Name ?? product.Title, nicheSlug, product.Id, ct);
+        var background = await ResolveBackgroundAsync(plan, brand, palette, title, niche?.Name ?? product.Title, nicheSlug, product.Id, ct);
 
         var art = new CoverArt(
             title,
@@ -119,12 +123,25 @@ public sealed class CoverJobHandler(
     // Ilustração de fundo da capa: cena concreta planejada pela IA via Media Gateway (free-first),
     // com fallback para a foto de banco por nome do nicho. Best-effort: null → gradiente da paleta.
     private async Task<byte[]?> ResolveBackgroundAsync(
-        Content.Images.CoverPlanDto? plan, string nicheName, string nicheSlug, Guid productId, CancellationToken ct)
+        Content.Images.CoverPlanDto? plan, ProductBrand brand, NichePalette palette, string title,
+        string nicheName, string nicheSlug, Guid productId, CancellationToken ct)
     {
         if (!string.IsNullOrWhiteSpace(plan?.Scene))
         {
+            // docs/15 Frente C: prompt amplo (cena+título+paleta+direção de arte) e roteamento
+            // Illustration → generativos primeiro (Gemini é o 1º da cadeia). Fallback: foto de banco.
+            var rendered = await promptLibrary.RenderAsync("media/cover-bg", new Dictionary<string, string>
+            {
+                ["title"] = title,
+                ["niche"] = nicheSlug,
+                ["scene"] = plan!.Scene,
+                ["background"] = palette.Background,
+                ["accent"] = palette.Accent,
+            }, ct);
+            var prompt = brand.Decorate(rendered.IsSuccess ? rendered.Value : plan.Scene);
+
             var media = await mediaGateway.GenerateAsync(
-                new MediaBrief("cover-bg", plan!.Scene, nicheName, nicheSlug, 1600, 2400, productId, MediaKind.Photo), ct);
+                new MediaBrief("cover-bg", prompt, nicheName, nicheSlug, 1600, 2400, productId, MediaKind.Illustration), ct);
             if (media.IsSuccess)
             {
                 return media.Value.Bytes;

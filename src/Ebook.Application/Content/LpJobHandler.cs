@@ -32,6 +32,7 @@ public sealed class LpJobHandler(
     IMediaGateway mediaGateway,
     IPromptLibrary promptLibrary,
     IPaletteResolver paletteResolver,
+    IBrandResolver brandResolver,
     IUnitOfWork unitOfWork,
     IClock clock,
     ILogger<LpJobHandler> logger) : IJobHandler
@@ -84,6 +85,7 @@ public sealed class LpJobHandler(
 
         var copy = await ReadCopyAsync(product.Slug, ct);
         var cover = await artifactStore.ReadBytesAsync(ContentPaths.Cover(product.Slug), ct);
+        var mockup = await artifactStore.ReadBytesAsync(ContentPaths.Mockup(product.Slug), ct); // hero 3D
 
         var checkoutUrl = $"{baseUrl}/go/{product.Slug}";
         var pixelUrl = $"{baseUrl}/px.gif?s={Uri.EscapeDataString(product.Slug)}";
@@ -101,7 +103,7 @@ public sealed class LpJobHandler(
 
         var model = LandingPageBuilder.BuildModel(
             product.Title, copy, cover, checkoutUrl, pixelUrl, palette, deadline, canonicalUrl, coverImageUrl,
-            legal, disclaimer, showcase);
+            legal, disclaimer, showcase, mockup);
         var template = LpTemplateSelector.ForNiche(nicheSlug);
         var html = LandingPageBuilder.Render(model, template);
 
@@ -151,9 +153,11 @@ public sealed class LpJobHandler(
                 ["nicheSlug"] = nicheSlug,
             };
             var rendered = await promptLibrary.RenderAsync("media/lp-hero", vars, ct);
-            var prompt = rendered.IsSuccess
+            var basePrompt = rendered.IsSuccess
                 ? rendered.Value
                 : $"premium aspirational landing page hero illustration about {nicheSlug}, no text, modern editorial, 2:1 banner";
+            var brand = await brandResolver.ResolveAsync(product.Slug, nicheSlug, ct); // docs/15 Frente A
+            var prompt = brand.Decorate(basePrompt);
 
             var result = await mediaGateway.GenerateAsync(
                 new MediaBrief("lp-hero", prompt, nicheSlug, nicheSlug, 1024, 512), ct);

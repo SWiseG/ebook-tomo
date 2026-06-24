@@ -279,7 +279,7 @@ public sealed class QuestPdfRenderer(ILogger<QuestPdfRenderer>? logger = null) :
         col.Item().PaddingTop(72).PaddingBottom(26).Row(row =>
         {
             row.ConstantItem(120).AlignTop().Text(ChapterNumber(eyebrow, index))
-                .FontFamily(theme.HeadingFont).FontSize(80).Bold().FontColor(Tint(theme.Accent, 0.45f));
+                .FontFamily(theme.DisplayFont).FontSize(80).Bold().FontColor(Tint(theme.Accent, 0.45f));
 
             row.RelativeItem().PaddingLeft(10).PaddingTop(8).Column(open =>
             {
@@ -293,7 +293,7 @@ public sealed class QuestPdfRenderer(ILogger<QuestPdfRenderer>? logger = null) :
                 open.Item().Text(eyebrowText)
                     .FontFamily(theme.HeadingFont).FontSize(11).Bold().FontColor(theme.Accent);
                 open.Item().PaddingTop(6).Text(titleText)
-                    .FontFamily(theme.HeadingFont).FontSize(28).Bold().FontColor(theme.Primary).LineHeight(1.1f);
+                    .FontFamily(theme.DisplayFont).FontSize(28).Bold().FontColor(theme.Primary).LineHeight(1.1f);
                 open.Item().PaddingTop(16).Width(60).Height(4).Background(theme.Accent);
             });
         });
@@ -650,19 +650,19 @@ public sealed class QuestPdfRenderer(ILogger<QuestPdfRenderer>? logger = null) :
         return (false, false, item);
     }
 
-    private sealed record Style(string Primary, string Accent, string Text, string HeadingFont, string BodyFont)
+    private sealed record Style(string Primary, string Accent, string Text, string HeadingFont, string BodyFont, string DisplayFont)
     {
         // Derivado da paleta do nicho (caminho principal): cor de cabeçalho = fundo do nicho,
         // texto do corpo num quase-preto legível sobre branco, fontes profissionais embarcadas.
         public static Style From(NichePalette p) =>
-            new(p.Background, p.Accent, "#1A1A1A", p.HeadingFont, p.BodyFont);
+            new(p.Background, p.Accent, "#1A1A1A", p.HeadingFont, p.BodyFont, p.Display);
 
         // Fallback por tema (usado quando não há paleta, ex.: testes). Fontes embarcadas via FontRegistry.
         public static Style For(PdfTheme theme) => theme switch
         {
-            PdfTheme.Modern => new Style("#1E1B4B", "#8B93F8", "#1A1A1A", "Manrope", "Inter"),
-            PdfTheme.Editorial => new Style("#7C2D12", "#FDBA74", "#1A1A1A", "Fraunces", "Lora"),
-            PdfTheme.Classic or _ => new Style("#0E2A47", "#E0B978", "#1A1A1A", "Manrope", "Merriweather")
+            PdfTheme.Modern => new Style("#1E1B4B", "#8B93F8", "#1A1A1A", "Manrope", "Inter", "Anton"),
+            PdfTheme.Editorial => new Style("#7C2D12", "#FDBA74", "#1A1A1A", "Fraunces", "Lora", "Anton"),
+            PdfTheme.Classic or _ => new Style("#0E2A47", "#E0B978", "#1A1A1A", "Manrope", "Merriweather", "Archivo Black")
         };
     }
 }

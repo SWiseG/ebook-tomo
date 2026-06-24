@@ -32,6 +32,7 @@ public sealed class PdfJobHandler(
     IAiGateway aiGateway,
     IPromptLibrary promptLibrary,
     IPaletteResolver paletteResolver,
+    IBrandResolver brandResolver,
     IUnitOfWork unitOfWork,
     IClock clock,
     ILogger<PdfJobHandler> logger) : IJobHandler
@@ -104,7 +105,8 @@ public sealed class PdfJobHandler(
             : EmptyPlan;
 
         // Frente D: ilustrações por capítulo (geradas em paralelo via Media Gateway), guiadas pelo plano.
-        var bodyWithImages = await InjectIllustrationsAsync(book.Body, nicheSlug, product.Id, visualPlan, ct);
+        var brand = await brandResolver.ResolveAsync(product.Slug, nicheSlug, ct); // docs/15 Frente A
+        var bodyWithImages = await InjectIllustrationsAsync(book.Body, nicheSlug, product.Id, visualPlan, brand, ct);
         book = book with { Body = bodyWithImages };
 
         // WS-E: infográficos de métricas compostos no Skia (blocos Infographic → imagens)
@@ -136,6 +138,7 @@ public sealed class PdfJobHandler(
         string nicheSlug,
         Guid productId,
         IReadOnlyDictionary<string, VisualDirectiveDto> plan,
+        ProductBrand brand,
         CancellationToken ct)
     {
         var chapters = body
@@ -151,7 +154,7 @@ public sealed class PdfJobHandler(
         // gera todas as imagens em paralelo, cada capítulo guiado pela diretriz do Diretor de Arte (Fase 4)
         var imageTasks = chapters.ToDictionary(
             c => c.Text,
-            c => GenerateIllustrationAsync(c.Text, nicheSlug, productId, plan.GetValueOrDefault(ChapterKey(c.Text)), ct));
+            c => GenerateIllustrationAsync(c.Text, nicheSlug, productId, plan.GetValueOrDefault(ChapterKey(c.Text)), brand, ct));
 
         await Task.WhenAll(imageTasks.Values);
 
@@ -232,14 +235,15 @@ public sealed class PdfJobHandler(
     }
 
     private async Task<byte[]?> GenerateIllustrationAsync(
-        string chapterTitle, string nicheSlug, Guid productId, VisualDirectiveDto? directive, CancellationToken ct)
+        string chapterTitle, string nicheSlug, Guid productId, VisualDirectiveDto? directive, ProductBrand brand, CancellationToken ct)
     {
         try
         {
             var isPhoto = string.Equals(directive?.Mode, "photo", StringComparison.OrdinalIgnoreCase);
-            var prompt = !string.IsNullOrWhiteSpace(directive?.Prompt)
+            var basePrompt = !string.IsNullOrWhiteSpace(directive?.Prompt)
                 ? directive!.Prompt
                 : await BuildIllustrationPromptAsync(chapterTitle, nicheSlug, ct);
+            var prompt = brand.Decorate(basePrompt); // docs/15 Frente A: direção de arte única
             var query = !string.IsNullOrWhiteSpace(directive?.Query)
                 ? directive!.Query
                 : nicheSlug.Replace('-', ' '); // palavras-chave p/ bancos de foto

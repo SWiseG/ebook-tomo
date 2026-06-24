@@ -131,10 +131,11 @@ public sealed class GenerateTestLpHandler(
         var disclaimer = NicheStyleCatalog.DisclaimerFor(category);
 
         // URLs neutras para preview (sem checkout/pixel reais).
+        var mockup = composer.RenderMockup(cover, palette); // hero 3D (docs/15 Frente D)
         var model = LandingPageBuilder.BuildModel(
             title, copy, cover, "#", "#", palette,
             offerDeadlineUtc: null, canonicalUrl: null, coverImageUrl: null,
-            legal: legal, disclaimer: disclaimer, showcaseImage: hero);
+            legal: legal, disclaimer: disclaimer, showcaseImage: hero, mockupImage: mockup);
         var html = LandingPageBuilder.Render(model, template);
         steps.Add(new LpTraceStep("Renderização", "LandingPageBuilder", $"Template {template} + paleta do nicho", $"{html.Length} bytes"));
 

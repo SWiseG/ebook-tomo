@@ -59,6 +59,10 @@ public sealed class FakeAiGateway : IAiGateway
             { "background": "#0E2A47", "accent": "#E0B978", "onDark": "#F5F8FC",
               "headingFont": "Manrope", "bodyFont": "Merriweather", "displayFont": "Archivo Black" }
             """,
+        "ebook.brand" => """
+            { "mood": "confident, calm", "imageStyle": "documentary photography, natural light",
+              "subjectGuidance": "real people managing money, notebooks" }
+            """,
         "cover.plan" => """
             {
               "eyebrow": "Guia Completo",

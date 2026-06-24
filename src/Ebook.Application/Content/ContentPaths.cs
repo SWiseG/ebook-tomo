@@ -51,6 +51,9 @@ public static class ContentPaths
     /// sobre a paleta do nicho — dá variedade por produto mantendo PDF, LP e capa coerentes.</summary>
     public static string ProductPalette(string slug) => $"products/{slug}/palette.json";
 
+    /// <summary>Direção de arte de imagens do produto (docs/15 Frente A), no FileStore de conteúdo.</summary>
+    public static string ProductBrand(string slug) => $"products/{slug}/brand.json";
+
     /// <summary>Lê e desserializa o outline.json; falha tipada quando ausente ou inválido.</summary>
     public static async Task<Result<OutlineDto>> ReadOutlineAsync(IFileStore fileStore, string slug, CancellationToken ct)
     {

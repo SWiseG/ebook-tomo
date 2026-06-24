@@ -74,7 +74,9 @@ public sealed record LpModel(
     /// <summary>Disclaimer legal por nicho (sempre presente no render real; opcional no modelo).</summary>
     string? Disclaimer,
     /// <summary>Ilustração de herói gerada por IA (data URI). Null = seção showcase omitida.</summary>
-    string? ShowcaseDataUri);
+    string? ShowcaseDataUri,
+    /// <summary>Mockup 3D do e-book (data URI) para o hero. Null = usa a capa 2D (docs/15 Frente D).</summary>
+    string? MockupDataUri = null);
 
 /// <summary>
 /// Constrói a landing page como HTML auto-contido (CSS inline, capa em data URI),
@@ -96,10 +98,14 @@ public static class LandingPageBuilder
         string? coverImageUrl = null,
         LpLegalDto? legal = null,
         string? disclaimer = null,
-        byte[]? showcaseImage = null)
+        byte[]? showcaseImage = null,
+        byte[]? mockupImage = null)
     {
         var showcaseDataUri = showcaseImage is { Length: > 0 }
             ? $"data:image/png;base64,{Convert.ToBase64String(showcaseImage)}"
+            : null;
+        var mockupDataUri = mockupImage is { Length: > 0 }
+            ? $"data:image/png;base64,{Convert.ToBase64String(mockupImage)}"
             : null;
         var headline = string.IsNullOrWhiteSpace(copy?.Headline) ? productTitle : copy!.Headline!;
         var bullets = (copy?.Bullets ?? []).Where(b => !string.IsNullOrWhiteSpace(b)).ToList();
@@ -158,7 +164,8 @@ public static class LandingPageBuilder
             string.IsNullOrWhiteSpace(coverImageUrl) ? null : coverImageUrl,
             legal,
             string.IsNullOrWhiteSpace(disclaimer) ? null : disclaimer,
-            showcaseDataUri);
+            showcaseDataUri,
+            mockupDataUri);
     }
 
     public static string Render(LpModel model, LpTemplate template) => template switch
@@ -183,7 +190,7 @@ public static class LandingPageBuilder
             h1, h2, h3 { font-family: {{Font(m.Palette.HeadingFont)}}; line-height: 1.15; }
             .hero { background: linear-gradient(160deg, var(--bg), #000); color: var(--on-dark); padding: 64px 0 72px; }
             .hero .grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 40px; align-items: center; }
-            .hero h1 { font-size: 2.6rem; margin-bottom: 16px; }
+            .hero h1 { font-family: {{Font(m.Palette.Display)}}; font-size: 2.8rem; margin-bottom: 16px; }
             .hero .sub { font-size: 1.2rem; opacity: .85; margin-bottom: 28px; }
             .hero img { width: 100%; border-radius: 12px; box-shadow: 0 24px 60px rgba(0,0,0,.45); }
             .cta { display: inline-block; background: var(--accent); color: #1a1a1a; font-weight: 700;
@@ -224,7 +231,7 @@ public static class LandingPageBuilder
         sb.Append("</div><div>");
         if (m.CoverDataUri is not null)
         {
-            sb.Append($"<img src=\"{m.CoverDataUri}\" alt=\"{Esc(m.Title)}\" />");
+            sb.Append($"<img class=\"hero-art\" src=\"{m.MockupDataUri ?? m.CoverDataUri}\" alt=\"{Esc(m.Title)}\" />");
         }
         sb.Append("</div></div></div></header>");
 
@@ -285,7 +292,7 @@ public static class LandingPageBuilder
             .wrap { max-width: 820px; margin: 0 auto; padding: 0 24px; }
             h1, h2, h3 { font-family: {{Font(m.Palette.HeadingFont)}}; color: var(--ink); line-height: 1.2; }
             .hero { text-align: center; padding: 72px 0 52px; border-bottom: 3px solid var(--accent); }
-            .hero h1 { font-size: 2.8rem; margin-bottom: 18px; }
+            .hero h1 { font-family: {{Font(m.Palette.Display)}}; font-size: 3rem; margin-bottom: 18px; }
             .hero .sub { font-size: 1.25rem; color: #555; max-width: 620px; margin: 0 auto 30px; }
             .hero img { width: 320px; max-width: 80%; margin: 32px auto 0; display: block;
                         box-shadow: 0 18px 50px rgba(0,0,0,.18); border-radius: 6px; }
@@ -296,9 +303,11 @@ public static class LandingPageBuilder
             section { padding: 52px 0; border-bottom: 1px solid #ece7dd; }
             section h2 { font-size: 1.8rem; margin-bottom: 20px; }
             section h2.dash::before { content: "—"; color: var(--accent); margin-right: 10px; }
-            .bullets { list-style: none; display: grid; gap: 12px; }
-            .bullets li { padding-left: 28px; position: relative; }
-            .bullets li::before { content: "→"; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+            .bullets { list-style: none; display: grid; gap: 13px; }
+            .bullets li { padding-left: 36px; position: relative; }
+            .bullets li::before { content: "✓"; position: absolute; left: 0; top: 1px; color: #fff;
+                                  background: var(--accent); width: 24px; height: 24px; border-radius: 8px;
+                                  display: grid; place-items: center; font-size: .8rem; font-weight: 800; }
             .offer { text-align: center; }
             .price { font-size: 2.8rem; font-weight: 800; color: var(--ink); margin: 10px 0 6px; }
             .anchor { text-decoration: line-through; color: #999; font-size: 1.3rem; margin-right: 10px; }
@@ -323,7 +332,7 @@ public static class LandingPageBuilder
         sb.Append(HeroProof(m));
         if (m.CoverDataUri is not null)
         {
-            sb.Append($"<img src=\"{m.CoverDataUri}\" alt=\"{Esc(m.Title)}\" />");
+            sb.Append($"<img class=\"hero-art\" src=\"{m.MockupDataUri ?? m.CoverDataUri}\" alt=\"{Esc(m.Title)}\" />");
         }
         sb.Append("</div></header>");
 
@@ -385,7 +394,7 @@ public static class LandingPageBuilder
             h1, h2, h3 { font-family: {{Font(m.Palette.HeadingFont)}}; line-height: 1.12; color: var(--bg); }
             .hero { padding: 56px 0 64px; }
             .hero .grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 44px; align-items: center; }
-            .hero h1 { font-size: 2.9rem; margin-bottom: 16px; }
+            .hero h1 { font-family: {{Font(m.Palette.Display)}}; font-size: 3.1rem; margin-bottom: 16px; }
             .hero .sub { font-size: 1.2rem; color: #6b6258; margin-bottom: 28px; }
             .hero img { width: 100%; border-radius: 16px; box-shadow: 0 30px 64px rgba(80,60,30,.20); }
             .cta { display: inline-block; background: var(--accent); color: #1a1a1a; font-weight: 800;
@@ -427,7 +436,7 @@ public static class LandingPageBuilder
         sb.Append("</div><div>");
         if (m.CoverDataUri is not null)
         {
-            sb.Append($"<img src=\"{m.CoverDataUri}\" alt=\"{Esc(m.Title)}\" />");
+            sb.Append($"<img class=\"hero-art\" src=\"{m.MockupDataUri ?? m.CoverDataUri}\" alt=\"{Esc(m.Title)}\" />");
         }
         sb.Append("</div></div></div></header>");
 
@@ -520,7 +529,7 @@ public static class LandingPageBuilder
     private static string Fonts(LpModel m)
     {
         var families = new List<string>();
-        foreach (var f in new[] { m.Palette.HeadingFont, m.Palette.BodyFont })
+        foreach (var f in new[] { m.Palette.HeadingFont, m.Palette.BodyFont, m.Palette.Display })
         {
             if (!string.IsNullOrWhiteSpace(f) && !families.Contains(f))
             {
@@ -1070,8 +1079,9 @@ public static class LandingPageBuilder
           .sticky-cta .cta { padding: 12px 20px; font-size: 1rem; box-shadow: none; }
         }
         .proof-pill { display: inline-block; background: color-mix(in srgb, var(--accent) 22%, transparent);
-                      color: var(--accent); font-weight: 700; font-size: .82rem; padding: 6px 14px;
-                      border-radius: 999px; margin-bottom: 18px; }
+                      color: var(--accent); font-weight: 800; font-size: .74rem; padding: 6px 14px;
+                      border-radius: 999px; margin-bottom: 18px;
+                      text-transform: uppercase; letter-spacing: .1em; }
         .hero-proof { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-top: 22px; font-size: .9rem; }
         .hero-proof .stars { color: var(--accent); letter-spacing: 2px; }
         .hero-proof .rating-text { font-weight: 600; }
@@ -1139,6 +1149,17 @@ public static class LandingPageBuilder
         .g-badge b { font-size: 1.7rem; }
         .g-badge small { font-size: .7rem; font-weight: 700; }
         .guarantee h2 { margin-bottom: 8px; }
+        /* hero 2.0 (docs/15 Frente D): profundidade com glows da paleta + mockup 3D */
+        .hero { position: relative; overflow: hidden; }
+        .hero::before, .hero::after { content: ""; position: absolute; border-radius: 50%;
+            filter: blur(90px); z-index: 0; pointer-events: none; }
+        .hero::before { width: 440px; height: 440px; background: var(--accent); opacity: .45;
+            top: -130px; right: -90px; }
+        .hero::after { width: 380px; height: 380px; background: var(--bg); opacity: .22;
+            bottom: -150px; left: -110px; }
+        .hero > .wrap { position: relative; z-index: 1; }
+        .hero-art { transition: transform .3s ease; }
+        .hero-art:hover { transform: translateY(-4px) rotate(-.5deg); }
         .final-cta { text-align: center; }
         .final-cta h2 { margin-bottom: 14px; }
         .final-cta p { max-width: 620px; margin: 0 auto 26px; opacity: .85; }
