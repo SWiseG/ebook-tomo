@@ -7,6 +7,18 @@
 .grid-toolbar { padding: 0; }
 .empty { margin: 0; }
 
+/* layout 2 colunas: decisões (flexível) + histórico de ciclos (aside fixo). Empilha no mobile. */
+.grid-2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: t.$space-5;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
 .block__title {
   font-size: 0.78rem;
   text-transform: uppercase;

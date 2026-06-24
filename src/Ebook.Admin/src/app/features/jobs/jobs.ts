@@ -138,10 +138,11 @@ export class Jobs {
         sortable: false,
         resizable: false,
         cellRenderer: (params: ICellRendererParams<JobItem>) => {
-          if (params.data?.status !== 'Dead') return '';
+          const s = params.data?.status;
+          if (s !== 'Dead' && s !== 'Succeeded') return '';
           const ctx = params.context as { retry: (j: JobItem) => void };
           const btn = document.createElement('button');
-          btn.className = 'tomo-row-btn';
+          btn.className = s === 'Dead' ? 'tomo-row-btn tomo-row-btn--danger' : 'tomo-row-btn';
           btn.innerHTML = `<span class="pi pi-refresh"></span> ${t.translate('jobs.retry')}`;
           btn.addEventListener('click', (e) => { e.stopPropagation(); ctx.retry(params.data!); });
           return btn;

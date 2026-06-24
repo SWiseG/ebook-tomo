@@ -124,10 +124,10 @@ public static class Endpoints
                 return Results.NotFound();
             }
 
-            if (job.Status != JobStatus.Dead)
+            if (job.Status is not (JobStatus.Dead or JobStatus.Succeeded))
             {
-                return Results.Problem(title: "Job.NotDead",
-                    detail: "Apenas jobs em dead-letter podem ser reenfileirados.", statusCode: 400);
+                return Results.Problem(title: "Job.NotRetryable",
+                    detail: "Só jobs concluídos ou em dead-letter podem ser reenfileirados.", statusCode: 400);
             }
 
             job.Status = JobStatus.Pending;
