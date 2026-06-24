@@ -119,7 +119,7 @@ public class LandingPageBuilderTests
         var model = LandingPageBuilder.BuildModel("P", FullCopy(), null, "/go/p", "/px.gif?s=p", Palette);
         var html = LandingPageBuilder.Render(model, LpTemplate.Aurora);
 
-        Assert.DoesNotContain("class=\"proof-pill\"", html, StringComparison.Ordinal);
+        Assert.Contains("class=\"proof-pill\"", html, StringComparison.Ordinal); // modo agressivo: fallback sempre
         Assert.DoesNotContain("class=\"steps\"", html, StringComparison.Ordinal);
         Assert.DoesNotContain("class=\"bonus-stack\"", html, StringComparison.Ordinal);
         Assert.DoesNotContain("class=\"installments\"", html, StringComparison.Ordinal);

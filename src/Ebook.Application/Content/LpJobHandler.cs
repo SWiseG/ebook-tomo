@@ -101,9 +101,17 @@ public sealed class LpJobHandler(
         var disclaimer = NicheStyleCatalog.DisclaimerFor(NicheStyleCatalog.Classify(nicheSlug));
         var showcase = await EnsureShowcaseAsync(product, nicheSlug, ct);
 
+        // docs/17 P2-9: com baseUrl público, serve mockup/hero via /media/ e NÃO embute base64 (LP leve).
+        var hasBase = !string.IsNullOrWhiteSpace(baseUrl);
+        var mockupUrl = hasBase && mockup is not null ? $"{baseUrl}/media/{ContentPaths.Mockup(product.Slug)}" : null;
+        var showcaseUrl = hasBase && showcase is not null ? $"{baseUrl}/media/{ContentPaths.LpHero(product.Slug)}" : null;
+
         var model = LandingPageBuilder.BuildModel(
             product.Title, copy, cover, checkoutUrl, pixelUrl, palette, deadline, canonicalUrl, coverImageUrl,
-            legal, disclaimer, showcase, mockup);
+            legal, disclaimer,
+            showcaseImage: showcaseUrl is null ? showcase : null,
+            mockupImage: mockupUrl is null ? mockup : null,
+            mockupUrl: mockupUrl, showcaseUrl: showcaseUrl);
         var template = LpTemplateSelector.ForNiche(nicheSlug);
         var html = LandingPageBuilder.Render(model, template);
 

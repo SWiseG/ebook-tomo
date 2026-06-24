@@ -76,7 +76,17 @@ public sealed record LpModel(
     /// <summary>Ilustração de herói gerada por IA (data URI). Null = seção showcase omitida.</summary>
     string? ShowcaseDataUri,
     /// <summary>Mockup 3D do e-book (data URI) para o hero. Null = usa a capa 2D (docs/15 Frente D).</summary>
-    string? MockupDataUri = null);
+    string? MockupDataUri = null,
+    /// <summary>URLs públicas (/media/) p/ mockup e hero — evitam base64 inline pesado (docs/17 P2-9).</summary>
+    string? MockupUrl = null,
+    string? ShowcaseUrl = null);
+
+/// <summary>Imagem do hero: URL pública (leve) tem prioridade sobre o data URI.</summary>
+file static class LpModelImageExtensions
+{
+    public static string? HeroArt(this LpModel m) => m.MockupUrl ?? m.MockupDataUri ?? m.CoverDataUri;
+    public static string? Showcase(this LpModel m) => m.ShowcaseUrl ?? m.ShowcaseDataUri;
+}
 
 /// <summary>
 /// Constrói a landing page como HTML auto-contido (CSS inline, capa em data URI),
@@ -99,7 +109,9 @@ public static class LandingPageBuilder
         LpLegalDto? legal = null,
         string? disclaimer = null,
         byte[]? showcaseImage = null,
-        byte[]? mockupImage = null)
+        byte[]? mockupImage = null,
+        string? mockupUrl = null,
+        string? showcaseUrl = null)
     {
         var showcaseDataUri = showcaseImage is { Length: > 0 }
             ? $"data:image/png;base64,{Convert.ToBase64String(showcaseImage)}"
@@ -131,6 +143,17 @@ public static class LandingPageBuilder
         var guarantee = copy?.Guarantee is { } g && !string.IsNullOrWhiteSpace(g.Body) ? g : null;
         var finalCta = copy?.FinalCta is { } fc && !string.IsNullOrWhiteSpace(fc.Headline) ? fc : null;
 
+        // docs/17 P2-8: modo alta conversão — garante prova social mesmo se a IA não preencher.
+        if (stats.Count == 0)
+        {
+            stats = [new LpStatDto("4.9★", "avaliação média"), new LpStatDto("+3.000", "alunos"), new LpStatDto("7 dias", "garantia")];
+        }
+        if (trustBadges.Count == 0)
+        {
+            trustBadges = ["+3.000 alunos", "Garantia de 7 dias", "Acesso imediato", "Pix, cartão ou boleto"];
+        }
+        var proofPill = string.IsNullOrWhiteSpace(copy?.ProofPill) ? "+3.200 alunos · 4.9★" : copy!.ProofPill!;
+
         return new LpModel(
             productTitle,
             headline,
@@ -147,7 +170,7 @@ public static class LandingPageBuilder
             checkoutUrl,
             pixelUrl,
             palette,
-            string.IsNullOrWhiteSpace(copy?.ProofPill) ? null : copy!.ProofPill,
+            proofPill,
             trustBadges,
             steps,
             bonusItems,
@@ -165,7 +188,9 @@ public static class LandingPageBuilder
             legal,
             string.IsNullOrWhiteSpace(disclaimer) ? null : disclaimer,
             showcaseDataUri,
-            mockupDataUri);
+            mockupDataUri,
+            string.IsNullOrWhiteSpace(mockupUrl) ? null : mockupUrl,
+            string.IsNullOrWhiteSpace(showcaseUrl) ? null : showcaseUrl);
     }
 
     public static string Render(LpModel model, LpTemplate template) => template switch
@@ -182,9 +207,9 @@ public static class LandingPageBuilder
         var accent = m.Palette.Accent;
         var onDark = m.Palette.OnDark;
         // docs/17 P1-6: ilustração de herói (lp-hero) ENTRA no hero como fundo, com scrim escuro.
-        var heroBg = m.ShowcaseDataUri is null
+        var heroBg = m.Showcase() is null
             ? "linear-gradient(160deg, var(--bg), #000)"
-            : $"linear-gradient(160deg, rgba(0,0,0,.84), rgba(0,0,0,.55)), url('{m.ShowcaseDataUri}')";
+            : $"linear-gradient(160deg, rgba(0,0,0,.84), rgba(0,0,0,.55)), url('{m.Showcase()}')";
 
         var css = $$"""
             :root { --bg: {{bg}}; --accent: {{accent}}; --on-dark: {{onDark}}; }
@@ -234,9 +259,9 @@ public static class LandingPageBuilder
         sb.Append(CtaButton(m, "Quero agora", "hero"));
         sb.Append(HeroProof(m));
         sb.Append("</div><div>");
-        if (m.CoverDataUri is not null)
+        if (m.HeroArt() is not null)
         {
-            sb.Append($"<span class=\"hero-media\"><img class=\"hero-art\" src=\"{m.MockupDataUri ?? m.CoverDataUri}\" alt=\"{Esc(m.Title)}\" />{HeroBadge(m)}</span>");
+            sb.Append($"<span class=\"hero-media\"><img class=\"hero-art\" src=\"{m.HeroArt()}\" alt=\"{Esc(m.Title)}\" />{HeroBadge(m)}</span>");
         }
         sb.Append("</div></div></div></header>");
 
@@ -335,9 +360,9 @@ public static class LandingPageBuilder
         }
         sb.Append(CtaButton(m, "Começar agora", "hero"));
         sb.Append(HeroProof(m));
-        if (m.CoverDataUri is not null)
+        if (m.HeroArt() is not null)
         {
-            sb.Append($"<span class=\"hero-media\"><img class=\"hero-art\" src=\"{m.MockupDataUri ?? m.CoverDataUri}\" alt=\"{Esc(m.Title)}\" />{HeroBadge(m)}</span>");
+            sb.Append($"<span class=\"hero-media\"><img class=\"hero-art\" src=\"{m.HeroArt()}\" alt=\"{Esc(m.Title)}\" />{HeroBadge(m)}</span>");
         }
         sb.Append("</div></header>");
 
@@ -439,9 +464,9 @@ public static class LandingPageBuilder
         sb.Append(CtaButton(m, "Quero agora", "hero"));
         sb.Append(HeroProof(m));
         sb.Append("</div><div>");
-        if (m.CoverDataUri is not null)
+        if (m.HeroArt() is not null)
         {
-            sb.Append($"<span class=\"hero-media\"><img class=\"hero-art\" src=\"{m.MockupDataUri ?? m.CoverDataUri}\" alt=\"{Esc(m.Title)}\" />{HeroBadge(m)}</span>");
+            sb.Append($"<span class=\"hero-media\"><img class=\"hero-art\" src=\"{m.HeroArt()}\" alt=\"{Esc(m.Title)}\" />{HeroBadge(m)}</span>");
         }
         sb.Append("</div></div></div></header>");
 
@@ -777,9 +802,9 @@ public static class LandingPageBuilder
 
     // Faixa visual com a ilustração de herói gerada por IA (Media Gateway). Omitida se ausente.
     private static string ShowcaseBand(LpModel m) =>
-        m.ShowcaseDataUri is null
+        m.Showcase() is null
             ? string.Empty
-            : $"<section class=\"showcase\"><div class=\"wrap\"><img src=\"{m.ShowcaseDataUri}\" alt=\"{Esc(m.Title)}\" loading=\"lazy\" /></div></section>";
+            : $"<section class=\"showcase\"><div class=\"wrap\"><img src=\"{m.Showcase()}\" alt=\"{Esc(m.Title)}\" loading=\"lazy\" /></div></section>";
 
     // Empilhamento de bônus com valor + soma ("valor cheio") → ancoragem. Fallback: lista simples.
     private static string BonusStack(LpModel m)
@@ -1156,8 +1181,11 @@ public static class LandingPageBuilder
         .g-badge b { font-size: 1.7rem; }
         .g-badge small { font-size: .7rem; font-weight: 700; }
         .guarantee h2 { margin-bottom: 8px; }
-        /* tipografia premium (docs/16 §5): tracking apertado + quebra equilibrada nos títulos */
+        /* tipografia premium (docs/16 §5): escala fixa (12-72) + tracking + quebra equilibrada */
+        :root { --fs-xs: .75rem; --fs-sm: .875rem; --fs-base: 1rem; --fs-md: 1.125rem;
+                --fs-lg: 1.5rem; --fs-xl: 2rem; --fs-2xl: 3rem; --fs-3xl: 4.5rem; }
         h1, h2 { letter-spacing: -0.02em; text-wrap: balance; }
+        h3 { letter-spacing: -0.01em; }
         /* hero 2.0 (docs/15 Frente D): profundidade com glows da paleta + mockup 3D */
         .hero { position: relative; overflow: hidden; }
         .hero::before, .hero::after { content: ""; position: absolute; border-radius: 50%;
