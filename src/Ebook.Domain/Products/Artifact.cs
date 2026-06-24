@@ -8,6 +8,7 @@ public enum ArtifactType
     Pdf,
     Cover,
     Mockup,
+    Banner,
     LpBundle,
     SocialCard,
     Video

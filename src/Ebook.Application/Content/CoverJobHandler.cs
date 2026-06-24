@@ -116,6 +116,11 @@ public sealed class CoverJobHandler(
         var mockupStored = await artifactStore.WriteBytesAsync(ContentPaths.Mockup(product.Slug), mockupPng, ct);
         await AddArtifactIfNewAsync(product.Id, ArtifactType.Mockup, mockupStored, ct);
 
+        // Banner da vitrine Kiwify/Hotmart ~300×250 (docs/17 P1-7)
+        var bannerPng = composer.RenderMarketplaceBanner(coverPng, palette);
+        var bannerStored = await artifactStore.WriteBytesAsync(ContentPaths.Banner(product.Slug), bannerPng, ct);
+        await AddArtifactIfNewAsync(product.Id, ArtifactType.Banner, bannerStored, ct);
+
         logger.LogInformation("Capa e mockup gerados para {Slug} (plano IA: {HasPlan}, fundo: {HasBg})",
             product.Slug, plan is not null, background is not null);
     }

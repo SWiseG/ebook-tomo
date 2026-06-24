@@ -23,6 +23,9 @@ public static class ContentPaths
 
     public static string Mockup(string slug) => $"products/{slug}/images/mockup.png";
 
+    /// <summary>Banner da vitrine Kiwify/Hotmart (~300×250). <c>IArtifactStore</c>. docs/17 P1-7.</summary>
+    public static string Banner(string slug) => $"products/{slug}/images/banner.png";
+
     /// <summary>Ilustração de herói da landing page, gerada por IA (E14). <c>IArtifactStore</c>.</summary>
     public static string LpHero(string slug) => $"products/{slug}/images/lp-hero.png";
 

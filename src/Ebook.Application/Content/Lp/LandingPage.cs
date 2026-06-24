@@ -181,6 +181,10 @@ public static class LandingPageBuilder
         var bg = m.Palette.Background;
         var accent = m.Palette.Accent;
         var onDark = m.Palette.OnDark;
+        // docs/17 P1-6: ilustração de herói (lp-hero) ENTRA no hero como fundo, com scrim escuro.
+        var heroBg = m.ShowcaseDataUri is null
+            ? "linear-gradient(160deg, var(--bg), #000)"
+            : $"linear-gradient(160deg, rgba(0,0,0,.84), rgba(0,0,0,.55)), url('{m.ShowcaseDataUri}')";
 
         var css = $$"""
             :root { --bg: {{bg}}; --accent: {{accent}}; --on-dark: {{onDark}}; }
@@ -188,7 +192,8 @@ public static class LandingPageBuilder
             body { font-family: {{Font(m.Palette.BodyFont)}}; color: #1a1a1a; background: #fff; line-height: 1.6; }
             .wrap { max-width: 980px; margin: 0 auto; padding: 0 24px; }
             h1, h2, h3 { font-family: {{Font(m.Palette.HeadingFont)}}; line-height: 1.15; }
-            .hero { background: linear-gradient(160deg, var(--bg), #000); color: var(--on-dark); padding: 64px 0 72px; }
+            .hero { background: {{heroBg}}; background-size: cover; background-position: center;
+                    color: var(--on-dark); padding: 64px 0 72px; }
             .hero .grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 40px; align-items: center; }
             .hero h1 { font-family: {{Font(m.Palette.Display)}}; font-size: 2.8rem; margin-bottom: 16px; }
             .hero .sub { font-size: 1.2rem; opacity: .85; margin-bottom: 28px; }

@@ -210,6 +210,52 @@ public sealed class SkiaImageComposer : IImageComposer
         return Encode(surface);
     }
 
+    public byte[] RenderMarketplaceBanner(byte[] coverPng, NichePalette palette)
+    {
+        const int w = 1200;
+        const int h = 1000; // ~300×250 (1.2:1), alta resolução
+        using var surface = SKSurface.Create(new SKImageInfo(w, h));
+        var canvas = surface.Canvas;
+        var bg = SKColor.Parse(palette.Background);
+        var accent = SKColor.Parse(palette.Accent);
+
+        using (var grad = new SKPaint
+        {
+            IsAntialias = true,
+            Shader = SKShader.CreateLinearGradient(new SKPoint(0, 0), new SKPoint(w, h),
+                [bg, Darken(bg)], null, SKShaderTileMode.Clamp),
+        })
+        {
+            canvas.DrawRect(SKRect.Create(0, 0, w, h), grad);
+        }
+
+        // faixa accent decorativa à esquerda
+        using (var strip = new SKPaint { Color = accent, IsAntialias = true })
+        {
+            canvas.DrawRect(SKRect.Create(0, 0, 18, h), strip);
+        }
+
+        using var cover = SKBitmap.Decode(coverPng);
+        if (cover is null)
+        {
+            return Encode(surface);
+        }
+
+        var targetH = h * 0.82f;
+        var scale = targetH / cover.Height;
+        var bookW = cover.Width * scale;
+        var left = w - bookW - 80;
+        var top = (h - targetH) / 2f;
+
+        using (var shadow = new SKPaint { Color = SKColors.Black.WithAlpha(90), IsAntialias = true, ImageFilter = SKImageFilter.CreateBlur(20, 20) })
+        {
+            canvas.DrawRect(SKRect.Create(left + 16, top + 18, bookW, targetH), shadow);
+        }
+
+        canvas.DrawBitmap(cover, SKRect.Create(left, top, bookW, targetH));
+        return Encode(surface);
+    }
+
     public byte[] FitBanner(byte[] imageBytes)
     {
         using var bmp = SKBitmap.Decode(imageBytes);

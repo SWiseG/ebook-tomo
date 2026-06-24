@@ -22,6 +22,8 @@ public sealed class FakeImageComposer : IImageComposer
 
     public byte[] FitBanner(byte[] imageBytes) => imageBytes;
 
+    public byte[] RenderMarketplaceBanner(byte[] coverPng, NichePalette palette) => [.. Png];
+
     public byte[] RenderMockup(byte[] coverPng, NichePalette palette)
     {
         MockupCount++;

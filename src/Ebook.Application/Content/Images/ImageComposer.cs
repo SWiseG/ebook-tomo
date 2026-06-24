@@ -56,6 +56,10 @@ public interface IImageComposer
     /// <summary>Mockup 3D do e-book para marketing, a partir da capa já renderizada.</summary>
     byte[] RenderMockup(byte[] coverPng, NichePalette palette);
 
+    /// <summary>Banner da vitrine Kiwify/Hotmart (~300×250, 1200×1000 hi-res): capa sobre fundo da
+    /// paleta. docs/17 P1-7.</summary>
+    byte[] RenderMarketplaceBanner(byte[] coverPng, NichePalette palette);
+
     byte[] RenderSocial(SocialArt art, byte[]? backgroundPhoto = null);
 
     /// <summary>Renderiza um carrossel: capa (headline) + 1 slide por texto. Todos 1080×1080.</summary>
