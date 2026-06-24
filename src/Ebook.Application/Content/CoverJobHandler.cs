@@ -99,7 +99,7 @@ public sealed class CoverJobHandler(
         var art = new CoverArt(
             title,
             string.IsNullOrWhiteSpace(plan?.Subtitle) ? subtitle : plan!.Subtitle,
-            niche?.Name,
+            null, // docs/17 P4-15: sem rodapé de "autor" com nome do nicho (poluía a capa)
             palette,
             Eyebrow: plan?.Eyebrow,
             Features: plan?.Features.Select(f => new CoverFeature(f.Text, f.Icon)).ToList(),
