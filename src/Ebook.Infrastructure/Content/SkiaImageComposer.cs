@@ -210,6 +210,19 @@ public sealed class SkiaImageComposer : IImageComposer
         return Encode(surface);
     }
 
+    public byte[] FitBanner(byte[] imageBytes)
+    {
+        using var bmp = SKBitmap.Decode(imageBytes);
+        if (bmp is null)
+        {
+            return imageBytes;
+        }
+
+        using var surface = SKSurface.Create(new SKImageInfo(1280, 640));
+        DrawCovering(surface.Canvas, bmp, 1280, 640);
+        return Encode(surface);
+    }
+
     public byte[] RenderSocial(SocialArt art, byte[]? backgroundPhoto = null)
     {
         var (w, h) = art.Template == ImageTemplate.Story ? (1080, 1920) : (1080, 1080);

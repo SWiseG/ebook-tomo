@@ -141,9 +141,10 @@ public sealed class PdfJobHandler(
         ProductBrand brand,
         CancellationToken ct)
     {
+        // docs/17 P1-4: 1 ilustração por capítulo (antes só 6); teto p/ conter custo em livros longos.
         var chapters = body
             .Where(b => b.Kind == MarkdownBlockKind.Heading && b.Level == 2)
-            .Take(6)
+            .Take(12)
             .ToList();
 
         if (chapters.Count == 0)
@@ -259,7 +260,8 @@ public sealed class PdfJobHandler(
                 Kind: directive is null ? MediaKind.Auto : isPhoto ? MediaKind.Photo : MediaKind.Illustration);
 
             var result = await mediaGateway.GenerateAsync(brief, ct);
-            return result.IsSuccess ? result.Value.Bytes : null;
+            // docs/17 P1-5: normaliza p/ banner 2:1 — evita ilustração retrato/quadrada minúscula no PDF.
+            return result.IsSuccess ? imageComposer.FitBanner(result.Value.Bytes) : null;
         }
         catch (Exception ex)
         {

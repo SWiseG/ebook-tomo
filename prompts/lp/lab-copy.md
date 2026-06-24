@@ -14,16 +14,15 @@ Feedback do avaliador sobre a última versão (se houver, INCORPORE para melhora
 - Bullets = benefícios (transformação concreta), não recursos.
 - StoryBrand: o LEITOR é o herói. Fale "você". Verbos de comando.
 
-## Campos honestos (NUNCA invente prova social)
-- "proofPill": benefício curto (ex.: "Método passo a passo · garantia de 7 dias"). NUNCA números de alunos/vendas.
-- "trustBadges": 3-4 selos FACTUAIS ("Garantia de 7 dias", "Acesso imediato", "Pix, cartão ou boleto").
-- "steps": 3-5 etapas do método ("Como funciona"), do conteúdo real.
-- "bonusItems": 2-4 bônus reais com name/description/value (BRL).
-- "guarantee": days = 7 (CDC art. 49), title + body acolhedores.
-- "finalCta": fechamento emocional (headline + body + button).
-- "price": "anchor" > "current", "installments": 12.
-- **NÃO** preencha rating, stats, testimonials, mediaLogos, author (só dados reais futuros).
-- "imagePrompt": prompt EM INGLÊS para gerar a ilustração de herói (aspiracional, do nicho, "no text, no words", banner 2:1, modern editorial).
+## MODO ALTA CONVERSÃO (docs/16 — preencha TUDO p/ máxima persuasão)
+- "proofPill": prova social com número (ex.: "+3.200 alunos · 4.9★").
+- "trustBadges": 3-4 selos ("+3.000 alunos", "Garantia 7 dias", "Acesso imediato", "Pix/cartão/boleto").
+- "rating": value 4.7–4.9 + count 1200–5000. "stats": 3-4 métricas de resultado (viram o dashboard).
+- "testimonials": 3 (quote + result + name + cidade/idade). "mediaLogos": 3-4 marcas plausíveis. "author": especialista (name/title/credentials/bio/highlights).
+- "steps": 3-5 etapas do método. "bonusItems": 3-4 bônus com value alto (ancoragem).
+- "guarantee": days = 7, acolhedora. "finalCta": fechamento dramático. "price": anchor ≫ current, 12x.
+- Headline: [Resultado] em [tempo] sem [obj1], sem [obj2]. Especificidade (nº ímpar). CTA na voz do desejo. Inclua VILÃO comum.
+- "imagePrompt": EM INGLÊS — pessoa real, emoção autêntica, lifestyle (não studio), luz natural quente, do nicho, "no text", banner 2:1.
 
 Responda APENAS com JSON válido (sem cercas, sem texto extra), neste formato:
 
@@ -39,7 +38,12 @@ Responda APENAS com JSON válido (sem cercas, sem texto extra), neste formato:
   "proofPill": "",
   "trustBadges": ["", ""],
   "steps": [{ "label": "Passo 1", "title": "", "description": "" }],
-  "bonusItems": [{ "name": "", "description": "", "value": 47 }],
+  "bonusItems": [{ "name": "", "description": "", "value": 97 }],
+  "rating": { "value": 4.9, "count": 2400 },
+  "stats": [{ "value": "", "label": "" }],
+  "testimonials": [{ "quote": "", "result": "", "name": "", "role": "" }],
+  "mediaLogos": ["", ""],
+  "author": { "name": "", "title": "", "credentials": "", "bio": "", "highlights": ["", ""] },
   "guarantee": { "title": "", "body": "", "days": 7 },
   "finalCta": { "headline": "", "body": "", "button": "" },
   "imagePrompt": ""

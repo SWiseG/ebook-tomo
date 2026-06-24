@@ -49,6 +49,10 @@ public interface IImageComposer
     /// 2:3 (cover-crop). Garante dimensões consistentes independentemente do que o modelo devolveu.</summary>
     byte[] FitCover(byte[] imageBytes);
 
+    /// <summary>Recorta qualquer imagem para banner 2:1 (1280×640) — ilustrações de capítulo do PDF
+    /// ficam grandes e uniformes (sem letterbox de retrato/quadrado). docs/17 P1-5.</summary>
+    byte[] FitBanner(byte[] imageBytes);
+
     /// <summary>Mockup 3D do e-book para marketing, a partir da capa já renderizada.</summary>
     byte[] RenderMockup(byte[] coverPng, NichePalette palette);
 
