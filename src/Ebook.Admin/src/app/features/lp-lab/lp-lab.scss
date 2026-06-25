@@ -100,6 +100,25 @@
   gap: t.$space-2;
 }
 
+@media (max-width: 860px) {
+  .lab-controls,
+  .lab-grid {
+    padding-inline: t.$space-4;
+  }
+  .lab-controls ::ng-deep .niche-select {
+    min-width: 0;
+    width: 100%;
+  }
+  .preview {
+    min-height: 55vh;
+    iframe { height: 58vh; }
+  }
+  .preview-empty { height: 55vh; }
+  .memory {
+    position: static;
+  }
+}
+
 /* ── Modal do caminho ── */
 .trace {
   display: flex;

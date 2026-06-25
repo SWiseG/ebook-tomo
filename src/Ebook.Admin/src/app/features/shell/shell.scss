@@ -569,6 +569,13 @@
   .content {
     padding: 0;
   }
+
+  // Compacta a topbar: esconde seletor de idioma e botão de ajuda
+  .lang { display: none; }
+  .topbar-help { display: none !important; }
+
+  // Conn-dot mais visível (fica sozinho com bell + theme)
+  .conn-dot { margin-right: t.$space-1; }
 }
 
 /* sidebar acima do backdrop no mobile */

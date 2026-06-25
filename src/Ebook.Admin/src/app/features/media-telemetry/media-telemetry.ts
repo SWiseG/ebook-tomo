@@ -1,6 +1,6 @@
 import { DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ButtonModule } from 'primeng/button';
@@ -9,6 +9,7 @@ import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridReadyEvent, ICellRendererParams } from 'ag-grid-community';
 import { tomoAgTheme } from '../../shared/ag-grid/tomo-ag-theme';
 import { MediaTelemetry as MediaTelemetryData, MediaProviderStat } from '../../core/api.types';
+import { LayoutService } from '../../core/layout.service';
 import { NotificationService } from '../../core/notification.service';
 import { Loading } from '../../shared/loading';
 
@@ -24,6 +25,7 @@ export class MediaTelemetry {
   private readonly http = inject(HttpClient);
   private readonly notify = inject(NotificationService);
   private readonly t = inject(TranslocoService);
+  private readonly layout = inject(LayoutService);
 
   readonly data = signal<MediaTelemetryData | null>(null);
   readonly loading = signal(false);
@@ -44,9 +46,20 @@ export class MediaTelemetry {
 
   readonly colDefs: ColDef<MediaProviderStat>[] = this.buildCols();
 
-  constructor() { this.load(); }
+  constructor() {
+    this.load();
+    effect(() => { this.layout.isMobile(); this.applyMobileCols(); });
+  }
 
-  onGridReady(e: GridReadyEvent<MediaProviderStat>): void { this.gridApi = e.api; }
+  onGridReady(e: GridReadyEvent<MediaProviderStat>): void {
+    this.gridApi = e.api;
+    this.applyMobileCols();
+  }
+
+  private applyMobileCols(): void {
+    if (!this.gridApi) return;
+    this.gridApi.setColumnsVisible(['generatedThisMonth', 'avgDurationMsToday', 'totalBytesToday'], !this.layout.isMobile());
+  }
 
   onSearch(): void {
     this.gridApi?.setGridOption('quickFilterText', this.quickFilter);

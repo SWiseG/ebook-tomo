@@ -308,3 +308,16 @@
   flex-direction: column;
   gap: t.$space-1;
 }
+
+@media (max-width: 860px) {
+  .back {
+    padding-left: t.$space-4;
+  }
+  .stepper {
+    gap: t.$space-1;
+    .step {
+      font-size: 0.78rem;
+      padding: t.$space-1 t.$space-2;
+    }
+  }
+}

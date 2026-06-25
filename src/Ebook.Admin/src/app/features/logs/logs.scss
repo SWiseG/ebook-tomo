@@ -96,6 +96,20 @@
   white-space: pre-wrap;
 }
 
+@media (max-width: 860px) {
+  .logs-toolbar {
+    padding: 0 t.$space-4;
+    gap: t.$space-2;
+  }
+  .terminal {
+    padding: t.$space-3 t.$space-3;
+    font-size: 0.72rem;
+  }
+  .log-source {
+    display: none;
+  }
+}
+
 /* Cores por nível */
 .log-trace { .log-level { color: #475569; } .log-msg { color: #64748b; } }
 .log-debug  { .log-level { color: #38bdf8; } .log-msg { color: #94a3b8; } }

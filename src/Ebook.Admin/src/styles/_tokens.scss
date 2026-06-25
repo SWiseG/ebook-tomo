@@ -71,6 +71,11 @@ $sidebar-w-collapsed: 76px;
 $topbar-h: 60px;
 $content-max: 1200px;
 
+// ── Breakpoints mobile
+$bp-sm: 640px;
+$bp-md: 860px;
+$bp-lg: 1024px;
+
 // ── Camadas (z-index)
 $z-content: 1;
 $z-sidebar: 40;

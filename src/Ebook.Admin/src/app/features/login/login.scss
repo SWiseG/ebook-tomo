@@ -48,3 +48,13 @@
     width: 100%;
   }
 }
+
+@media (max-width: 860px) {
+  .login-card {
+    // botão submit full-width no mobile
+    ::ng-deep .p-button:not(.p-button-icon-only) {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}

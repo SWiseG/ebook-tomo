@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { debounceTime } from 'rxjs';
 import { FormsModule } from '@angular/forms';
@@ -11,6 +11,7 @@ import { ColDef, GridApi, GridReadyEvent, ICellRendererParams } from 'ag-grid-co
 import { tomoAgTheme } from '../../shared/ag-grid/tomo-ag-theme';
 import { JobItem, JobsPage } from '../../core/api.types';
 import { LanguageService } from '../../core/language.service';
+import { LayoutService } from '../../core/layout.service';
 import { NotificationService } from '../../core/notification.service';
 import { RealtimeService } from '../../core/realtime.service';
 import { Loading } from '../../shared/loading';
@@ -43,6 +44,7 @@ export class Jobs {
   private readonly realtime = inject(RealtimeService);
   private readonly t = inject(TranslocoService);
   private readonly language = inject(LanguageService);
+  private readonly layout = inject(LayoutService);
 
   readonly page = signal<JobsPage | null>(null);
 
@@ -83,9 +85,18 @@ export class Jobs {
     this.realtime.jobChanged$
       .pipe(debounceTime(600), takeUntilDestroyed())
       .subscribe(() => this.load());
+    effect(() => { this.layout.isMobile(); this.applyMobileCols(); });
   }
 
-  onGridReady(e: GridReadyEvent<JobItem>): void { this.gridApi = e.api; }
+  onGridReady(e: GridReadyEvent<JobItem>): void {
+    this.gridApi = e.api;
+    this.applyMobileCols();
+  }
+
+  private applyMobileCols(): void {
+    if (!this.gridApi) return;
+    this.gridApi.setColumnsVisible(['attempts', 'createdAtUtc', 'lastError'], !this.layout.isMobile());
+  }
 
   onSearch(): void {
     this.gridApi?.setGridOption('quickFilterText', this.quickFilter);
