@@ -82,6 +82,7 @@ public static class DependencyInjection
         // ordem de registro = ordem da cadeia (qualidade-primeiro dentro do grátis):
         // generativos premium (com chave) → bancos de foto (com chave) → Pollinations (grátis) → Skia (piso).
         services.AddHttpClient<IMediaResolver, Media.GeminiImageResolver>(c => c.Timeout = TimeSpan.FromSeconds(90));
+        services.AddHttpClient<IMediaResolver, Media.HiggsfieldImageResolver>(c => c.Timeout = TimeSpan.FromSeconds(60));
         services.AddHttpClient<IMediaResolver, Media.CloudflareImageResolver>(c => c.Timeout = TimeSpan.FromSeconds(90));
         services.AddHttpClient<IMediaResolver, Media.HuggingFaceImageResolver>(c => c.Timeout = TimeSpan.FromSeconds(90));
         services.AddScoped<IMediaResolver, Media.PexelsMediaResolver>();

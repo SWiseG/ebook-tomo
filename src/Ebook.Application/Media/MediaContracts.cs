@@ -7,6 +7,7 @@ public enum MediaProvider
 {
     Cache,
     Gemini,
+    Higgsfield,
     Cloudflare,
     HuggingFace,
     Pollinations,

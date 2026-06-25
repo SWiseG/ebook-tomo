@@ -206,41 +206,91 @@ public static class LandingPageBuilder
         var bg = m.Palette.Background;
         var accent = m.Palette.Accent;
         var onDark = m.Palette.OnDark;
-        // docs/17 P1-6: ilustração de herói (lp-hero) ENTRA no hero como fundo, com scrim escuro.
-        var heroBg = m.Showcase() is null
-            ? "linear-gradient(160deg, var(--bg), #000)"
-            : $"linear-gradient(160deg, rgba(0,0,0,.84), rgba(0,0,0,.55)), url('{m.Showcase()}')";
-
         var css = $$"""
-            :root { --bg: {{bg}}; --accent: {{accent}}; --on-dark: {{onDark}}; }
+            /* Aurora v2 (docs/18): design system ESCURO do topo ao rodapé — corpo navy, cards no tom,
+               dourado de destaque, tipografia display. Espelha o template aprovado lp-renda-extra-v2. */
+            :root { --bg: {{bg}}; --accent: {{accent}}; --on-dark: {{onDark}};
+                    --muted: color-mix(in srgb, {{onDark}} 64%, transparent);
+                    --line: color-mix(in srgb, {{onDark}} 13%, transparent);
+                    --card: color-mix(in srgb, {{onDark}} 6%, transparent);
+                    --navy2: color-mix(in srgb, {{bg}} 78%, #000); --radius: 18px; }
             * { box-sizing: border-box; margin: 0; padding: 0; }
-            body { font-family: {{Font(m.Palette.BodyFont)}}; color: #1a1a1a; background: #fff; line-height: 1.6; }
-            .wrap { max-width: 980px; margin: 0 auto; padding: 0 24px; }
-            h1, h2, h3 { font-family: {{Font(m.Palette.HeadingFont)}}; line-height: 1.15; }
-            .hero { background: {{heroBg}}; background-size: cover; background-position: center;
-                    color: var(--on-dark); padding: 64px 0 72px; }
-            .hero .grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 40px; align-items: center; }
-            .hero h1 { font-family: {{Font(m.Palette.Display)}}; font-size: 2.8rem; margin-bottom: 16px; }
-            .hero .sub { font-size: 1.2rem; opacity: .85; margin-bottom: 28px; }
-            .hero img { width: 100%; border-radius: 12px; box-shadow: 0 24px 60px rgba(0,0,0,.45); }
-            .cta { display: inline-block; background: var(--accent); color: #1a1a1a; font-weight: 700;
-                   padding: 16px 34px; border-radius: 999px; text-decoration: none; font-size: 1.1rem;
-                   box-shadow: 0 8px 24px rgba(0,0,0,.25); transition: transform .15s; }
+            body { font-family: {{Font(m.Palette.BodyFont)}}; color: var(--on-dark); background: var(--bg); line-height: 1.6; }
+            .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+            a { color: inherit; text-decoration: none; }
+            h1, h2, h3 { font-family: {{Font(m.Palette.HeadingFont)}}; line-height: 1.05; letter-spacing: -.02em; }
+            section { padding: 84px 0; }
+            section h2 { font-family: {{Font(m.Palette.Display)}}; text-transform: uppercase;
+                         font-size: clamp(1.9rem, 3.6vw, 2.8rem); color: var(--on-dark); margin-bottom: 28px; }
+            section p { color: var(--muted); }
+            .cta { display: inline-flex; align-items: center; gap: 10px; background: var(--accent); color: #231a07;
+                   font-weight: 800; font-size: 1.05rem; padding: 17px 34px; border-radius: 999px; text-transform: uppercase;
+                   letter-spacing: .02em; box-shadow: 0 16px 40px color-mix(in srgb, var(--accent) 30%, transparent);
+                   transition: transform .15s, box-shadow .15s; }
             .cta:hover { transform: translateY(-2px); }
-            section { padding: 56px 0; }
-            section h2 { font-size: 1.9rem; margin-bottom: 24px; color: var(--bg); }
-            .pain { background: #faf7f2; }
+            .cta.ghost { background: transparent; color: var(--on-dark); border: 1px solid var(--line); box-shadow: none; }
+            /* Hero v2: imagem de fundo (free-first) borrada SOB a cor + glow accent. */
+            .hero { position: relative; overflow: hidden; color: var(--on-dark); padding: 84px 0 92px;
+                    background: linear-gradient(160deg, var(--bg), var(--navy2)); }
+            .hero-bg { position: absolute; inset: -30px; background-size: cover; background-position: center;
+                       filter: blur(14px) saturate(1.15); transform: scale(1.15); opacity: .42; z-index: 0; }
+            .hero-tint { position: absolute; inset: 0; z-index: 1; background:
+                radial-gradient(900px 520px at 80% 14%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 60%),
+                linear-gradient(160deg, color-mix(in srgb, var(--bg) 72%, transparent), color-mix(in srgb, var(--bg) 46%, transparent)); }
+            .hero .grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 48px; align-items: center; }
+            .hero h1 { font-family: {{Font(m.Palette.Display)}}; font-size: clamp(2.6rem, 5.4vw, 4.4rem);
+                       text-transform: uppercase; letter-spacing: -.02em; line-height: 1.02; margin-bottom: 18px; }
+            .hero .sub { font-size: 1.18rem; color: var(--muted); margin-bottom: 26px; max-width: 560px; }
+            .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+            .hero img { width: 100%; border-radius: 16px; box-shadow: 0 40px 90px rgba(0,0,0,.55); transform: rotate(2deg); }
             .bullets { list-style: none; display: grid; gap: 14px; }
-            .bullets li { padding-left: 34px; position: relative; font-size: 1.08rem; }
-            .bullets li::before { content: "✓"; position: absolute; left: 0; color: var(--accent);
-                                  font-weight: 800; background: var(--bg); width: 24px; height: 24px;
-                                  border-radius: 50%; display: grid; place-items: center; font-size: .8rem; }
-            .offer { background: var(--bg); color: var(--on-dark); text-align: center; }
-            .price { font-size: 3rem; font-weight: 800; color: var(--accent); margin: 8px 0 6px; }
-            .anchor { text-decoration: line-through; opacity: .6; font-size: 1.4rem; margin-right: 12px; }
-            footer { background: #111; color: #888; text-align: center; padding: 32px 0; font-size: .85rem; }
-            @media (max-width: 720px) { .hero .grid { grid-template-columns: 1fr; } .hero h1 { font-size: 2rem; } }
+            .bullets li { padding-left: 36px; position: relative; font-size: 1.06rem; }
+            .bullets li::before { content: "✓"; position: absolute; left: 0; top: 1px; color: #231a07;
+                                  background: var(--accent); width: 24px; height: 24px; border-radius: 8px;
+                                  display: grid; place-items: center; font-size: .8rem; font-weight: 800; }
+            .pain { background: var(--navy2); border-block: 1px solid var(--line); }
+            .offer { background: linear-gradient(180deg, var(--navy2), #04101c); text-align: center; }
+            .price { font-family: {{Font(m.Palette.Display)}}; font-size: 3.4rem; font-weight: 800; color: var(--accent); margin: 8px 0 6px; }
+            .anchor { text-decoration: line-through; color: var(--muted); font-size: 1.3rem; margin-right: 12px; }
+            footer { background: #04101c; color: var(--muted); text-align: center; padding: 40px 0; font-size: .85rem; }
+            @media (max-width: 720px) { .hero .grid { grid-template-columns: 1fr; } .hero h1 { font-size: 2.3rem; } }
             {{ComponentCss()}}
+            /* ===== overrides ESCUROS dos componentes neutros (coesão com o hero v2) ===== */
+            .announce { background: linear-gradient(90deg, #7a1f1f, #a32a2a); color: #fff; }
+            .announce .count b { background: rgba(0,0,0,.28); padding: 2px 8px; border-radius: 6px; }
+            .announce-cta { background: var(--accent); color: #231a07; border: none; }
+            .topnav { background: color-mix(in srgb, var(--bg) 84%, transparent); border-bottom: 1px solid var(--line); }
+            .nav-brand, .nav-links a { color: var(--on-dark); }
+            .hero .wrap { position: relative; z-index: 2; }
+            .stat, .tcard, .author-card { background: var(--card); border-color: var(--line); }
+            .bonus-stack li { background: var(--card); border-color: var(--line); }
+            .g-card { background: var(--card); }
+            .faq-item { border-color: var(--line); }
+            .faq-item summary { color: var(--on-dark); }
+            .media-bar { background: var(--navy2); border-block-color: var(--line); }
+            .sticky-cta { background: var(--navy2); border-top-color: var(--line); }
+            .sticky-cta .sc-price { color: var(--on-dark); }
+            /* ===== seções mais ricas (docs/18): kicker accent + cards p/ benefícios e passos ===== */
+            section h2::before, section h2.dash::before { content: ""; display: block; width: 48px; height: 4px;
+                background: var(--accent); border-radius: 2px; margin: 0 0 18px; }
+            .offer h2::before, .final-cta h2::before, .guarantee h2::before { display: none; }
+            .bullets { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+            .bullets li { display: flex; align-items: center; gap: 14px; padding: 18px 20px; background: var(--card);
+                          border: 1px solid var(--line); border-radius: var(--radius); font-size: 1rem;
+                          transition: transform .15s, border-color .15s; }
+            .bullets li:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+            .steps-list { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+            .steps-list li { position: relative; flex-direction: column; align-items: flex-start; gap: 12px; padding: 24px;
+                             background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+                             transition: transform .15s, border-color .15s; }
+            .steps-list li:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+            .steps-list h3 { font-size: 1.12rem; }
+            /* conector de timeline (docs/18 P1): traço no vão ligando os nós-número entre os cards */
+            .steps-list li:not(:last-child)::after { content: ""; position: absolute; top: 43px; right: -16px;
+                width: 16px; border-top: 2px dashed color-mix(in srgb, var(--accent) 55%, transparent); }
+            @media (max-width: 860px) { .steps-list { grid-template-columns: repeat(2, 1fr); } .bullets { grid-template-columns: 1fr; }
+                                        .steps-list li::after { display: none; } }
+            @media (max-width: 560px) { .steps-list { grid-template-columns: 1fr; } }
             """;
 
         var sb = new StringBuilder();
@@ -248,22 +298,7 @@ public static class LandingPageBuilder
         sb.Append(AnnouncementBar(m));
         sb.Append(TopNav(m));
 
-        // Hero
-        sb.Append("<header class=\"hero\"><div class=\"wrap\"><div class=\"grid\"><div>");
-        sb.Append(ProofPill(m));
-        sb.Append($"<h1>{Esc(m.Headline)}</h1>");
-        if (!string.IsNullOrWhiteSpace(m.Subheadline))
-        {
-            sb.Append($"<p class=\"sub\">{Esc(m.Subheadline!)}</p>");
-        }
-        sb.Append(CtaButton(m, "Quero agora", "hero"));
-        sb.Append(HeroProof(m));
-        sb.Append("</div><div>");
-        if (m.HeroArt() is not null)
-        {
-            sb.Append($"<span class=\"hero-media\"><img class=\"hero-art\" src=\"{m.HeroArt()}\" alt=\"{Esc(m.Title)}\" />{HeroBadge(m)}</span>");
-        }
-        sb.Append("</div></div></div></header>");
+        sb.Append(HeroSection(m));
 
         sb.Append(MediaBar(m));
 
@@ -295,6 +330,7 @@ public static class LandingPageBuilder
         sb.Append(BonusStack(m));
         sb.Append(PriceBlock(m));
         sb.Append(CtaButton(m, "Garantir meu acesso", "offer"));
+        sb.Append(SecureBadge(m));
         sb.Append(TrustRow(m));
         sb.Append("</div></section>");
 
@@ -321,8 +357,16 @@ public static class LandingPageBuilder
             body { font-family: {{Font(m.Palette.BodyFont)}}; color: #2b2b2b; background: #fdfcf9; line-height: 1.7; }
             .wrap { max-width: 820px; margin: 0 auto; padding: 0 24px; }
             h1, h2, h3 { font-family: {{Font(m.Palette.HeadingFont)}}; color: var(--ink); line-height: 1.2; }
-            .hero { text-align: center; padding: 72px 0 52px; border-bottom: 3px solid var(--accent); }
-            .hero h1 { font-family: {{Font(m.Palette.Display)}}; font-size: 3rem; margin-bottom: 18px; }
+            /* Hero v2 (docs/18): imagem de fundo borrada sob um scrim CLARO — mantém o ar de revista. */
+            .hero { position: relative; overflow: hidden; text-align: center; padding: 76px 0 56px;
+                    border-bottom: 3px solid var(--accent); background: #fdfcf9; }
+            .hero-bg { position: absolute; inset: -30px; background-size: cover; background-position: center;
+                       filter: blur(18px) saturate(1.1); transform: scale(1.15); opacity: .55; z-index: 0; }
+            .hero-tint { position: absolute; inset: 0; z-index: 1; background:
+                radial-gradient(800px 460px at 50% 0, color-mix(in srgb, var(--accent) 16%, transparent), transparent 62%),
+                linear-gradient(180deg, rgba(253,252,249,.90), rgba(253,252,249,.78)); }
+            .hero .wrap { position: relative; z-index: 2; }
+            .hero h1 { font-family: {{Font(m.Palette.Display)}}; font-size: 3.1rem; margin-bottom: 18px; }
             .hero .sub { font-size: 1.25rem; color: #555; max-width: 620px; margin: 0 auto 30px; }
             .hero img { width: 320px; max-width: 80%; margin: 32px auto 0; display: block;
                         box-shadow: 0 18px 50px rgba(0,0,0,.18); border-radius: 6px; }
@@ -351,7 +395,13 @@ public static class LandingPageBuilder
         sb.Append(AnnouncementBar(m));
         sb.Append(TopNav(m));
 
-        sb.Append("<header class=\"hero\"><div class=\"wrap\">");
+        sb.Append("<header class=\"hero\">");
+        if (m.Showcase() is { } heroImg)
+        {
+            sb.Append($"<div class=\"hero-bg\" style=\"background-image:url('{heroImg}')\"></div>");
+        }
+        sb.Append("<div class=\"hero-tint\"></div>");
+        sb.Append("<div class=\"wrap\">");
         sb.Append(ProofPill(m));
         sb.Append($"<h1>{Esc(m.Headline)}</h1>");
         if (!string.IsNullOrWhiteSpace(m.Subheadline))
@@ -395,6 +445,7 @@ public static class LandingPageBuilder
         sb.Append(BonusStack(m));
         sb.Append(PriceBlock(m));
         sb.Append(CtaButton(m, "Quero garantir", "offer"));
+        sb.Append(SecureBadge(m));
         sb.Append(TrustRow(m));
         sb.Append("</div></section>");
 
@@ -422,11 +473,23 @@ public static class LandingPageBuilder
             body { font-family: {{Font(m.Palette.BodyFont)}}; color: #2b2520; background: var(--surface); line-height: 1.65; }
             .wrap { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
             h1, h2, h3 { font-family: {{Font(m.Palette.HeadingFont)}}; line-height: 1.12; color: var(--bg); }
-            .hero { padding: 56px 0 64px; }
-            .hero .grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 44px; align-items: center; }
-            .hero h1 { font-family: {{Font(m.Palette.Display)}}; font-size: 3.1rem; margin-bottom: 16px; }
-            .hero .sub { font-size: 1.2rem; color: #6b6258; margin-bottom: 28px; }
-            .hero img { width: 100%; border-radius: 16px; box-shadow: 0 30px 64px rgba(80,60,30,.20); }
+            /* Hero v2 (docs/18): imagem de fundo borrada sobre a cor + glow; texto claro, body claro. */
+            .hero { position: relative; overflow: hidden; color: var(--on-dark); padding: 72px 0 84px;
+                    background: linear-gradient(160deg, var(--bg), #000); }
+            .hero-bg { position: absolute; inset: -30px; background-size: cover; background-position: center;
+                       filter: blur(16px) saturate(1.15); transform: scale(1.15); opacity: .85; z-index: 0; }
+            .hero-tint { position: absolute; inset: 0; z-index: 1; background:
+                radial-gradient(880px 520px at 80% 12%, color-mix(in srgb, var(--accent) 28%, transparent), transparent 60%),
+                linear-gradient(160deg, color-mix(in srgb, var(--bg) 86%, transparent), color-mix(in srgb, var(--bg) 60%, transparent)); }
+            .hero .wrap { position: relative; z-index: 2; }
+            .hero .grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 44px; align-items: center; }
+            .hero h1 { font-family: {{Font(m.Palette.Display)}}; color: var(--on-dark);
+                       font-size: clamp(2.5rem, 5vw, 4rem); text-transform: uppercase; letter-spacing: -.02em;
+                       line-height: 1.03; margin-bottom: 16px; }
+            .hero .sub { font-size: 1.18rem; color: var(--on-dark); opacity: .82; margin-bottom: 24px; max-width: 560px; }
+            .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+            .hero img { width: 100%; border-radius: 16px; box-shadow: 0 36px 80px rgba(0,0,0,.5); transform: rotate(2deg); }
+            .cta.ghost { background: transparent; color: var(--on-dark); border: 1px solid rgba(255,255,255,.3); box-shadow: none; }
             .cta { display: inline-block; background: var(--accent); color: #1a1a1a; font-weight: 800;
                    padding: 17px 36px; border-radius: 14px; text-decoration: none; font-size: 1.1rem;
                    box-shadow: 0 10px 26px color-mix(in srgb, var(--accent) 42%, transparent); transition: transform .15s; }
@@ -453,22 +516,7 @@ public static class LandingPageBuilder
         sb.Append(AnnouncementBar(m));
         sb.Append(TopNav(m));
 
-        // Hero
-        sb.Append("<header class=\"hero\"><div class=\"wrap\"><div class=\"grid\"><div>");
-        sb.Append(ProofPill(m));
-        sb.Append($"<h1>{Esc(m.Headline)}</h1>");
-        if (!string.IsNullOrWhiteSpace(m.Subheadline))
-        {
-            sb.Append($"<p class=\"sub\">{Esc(m.Subheadline!)}</p>");
-        }
-        sb.Append(CtaButton(m, "Quero agora", "hero"));
-        sb.Append(HeroProof(m));
-        sb.Append("</div><div>");
-        if (m.HeroArt() is not null)
-        {
-            sb.Append($"<span class=\"hero-media\"><img class=\"hero-art\" src=\"{m.HeroArt()}\" alt=\"{Esc(m.Title)}\" />{HeroBadge(m)}</span>");
-        }
-        sb.Append("</div></div></div></header>");
+        sb.Append(HeroSection(m));
 
         sb.Append(MediaBar(m));
 
@@ -499,6 +547,7 @@ public static class LandingPageBuilder
         sb.Append(BonusStack(m));
         sb.Append(PriceBlock(m));
         sb.Append(CtaButton(m, "Garantir meu acesso", "offer"));
+        sb.Append(SecureBadge(m));
         sb.Append(TrustRow(m));
         sb.Append("</div></section>");
 
@@ -648,6 +697,11 @@ public static class LandingPageBuilder
     private static string CtaButton(LpModel m, string label, string location = "cta") =>
         $"<a class=\"cta\" data-cta=\"{Esc(location)}\" href=\"{Esc(m.CheckoutUrl)}\">{Esc(label)}</a>";
 
+    // docs/18 P1: CTA por benefício (personalizado converte muito mais que o genérico). Usa o botão
+    // de fechamento escrito pela IA (ex.: "Quero emagrecer agora"); na falta, cai no genérico.
+    private static string PrimaryCtaLabel(LpModel m) =>
+        string.IsNullOrWhiteSpace(m.FinalCta?.Button) ? "Quero agora" : m.FinalCta!.Button!;
+
     // Badge flutuante de resultado sobre a imagem do hero (docs/16 §7) — usa a 1ª métrica, se houver.
     private static string HeroBadge(LpModel m) =>
         m.Stats.Count == 0 ? string.Empty
@@ -655,6 +709,39 @@ public static class LandingPageBuilder
 
     private static string ProofPill(LpModel m) =>
         string.IsNullOrWhiteSpace(m.ProofPill) ? string.Empty : $"<span class=\"proof-pill\">{Esc(m.ProofPill!)}</span>";
+
+    // Hero v2 (docs/18): fundo de IMAGEM (free-first, via Showcase) com BLUR sobre a cor da paleta +
+    // glow accent; CTA duplo (comprar + "ver o método"); prova social colada ao CTA. CSS por template.
+    private static string HeroSection(LpModel m)
+    {
+        var sb = new StringBuilder("<header class=\"hero\">");
+        if (m.Showcase() is { } heroImg)
+        {
+            sb.Append($"<div class=\"hero-bg\" style=\"background-image:url('{heroImg}')\"></div>");
+        }
+        sb.Append("<div class=\"hero-tint\"></div>");
+        sb.Append("<div class=\"wrap\"><div class=\"grid\"><div>");
+        sb.Append(ProofPill(m));
+        sb.Append($"<h1>{Esc(m.Headline)}</h1>");
+        if (!string.IsNullOrWhiteSpace(m.Subheadline))
+        {
+            sb.Append($"<p class=\"sub\">{Esc(m.Subheadline!)}</p>");
+        }
+        sb.Append("<div class=\"hero-actions\">");
+        sb.Append(CtaButton(m, PrimaryCtaLabel(m), "hero"));
+        if (m.Steps.Count > 0 || !string.IsNullOrWhiteSpace(m.SolutionSection))
+        {
+            sb.Append("<a class=\"cta ghost\" href=\"#metodo\">Ver o método</a>");
+        }
+        sb.Append("</div>");
+        sb.Append(HeroProof(m));
+        sb.Append("</div><div>");
+        if (m.HeroArt() is not null)
+        {
+            sb.Append($"<span class=\"hero-media\"><img class=\"hero-art\" src=\"{m.HeroArt()}\" alt=\"{Esc(m.Title)}\" />{HeroBadge(m)}</span>");
+        }
+        return sb.Append("</div></div></div></header>").ToString();
+    }
 
     // Rating (se real) + selos de confiança logo abaixo do CTA do hero.
     private static string HeroProof(LpModel m)
@@ -864,9 +951,9 @@ public static class LandingPageBuilder
         }
 
         var sb = new StringBuilder("<ul class=\"bullets\">");
-        foreach (var b in bullets)
+        for (var i = 0; i < bullets.Count; i++)
         {
-            sb.Append($"<li>{Esc(b)}</li>");
+            sb.Append($"<li><span class=\"b-ic\">{LpIcons.Benefit(i)}</span><span>{Esc(bullets[i])}</span></li>");
         }
         return sb.Append("</ul>").ToString();
     }
@@ -892,6 +979,24 @@ public static class LandingPageBuilder
     }
 
     // Linha de micro-selos factuais perto do preço/CTA.
+    // docs/18 P2: reforço de confiança colado ao CTA da oferta — selo de compra segura + nota verificada.
+    private static string SecureBadge(LpModel m)
+    {
+        var sb = new StringBuilder("<div class=\"secure\">");
+        sb.Append($"<span class=\"secure-seal\">{LpIcons.Lock}Compra 100% segura · SSL</span>");
+        if (m.Rating is { Value: > 0 } r)
+        {
+            var val = r.Value.ToString("0.0", CultureInfo.GetCultureInfo("pt-BR"));
+            sb.Append($"<span class=\"secure-rating\"><span class=\"stars\">★★★★★</span> <b>{Esc(val)}</b>/5");
+            if (r.Count > 0)
+            {
+                sb.Append($" · {r.Count} avaliações verificadas");
+            }
+            sb.Append("</span>");
+        }
+        return sb.Append("</div>").ToString();
+    }
+
     private static string TrustRow(LpModel m)
     {
         if (m.TrustBadges.Count == 0)
@@ -980,8 +1085,11 @@ public static class LandingPageBuilder
         // Urgência sempre presente: prazo real, ou contador rolante de 48h como piso (docs/15).
         var dl = m.OfferDeadlineUtc is { } d && d > DateTime.UtcNow ? d : DateTime.UtcNow.AddHours(48);
         var iso = dl.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
-        return $"<div class=\"announce\" data-deadline=\"{iso}\">🔥 Oferta por tempo limitado · Vagas limitadas · Encerra em " +
-               "<span class=\"count\"><b data-d>00</b>d <b data-h>00</b>h <b data-m>00</b>m <b data-s>00</b>s</span></div>";
+        return $"<div class=\"announce\" data-deadline=\"{iso}\"><div class=\"wrap\">" +
+               "<span>🔥 Oferta por tempo limitado · Vagas limitadas · Encerra em " +
+               "<span class=\"count\"><b data-d>00</b>d <b data-h>00</b>h <b data-m>00</b>m <b data-s>00</b>s</span></span>" +
+               $"<a class=\"announce-cta\" data-cta=\"announce\" href=\"{Esc(m.CheckoutUrl)}\">Garantir agora</a>" +
+               "</div></div>";
     }
 
     // Barra de compra fixa no rodapé (só mobile, via CSS): mantém o CTA real sempre alcançável.
@@ -1062,11 +1170,26 @@ public static class LandingPageBuilder
         /* scroll-reveal (progressive enhancement; só ativa com .js e sem reduced-motion) */
         .js section { opacity: 0; transform: translateY(14px); transition: opacity .6s ease, transform .6s ease; }
         .js section.in { opacity: 1; transform: none; }
-        @media (prefers-reduced-motion: reduce) { .js section { opacity: 1 !important; transform: none !important; } }
+        /* stagger dos cards quando a seção entra (docs/18 P1: micro-interação p/ clareza) */
+        .js :is(.steps-list, .bullets, .tcards, .stat-grid, .bonus-stack) > * {
+            opacity: 0; transform: translateY(12px); transition: opacity .5s ease, transform .5s ease; }
+        .js section.in :is(.steps-list, .bullets, .tcards, .stat-grid, .bonus-stack) > * { opacity: 1; transform: none; }
+        .js section.in :is(.steps-list, .bullets, .tcards, .stat-grid, .bonus-stack) > :nth-child(2) { transition-delay: .07s; }
+        .js section.in :is(.steps-list, .bullets, .tcards, .stat-grid, .bonus-stack) > :nth-child(3) { transition-delay: .14s; }
+        .js section.in :is(.steps-list, .bullets, .tcards, .stat-grid, .bonus-stack) > :nth-child(4) { transition-delay: .21s; }
+        .js section.in :is(.steps-list, .bullets, .tcards, .stat-grid, .bonus-stack) > :nth-child(n+5) { transition-delay: .28s; }
+        @media (prefers-reduced-motion: reduce) {
+          .js section { opacity: 1 !important; transform: none !important; }
+          .js :is(.steps-list, .bullets, .tcards, .stat-grid, .bonus-stack) > * { opacity: 1 !important; transform: none !important; }
+        }
         /* barra de urgência (prazo real) */
         .announce { background: var(--accent); color: #1a1a1a; text-align: center; font-weight: 700;
                     padding: 9px 16px; font-size: .9rem; }
+        .announce .wrap { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
         .announce .count b { font-variant-numeric: tabular-nums; }
+        .announce-cta { background: rgba(0,0,0,.16); color: inherit; border: 1px solid rgba(0,0,0,.22);
+                        padding: 5px 14px; border-radius: 999px; font-weight: 800; font-size: .76rem;
+                        text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
         /* nav fixa */
         .topnav { position: sticky; top: 0; z-index: 50; background: color-mix(in srgb, #ffffff 88%, transparent);
                   -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
@@ -1172,6 +1295,20 @@ public static class LandingPageBuilder
                      font-size: .85rem; opacity: .85; }
         .trust-row span { display: inline-flex; align-items: center; gap: 6px; }
         .trust-row .ic { color: var(--accent); }
+        /* docs/18 P2: ícone distinto por benefício (substitui o check ::before) */
+        .bullets li::before { display: none; }
+        .bullets li { display: flex; gap: 12px; align-items: flex-start; padding-left: 0; }
+        .b-ic { flex: none; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;
+                background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+        .b-ic .ic { width: 18px; height: 18px; }
+        /* docs/18 P2: selo de compra segura + nota verificada, colado ao CTA da oferta */
+        .secure { display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: center; align-items: center;
+                  margin-top: 16px; font-size: .86rem; opacity: .92; }
+        .secure-seal { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; }
+        .secure-seal .ic { color: var(--accent); }
+        .secure-rating { display: inline-flex; align-items: center; gap: 6px; }
+        .secure-rating .stars { color: var(--accent); letter-spacing: 1px; }
+        .secure-rating b { font-weight: 800; }
         .guarantee .g-card { display: flex; gap: 22px; align-items: center; padding: 28px; border-radius: 16px;
                              background: rgba(125,125,125,.07); border: 2px dashed var(--accent); }
         .g-badge { flex: none; width: 88px; height: 88px; border-radius: 50%; display: flex; flex-direction: column;

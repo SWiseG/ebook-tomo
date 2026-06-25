@@ -52,22 +52,35 @@ public sealed class SkiaImageComposer : IImageComposer
         top += 70;
 
         using var titleFace = Typeface(art.Palette.Display, SKFontStyleWeight.Bold);
+        var titleMaxW0 = hasSeal ? CoverWidth - margin - 300 - 30 - margin : contentW;
+        // docs/18 #3: auto-fit — reduz o corpo até caber em 2 linhas e equilibra a quebra (sem órfã).
+        var (titleSize, titleLines) = AutoFitTitle(titleFace, art.Title, titleMaxW0, max: 132f, min: 78f, maxLines: 2);
+        var titleLineH = titleSize * 1.14f;
         using var titlePaint = new SKPaint
         {
-            Color = onDark, IsAntialias = true, TextSize = 132, Typeface = titleFace, TextAlign = SKTextAlign.Left,
+            Color = onDark, IsAntialias = true, TextSize = titleSize, Typeface = titleFace, TextAlign = SKTextAlign.Left,
+            // docs/18 #1: sombra garante legibilidade do título sobre qualquer fundo (janela clara etc.)
+            ImageFilter = SKImageFilter.CreateDropShadow(0, 4, 8, 8, SKColors.Black.WithAlpha(140)),
         };
         // com selo no canto superior direito, o tÃ­tulo quebra ANTES da coluna do selo (nÃ£o some sob ele)
-        var titleMaxW = hasSeal ? CoverWidth - margin - 300 - 30 - margin : contentW;
-        var y = DrawWrapped(canvas, art.Title, titlePaint, margin, top + 110, titleMaxW, 150);
+        var ty = top + 110;
+        foreach (var line in titleLines)
+        {
+            canvas.DrawText(line, margin, ty, titlePaint);
+            ty += titleLineH;
+        }
+        var titleBottom = ty - titleLineH;
 
         if (!string.IsNullOrWhiteSpace(art.Subtitle))
         {
             using var subFace = Typeface(art.Palette.BodyFont, SKFontStyleWeight.Normal);
             using var subPaint = new SKPaint
             {
-                Color = accent, IsAntialias = true, TextSize = 56, Typeface = subFace, TextAlign = SKTextAlign.Left,
+                // docs/18 #1: subtítulo em branco (onDark) + sombra — accent sumia sobre fotos claras.
+                Color = onDark.WithAlpha(235), IsAntialias = true, TextSize = 56, Typeface = subFace, TextAlign = SKTextAlign.Left,
+                ImageFilter = SKImageFilter.CreateDropShadow(0, 3, 6, 6, SKColors.Black.WithAlpha(150)),
             };
-            DrawWrapped(canvas, art.Subtitle, subPaint, margin, y + 56, contentW, 76);
+            DrawWrapped(canvas, art.Subtitle, subPaint, margin, titleBottom + 96, contentW, 76);
         }
 
         // â”€â”€ Selo de confianÃ§a: emblema accent no canto superior direito (como os exemplos) â”€â”€â”€â”€â”€â”€â”€
@@ -509,12 +522,15 @@ public sealed class SkiaImageComposer : IImageComposer
                 using (var topScrim = new SKPaint
                 {
                     IsAntialias = true,
+                    // docs/18 #1: scrim mais profundo e com piso no meio — garante contraste do bloco
+                    // título+subtítulo (que descia até ~0.30h) mesmo sobre janelas/comida claras.
                     Shader = SKShader.CreateLinearGradient(
-                        new SKPoint(0, 0), new SKPoint(0, h * 0.46f),
-                        [bg.WithAlpha(238), bg.WithAlpha(0)], null, SKShaderTileMode.Clamp),
+                        new SKPoint(0, 0), new SKPoint(0, h * 0.50f),
+                        [bg.WithAlpha(245), bg.WithAlpha(140), bg.WithAlpha(0)],
+                        [0f, 0.52f, 1f], SKShaderTileMode.Clamp),
                 })
                 {
-                    canvas.DrawRect(SKRect.Create(0, 0, w, h * 0.46f), topScrim);
+                    canvas.DrawRect(SKRect.Create(0, 0, w, h * 0.50f), topScrim);
                 }
                 using (var botScrim = new SKPaint
                 {
@@ -525,6 +541,20 @@ public sealed class SkiaImageComposer : IImageComposer
                 })
                 {
                     canvas.DrawRect(SKRect.Create(0, h * 0.48f, w, h * 0.52f), botScrim);
+                }
+
+                // docs/18 #2: vignette suave dá profundidade e foca o centro — reduz a sensação de
+                // "vazio" quando o fundo é abstrato/escuro (ex.: tech) e dá acabamento editorial.
+                using (var vignette = new SKPaint
+                {
+                    IsAntialias = true,
+                    Shader = SKShader.CreateRadialGradient(
+                        new SKPoint(w / 2f, h / 2f), Math.Max(w, h) * 0.74f,
+                        [SKColors.Black.WithAlpha(0), SKColors.Black.WithAlpha(72)],
+                        [0.55f, 1f], SKShaderTileMode.Clamp),
+                })
+                {
+                    canvas.DrawRect(SKRect.Create(0, 0, w, h), vignette);
                 }
 
                 return;
@@ -591,6 +621,70 @@ public sealed class SkiaImageComposer : IImageComposer
         var capped = all.Take(max).ToList();
         capped[max - 1] = capped[max - 1].TrimEnd() + "â€¦";
         return capped;
+    }
+
+    // docs/18 #3: escolhe o maior corpo (entre max..min) em que o título cabe em <= maxLines linhas,
+    // preferindo uma quebra equilibrada (linhas de largura parecida) a uma quebra gulosa com órfã.
+    private static (float Size, List<string> Lines) AutoFitTitle(
+        SKTypeface face, string text, float maxWidth, float max, float min, int maxLines)
+    {
+        for (var size = max; size >= min; size -= 6f)
+        {
+            using var p = new SKPaint { TextSize = size, Typeface = face, IsAntialias = true };
+
+            if (maxLines == 2 && BalanceTwoLines(text, p, maxWidth) is { } balanced)
+            {
+                return (size, balanced);
+            }
+
+            var greedy = WrapLines(text, p, maxWidth, maxLines);
+            if (greedy.Count <= maxLines && greedy.TrueForAll(l => p.MeasureText(l) <= maxWidth))
+            {
+                return (size, greedy);
+            }
+        }
+
+        using var pf = new SKPaint { TextSize = min, Typeface = face, IsAntialias = true };
+        return (min, WrapLines(text, pf, maxWidth, maxLines));
+    }
+
+    // Divide o título em 2 linhas que caibam, minimizando a diferença de largura (quebra equilibrada).
+    // Cabe em 1 linha → [texto]. Não cabe em 2 → null (o chamador reduz o corpo / cai na quebra gulosa).
+    private static List<string>? BalanceTwoLines(string text, SKPaint paint, float maxWidth)
+    {
+        if (paint.MeasureText(text) <= maxWidth)
+        {
+            return [text];
+        }
+
+        var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (words.Length < 2)
+        {
+            return null;
+        }
+
+        List<string>? best = null;
+        var bestScore = float.MaxValue;
+        for (var i = 1; i < words.Length; i++)
+        {
+            var l1 = string.Join(' ', words[..i]);
+            var l2 = string.Join(' ', words[i..]);
+            var w1 = paint.MeasureText(l1);
+            var w2 = paint.MeasureText(l2);
+            if (w1 > maxWidth || w2 > maxWidth)
+            {
+                continue;
+            }
+
+            var score = Math.Abs(w1 - w2);
+            if (score < bestScore)
+            {
+                bestScore = score;
+                best = [l1, l2];
+            }
+        }
+
+        return best;
     }
 
     private static void FillBackground(SKCanvas canvas, int w, int h, NichePalette palette, byte[]? photo)

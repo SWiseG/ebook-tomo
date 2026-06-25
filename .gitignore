@@ -29,3 +29,6 @@ src/Ebook.Api/appsettings.Production.json
 
 # Claude Code local
 .claude/settings.local.json
+
+# saída local da rotina de treinamento de capas (imagens IA)
+training-covers/
