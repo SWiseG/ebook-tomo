@@ -79,12 +79,14 @@ public sealed record LpModel(
     string? MockupDataUri = null,
     /// <summary>URLs públicas (/media/) p/ mockup e hero — evitam base64 inline pesado (docs/17 P2-9).</summary>
     string? MockupUrl = null,
-    string? ShowcaseUrl = null);
+    string? ShowcaseUrl = null,
+    /// <summary>URL pública (/media/) da capa 2D — fallback leve do hero, sem base64 (docs/18 P3).</summary>
+    string? CoverUrl = null);
 
 /// <summary>Imagem do hero: URL pública (leve) tem prioridade sobre o data URI.</summary>
 file static class LpModelImageExtensions
 {
-    public static string? HeroArt(this LpModel m) => m.MockupUrl ?? m.MockupDataUri ?? m.CoverDataUri;
+    public static string? HeroArt(this LpModel m) => m.MockupUrl ?? m.CoverUrl ?? m.MockupDataUri ?? m.CoverDataUri;
     public static string? Showcase(this LpModel m) => m.ShowcaseUrl ?? m.ShowcaseDataUri;
 }
 
@@ -111,7 +113,8 @@ public static class LandingPageBuilder
         byte[]? showcaseImage = null,
         byte[]? mockupImage = null,
         string? mockupUrl = null,
-        string? showcaseUrl = null)
+        string? showcaseUrl = null,
+        string? coverUrl = null)
     {
         var showcaseDataUri = showcaseImage is { Length: > 0 }
             ? $"data:image/png;base64,{Convert.ToBase64String(showcaseImage)}"
@@ -190,7 +193,8 @@ public static class LandingPageBuilder
             showcaseDataUri,
             mockupDataUri,
             string.IsNullOrWhiteSpace(mockupUrl) ? null : mockupUrl,
-            string.IsNullOrWhiteSpace(showcaseUrl) ? null : showcaseUrl);
+            string.IsNullOrWhiteSpace(showcaseUrl) ? null : showcaseUrl,
+            string.IsNullOrWhiteSpace(coverUrl) ? null : coverUrl);
     }
 
     public static string Render(LpModel model, LpTemplate template) => template switch

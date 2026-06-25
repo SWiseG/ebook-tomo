@@ -106,12 +106,14 @@ public sealed class LpJobHandler(
         var mockupUrl = hasBase && mockup is not null ? $"{baseUrl}/media/{ContentPaths.Mockup(product.Slug)}" : null;
         var showcaseUrl = hasBase && showcase is not null ? $"{baseUrl}/media/{ContentPaths.LpHero(product.Slug)}" : null;
 
+        // docs/18 P3: com baseUrl público, a capa também vai por /media/ (CoverUrl é fallback do hero)
+        // e NÃO é embutida em base64 — LP leve p/ mobile. Em dev (sem baseUrl), embute como antes.
         var model = LandingPageBuilder.BuildModel(
-            product.Title, copy, cover, checkoutUrl, pixelUrl, palette, deadline, canonicalUrl, coverImageUrl,
+            product.Title, copy, hasBase ? null : cover, checkoutUrl, pixelUrl, palette, deadline, canonicalUrl, coverImageUrl,
             legal, disclaimer,
             showcaseImage: showcaseUrl is null ? showcase : null,
             mockupImage: mockupUrl is null ? mockup : null,
-            mockupUrl: mockupUrl, showcaseUrl: showcaseUrl);
+            mockupUrl: mockupUrl, showcaseUrl: showcaseUrl, coverUrl: coverImageUrl);
         var template = LpTemplateSelector.ForNiche(nicheSlug);
         var html = LandingPageBuilder.Render(model, template);
 
