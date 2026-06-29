@@ -18,6 +18,8 @@ SaaS autônomo para descoberta de nichos, geração, publicação, divulgação 
 | [10-geracao-ia-midia.md](10-geracao-ia-midia.md) | Media Gateway (E14): geração de imagens free-first + loop de aprendizado de estilo (E15) |
 | [11-padrao-editorial.md](11-padrao-editorial.md) | Padrão editorial inegociável (fontes, cores, imagens, copy, arquitetura) + diagnóstico + plano de melhoria |
 | [12-pdf-recursos-visuais.md](12-pdf-recursos-visuais.md) | Pesquisa: PDF mais bonito (QuestPDF SVG/Layers/gradientes/drop cap) + repositórios de imagens/SVGs + perfil visual por segmento |
+| [19-salto-produto-pdf-lp-capa.md](19-salto-produto-pdf-lp-capa.md) | Estratégia do "salto": multi-superfície + motor de conversão + profundidade editorial (com pesquisa de mercado 2026) |
+| [sprints/](sprints/README.md) | Planos de execução detalhados (Sprints A–E) do salto — "ensinar o Claude do futuro a fazer" |
 
 ## Resumo executivo
 
