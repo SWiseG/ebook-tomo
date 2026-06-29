@@ -1,5 +1,6 @@
 using Ebook.Application.Common.Messaging;
 using Ebook.Domain.Common;
+using Ebook.Domain.Products;
 
 namespace Ebook.Application.Analytics;
 
@@ -26,6 +27,13 @@ public interface IMetricsReader
 {
     Task<FunnelDto> GetOverallAsync(DateTime fromUtc, CancellationToken ct);
     Task<ProductMetricsDto> GetProductAsync(Guid productId, DateTime fromUtc, CancellationToken ct);
+
+    /// <summary>
+    /// Agrega visitas e cliques de checkout por variante de LP nos últimos <paramref name="days"/> dias,
+    /// lendo diretamente de AnalyticsEvent (não requer MetricDaily por variante).
+    /// Conversão = CheckoutClick (proxy de conversão rastreável pelo pixel).
+    /// </summary>
+    Task<IReadOnlyList<VariantStats>> GetVariantStatsAsync(Guid productId, int days, CancellationToken ct);
 }
 
 /// <summary>Funil de um produto nos últimos 30 dias (visitas → cliques → vendas).</summary>

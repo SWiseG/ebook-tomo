@@ -1,6 +1,7 @@
 using Ebook.Application.Analytics;
 using Ebook.Domain.Abstractions;
 using Ebook.Domain.Analytics;
+using Ebook.Domain.Products;
 using Ebook.Domain.Sales;
 using Ebook.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +20,7 @@ public sealed class AnalyticsRecorder(EbookDbContext db, IClock clock) : IAnalyt
 
         db.AnalyticsEvents.Add(AnalyticsEvent.Create(
             productId, hit.Type, ChannelMap.From(hit.UtmSource), clock.UtcNow,
-            hit.UtmSource, hit.UtmCampaign, hit.UtmContent));
+            hit.UtmSource, hit.UtmCampaign, hit.UtmContent, hit.VariantTag));
 
         await db.SaveChangesAsync(ct);
     }
@@ -124,6 +125,24 @@ public sealed class MetricsReader(EbookDbContext db) : IMetricsReader
             .ToList();
 
         return new ProductMetricsDto(Funnel(rows), byChannel);
+    }
+
+    public async Task<IReadOnlyList<VariantStats>> GetVariantStatsAsync(Guid productId, int days, CancellationToken ct)
+    {
+        var from = DateTime.UtcNow.Date.AddDays(-days);
+        var raw = await db.AnalyticsEvents.AsNoTracking()
+            .Where(e => e.ProductId == productId && e.VariantTag != null && e.OccurredAtUtc >= from)
+            .Select(e => new { e.VariantTag, e.Type })
+            .ToListAsync(ct);
+
+        return raw
+            .GroupBy(e => e.VariantTag!)
+            .Select(g => new VariantStats(
+                g.Key,
+                Visits: g.Count(x => x.Type == AnalyticsEventType.Visit),
+                Conversions: g.Count(x => x.Type == AnalyticsEventType.CheckoutClick)))
+            .OrderBy(v => v.VariantTag)
+            .ToList();
     }
 
     private static FunnelDto Funnel(IReadOnlyCollection<MetricDaily> rows)

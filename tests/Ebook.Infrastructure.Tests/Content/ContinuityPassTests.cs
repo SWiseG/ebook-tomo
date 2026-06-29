@@ -70,6 +70,7 @@ public class ContinuityPassTests
             s.AddScoped<INicheRepository, NicheRepository>();
             s.AddScoped<IProductRepository, ProductRepository>();
             s.AddScoped<IArtifactRepository, ArtifactRepository>();
+            s.AddScoped<ILpVariantRepository, LpVariantRepository>();
             s.AddScoped<IKnowledgeRepository, KnowledgeRepository>();
             s.AddScoped<ITrendSnapshotRepository, TrendSnapshotRepository>();
             s.AddScoped<ISocialPostRepository, SocialPostRepository>();

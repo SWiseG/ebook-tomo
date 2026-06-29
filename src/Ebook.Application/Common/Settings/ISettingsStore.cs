@@ -92,4 +92,16 @@ public static class SettingKeys
     /// Default 1 = uma iteração de melhoria. Zero = sem retry (avança imediatamente se reprovar).
     /// </summary>
     public const string AuditMaxRetries = "audit.maxRetries";
+
+    /// <summary>
+    /// Número de variantes de LP a gerar por produto (C1). Default 1 = comportamento atual (uma única LP).
+    /// Valores maiores geram N variantes com headline/CTA/seção distintos para teste A/B.
+    /// </summary>
+    public const string LpVariantCount = "lp.variantCount";
+
+    /// <summary>
+    /// Habilita o roteamento inteligente por Thompson Sampling (C2). Default false = round-robin (compat).
+    /// Quando true, o endpoint /lp/{slug} escolhe a variante com maior taxa de conversão estimada.
+    /// </summary>
+    public const string LpSmartTraffic = "lp.smartTraffic";
 }

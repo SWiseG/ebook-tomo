@@ -38,6 +38,9 @@ public static class ContentPaths
     /// <summary>Bundle da landing page (HTML auto-contido) no <c>IArtifactStore</c> (/data/artifacts).</summary>
     public static string LpBundle(string slug) => $"products/{slug}/lp/index.html";
 
+    /// <summary>Bundle de uma variante de LP no <c>IArtifactStore</c>. tag ex.: "v1", "v2".</summary>
+    public static string LpVariant(string slug, string tag) => $"products/{slug}/lp/{slug}-{tag}.html";
+
     /// <summary>Calendário de conteúdo social (FileStore de conteúdo).</summary>
     public static string SocialCalendar(string slug) => $"products/{slug}/social/calendar.json";
 

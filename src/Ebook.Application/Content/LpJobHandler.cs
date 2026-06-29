@@ -21,11 +21,13 @@ namespace Ebook.Application.Content;
 /// publica o bundle HTML auto-contido e submete o produto à aprovação (ou publica direto
 /// no modo Auto). Encerra o pipeline de conteúdo — costura para o E07 (Kiwify Publisher).
 /// Re-entrante: pula a renderização quando o bundle já existe e a transição quando já ocorreu.
+/// C1: gera N variantes (lp.variantCount) com headline/CTA/ordem distintos e persiste LpVariant.
 /// </summary>
 public sealed class LpJobHandler(
     IProductRepository products,
     INicheRepository niches,
     IArtifactRepository artifacts,
+    ILpVariantRepository lpVariants,
     IFileStore fileStore,
     IArtifactStore artifactStore,
     ISettingsStore settings,
@@ -40,6 +42,14 @@ public sealed class LpJobHandler(
     private const int Version = 1;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
+    // Configurações por índice de variante (0-based): [headline-angle, cta-label, earlyProof]
+    private static readonly (string HeadlineAngle, string CtaLabel, bool EarlyProof)[] VariantConfigs =
+    [
+        ("resultado",  "Quero agora",    false),   // v1: padrão — headline resultado, CTA agressivo
+        ("problema",   "Baixar agora",   true),    // v2: ângulo problema, prova social antecipada
+        ("solucao",    "Acessar",        false),   // v3: ângulo solução, CTA neutro
+    ];
+
     public string Type => ContentJobs.Lp;
 
     public async Task<Result> ExecuteAsync(string payloadJson, CancellationToken ct)
@@ -52,10 +62,34 @@ public sealed class LpJobHandler(
         }
 
         var baseUrl = (await settings.GetOrDefaultAsync(SettingKeys.LpBaseUrl, string.Empty, ct)).TrimEnd('/');
+        var variantCount = await settings.GetOrDefaultAsync(SettingKeys.LpVariantCount, 1, ct);
+        variantCount = Math.Max(1, Math.Min(variantCount, VariantConfigs.Length));
 
+        // Bundle principal (v1) — re-entrante
         if (!artifactStore.Exists(ContentPaths.LpBundle(product.Slug)))
         {
-            await RenderAsync(product, baseUrl, ct);
+            var (assets, nicheSlug, palette, template) = await ResolveAssetsAsync(product, baseUrl, ct);
+            await RenderAndPersistAsync(product, assets, nicheSlug, palette, template, baseUrl, ct);
+        }
+
+        // Variantes adicionais (v2, v3…) — cada uma em arquivo separado
+        var existingVariants = await lpVariants.GetByProductIdAsync(product.Id, ct);
+        for (var i = 0; i < variantCount; i++)
+        {
+            var tag = $"v{i + 1}";
+            if (existingVariants.Any(v => v.VariantTag == tag)) continue;
+
+            var variantPath = ContentPaths.LpVariant(product.Slug, tag);
+            if (!artifactStore.Exists(variantPath))
+            {
+                var (assets, nicheSlug, palette, template) = await ResolveAssetsAsync(product, baseUrl, ct);
+                var cfg = VariantConfigs[i % VariantConfigs.Length];
+                var variantOptions = new LpVariantOptions(
+                    HeadlineOverride: DeriveHeadline(assets.Copy, product.Title, cfg.HeadlineAngle),
+                    CtaLabel: cfg.CtaLabel,
+                    EarlyProof: cfg.EarlyProof);
+                await RenderVariantAsync(product, assets, nicheSlug, palette, template, baseUrl, tag, variantOptions, ct);
+            }
         }
 
         product.SetLpUrl($"{baseUrl}/lp/{product.Slug}");
@@ -77,69 +111,122 @@ public sealed class LpJobHandler(
         return Result.Success();
     }
 
-    private async Task RenderAsync(Product product, string baseUrl, CancellationToken ct)
+    private sealed record LpAssets(
+        LpCopyDto? Copy,
+        byte[]? Cover,
+        byte[]? Mockup,
+        byte[]? Showcase,
+        DateTime? Deadline,
+        LpLegalDto? Legal,
+        string Disclaimer,
+        bool HasBase,
+        string? MockupUrl,
+        string? ShowcaseUrl,
+        string? CoverImageUrl);
+
+    private async Task<(LpAssets Assets, string NicheSlug, NichePalette Palette, LpTemplate Template)>
+        ResolveAssetsAsync(Product product, string baseUrl, CancellationToken ct)
     {
         var niche = await niches.GetByIdAsync(product.NicheId, ct);
         var nicheSlug = niche?.Slug ?? product.Slug;
         var palette = await paletteResolver.ResolveAsync(product.Slug, nicheSlug, ct);
+        var template = LpTemplateSelector.ForNiche(nicheSlug);
 
         var copy = await ReadCopyAsync(product.Slug, ct);
         var cover = await artifactStore.ReadBytesAsync(ContentPaths.Cover(product.Slug), ct);
-        var mockup = await artifactStore.ReadBytesAsync(ContentPaths.Mockup(product.Slug), ct); // hero 3D
-
-        var checkoutUrl = $"{baseUrl}/go/{product.Slug}";
-        var pixelUrl = $"{baseUrl}/px.gif?s={Uri.EscapeDataString(product.Slug)}";
+        var mockup = await artifactStore.ReadBytesAsync(ContentPaths.Mockup(product.Slug), ct);
+        var showcase = await EnsureShowcaseAsync(product, nicheSlug, ct);
         var deadline = await ResolveOfferDeadlineAsync(ct);
-
-        // URLs absolutas para canonical/OG só fazem sentido com baseUrl público; capa via /media (E08).
-        var canonicalUrl = string.IsNullOrWhiteSpace(baseUrl) ? null : $"{baseUrl}/lp/{product.Slug}";
-        var coverImageUrl = !string.IsNullOrWhiteSpace(baseUrl) && cover is not null
-            ? $"{baseUrl}/media/{ContentPaths.Cover(product.Slug)}"
-            : null;
-
         var legal = await ResolveLegalAsync(ct);
         var disclaimer = NicheStyleCatalog.DisclaimerFor(NicheStyleCatalog.Classify(nicheSlug));
-        var showcase = await EnsureShowcaseAsync(product, nicheSlug, ct);
 
-        // docs/17 P2-9: com baseUrl público, serve mockup/hero via /media/ e NÃO embute base64 (LP leve).
         var hasBase = !string.IsNullOrWhiteSpace(baseUrl);
+        var coverImageUrl = hasBase && cover is not null ? $"{baseUrl}/media/{ContentPaths.Cover(product.Slug)}" : null;
         var mockupUrl = hasBase && mockup is not null ? $"{baseUrl}/media/{ContentPaths.Mockup(product.Slug)}" : null;
         var showcaseUrl = hasBase && showcase is not null ? $"{baseUrl}/media/{ContentPaths.LpHero(product.Slug)}" : null;
 
-        // docs/18 P3: com baseUrl público, a capa também vai por /media/ (CoverUrl é fallback do hero)
-        // e NÃO é embutida em base64 — LP leve p/ mobile. Em dev (sem baseUrl), embute como antes.
-        var model = LandingPageBuilder.BuildModel(
-            product.Title, copy, hasBase ? null : cover, checkoutUrl, pixelUrl, palette, deadline, canonicalUrl, coverImageUrl,
-            legal, disclaimer,
-            showcaseImage: showcaseUrl is null ? showcase : null,
-            mockupImage: mockupUrl is null ? mockup : null,
-            mockupUrl: mockupUrl, showcaseUrl: showcaseUrl, coverUrl: coverImageUrl);
-        var template = LpTemplateSelector.ForNiche(nicheSlug);
-        var html = LandingPageBuilder.Render(model, template);
+        return (new LpAssets(copy, cover, mockup, showcase, deadline, legal, disclaimer,
+            hasBase, mockupUrl, showcaseUrl, coverImageUrl), nicheSlug, palette, template);
+    }
 
+    private async Task RenderAndPersistAsync(
+        Product product, LpAssets a, string nicheSlug, NichePalette palette, LpTemplate template,
+        string baseUrl, CancellationToken ct)
+    {
+        var checkoutUrl = $"{baseUrl}/go/{product.Slug}";
+        var pixelUrl = $"{baseUrl}/px.gif?s={Uri.EscapeDataString(product.Slug)}";
+        var canonicalUrl = string.IsNullOrWhiteSpace(baseUrl) ? null : $"{baseUrl}/lp/{product.Slug}";
+
+        var model = LandingPageBuilder.BuildModel(
+            product.Title, a.Copy, a.HasBase ? null : a.Cover, checkoutUrl, pixelUrl, palette,
+            a.Deadline, canonicalUrl, a.CoverImageUrl, a.Legal, a.Disclaimer,
+            showcaseImage: a.ShowcaseUrl is null ? a.Showcase : null,
+            mockupImage: a.MockupUrl is null ? a.Mockup : null,
+            mockupUrl: a.MockupUrl, showcaseUrl: a.ShowcaseUrl, coverUrl: a.CoverImageUrl);
+
+        var html = LandingPageBuilder.Render(model, template);
         var stored = await artifactStore.WriteBytesAsync(
             ContentPaths.LpBundle(product.Slug), Encoding.UTF8.GetBytes(html), ct);
 
         if (await artifacts.GetLatestAsync(product.Id, ArtifactType.LpBundle, ct) is null)
         {
-            var meta = JsonSerializer.Serialize(
-                new { template = template.ToString(), bytes = stored.SizeBytes }, JsonOptions);
+            var meta = JsonSerializer.Serialize(new { template = template.ToString(), bytes = stored.SizeBytes }, JsonOptions);
             artifacts.Add(Artifact.Create(
                 product.Id, ArtifactType.LpBundle, stored.RelativePath, stored.Sha256, Version, meta, clock.UtcNow));
         }
 
-        logger.LogInformation("LP renderizada para {Slug} (template {Template}, {Bytes} bytes, capa: {HasCover})",
-            product.Slug, template, stored.SizeBytes, cover is not null);
+        logger.LogInformation("LP renderizada para {Slug} (template {Template}, {Bytes} bytes)",
+            product.Slug, template, stored.SizeBytes);
+    }
+
+    private async Task RenderVariantAsync(
+        Product product, LpAssets a, string nicheSlug, NichePalette palette, LpTemplate template,
+        string baseUrl, string tag, LpVariantOptions variantOptions, CancellationToken ct)
+    {
+        var checkoutUrl = $"{baseUrl}/go/{product.Slug}";
+        var pixelUrl = $"{baseUrl}/px.gif?s={Uri.EscapeDataString(product.Slug)}&v={Uri.EscapeDataString(tag)}";
+        var canonicalUrl = string.IsNullOrWhiteSpace(baseUrl) ? null : $"{baseUrl}/lp/{product.Slug}?v={Uri.EscapeDataString(tag)}";
+
+        var model = LandingPageBuilder.BuildModel(
+            product.Title, a.Copy, a.HasBase ? null : a.Cover, checkoutUrl, pixelUrl, palette,
+            a.Deadline, canonicalUrl, a.CoverImageUrl, a.Legal, a.Disclaimer,
+            showcaseImage: a.ShowcaseUrl is null ? a.Showcase : null,
+            mockupImage: a.MockupUrl is null ? a.Mockup : null,
+            mockupUrl: a.MockupUrl, showcaseUrl: a.ShowcaseUrl, coverUrl: a.CoverImageUrl);
+
+        var html = LandingPageBuilder.Render(model, template, variantOptions);
+        var variantPath = ContentPaths.LpVariant(product.Slug, tag);
+        var stored = await artifactStore.WriteBytesAsync(variantPath, Encoding.UTF8.GetBytes(html), ct);
+
+        lpVariants.Add(LpVariant.Create(product.Id, tag, stored.RelativePath, clock.UtcNow));
+
+        logger.LogInformation("LP variante {Tag} gerada para {Slug} ({Bytes} bytes, headline: {Angle})",
+            tag, product.Slug, stored.SizeBytes, variantOptions.HeadlineOverride ?? "(padrão)");
+    }
+
+    // Deriva um headline alternativo a partir da copy, baseado no ângulo da variante.
+    private static string? DeriveHeadline(LpCopyDto? copy, string productTitle, string angle) => angle switch
+    {
+        "problema" => string.IsNullOrWhiteSpace(copy?.PainSection)
+            ? null
+            : TruncateToSentence(copy!.PainSection!, 120),
+        "solucao" => string.IsNullOrWhiteSpace(copy?.SolutionSection)
+            ? null
+            : TruncateToSentence(copy!.SolutionSection!, 120),
+        _ => copy?.FinalCta?.Headline ?? copy?.Headline, // "resultado" → usa FinalCta ou headline original
+    };
+
+    private static string TruncateToSentence(string text, int maxLength)
+    {
+        if (text.Length <= maxLength) return text;
+        var dot = text.IndexOf('.', 0, Math.Min(maxLength, text.Length));
+        return dot > 20 ? text[..(dot + 1)] : text[..maxLength].TrimEnd() + "…";
     }
 
     private async Task<LpCopyDto?> ReadCopyAsync(string slug, CancellationToken ct)
     {
         var json = await fileStore.ReadTextAsync(ContentPaths.SalesCopy(slug), ct);
-        if (json is null)
-        {
-            return null;
-        }
-
+        if (json is null) return null;
         var parsed = AiJson.Parse<LpCopyDto>(json, "ebook.sales-copy");
         return parsed.IsSuccess ? parsed.Value : null;
     }

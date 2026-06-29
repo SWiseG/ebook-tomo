@@ -123,3 +123,26 @@ public sealed class ArtifactRepository(EbookDbContext db) : IArtifactRepository
 
     public void Add(Artifact artifact) => db.Artifacts.Add(artifact);
 }
+
+public sealed class LpVariantRepository(EbookDbContext db) : ILpVariantRepository
+{
+    public void Add(LpVariant variant) => db.LpVariants.Add(variant);
+
+    public async Task<IReadOnlyList<LpVariant>> GetByProductIdAsync(Guid productId, CancellationToken ct = default) =>
+        await db.LpVariants.AsNoTracking()
+            .Where(v => v.ProductId == productId)
+            .OrderBy(v => v.VariantTag)
+            .ToListAsync(ct);
+
+    public async Task<IReadOnlyList<LpVariant>> GetBySlugAsync(string slug, CancellationToken ct = default) =>
+        await db.LpVariants.AsNoTracking()
+            .Where(v => db.Products.Any(p => p.Slug == slug && p.Id == v.ProductId))
+            .OrderBy(v => v.VariantTag)
+            .ToListAsync(ct);
+
+    public async Task DeleteByProductIdAsync(Guid productId, CancellationToken ct = default)
+    {
+        var rows = await db.LpVariants.Where(v => v.ProductId == productId).ToListAsync(ct);
+        db.LpVariants.RemoveRange(rows);
+    }
+}

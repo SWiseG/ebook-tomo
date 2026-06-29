@@ -111,6 +111,8 @@ public static class DependencyInjection
         services.AddScoped<INicheRepository, NicheRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IArtifactRepository, ArtifactRepository>();
+        services.AddScoped<ILpVariantRepository, LpVariantRepository>();
+        services.AddSingleton<IRandom, SystemRandom>();
         services.AddScoped<IKnowledgeRepository, KnowledgeRepository>();
         services.AddScoped<ITrendSnapshotRepository, TrendSnapshotRepository>();
         services.AddScoped<ISaleRepository, SaleRepository>();

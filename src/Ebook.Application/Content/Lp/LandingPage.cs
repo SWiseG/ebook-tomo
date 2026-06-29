@@ -91,6 +91,18 @@ file static class LpModelImageExtensions
 }
 
 /// <summary>
+/// Opções de variante para A/B — aplicadas sobre o modelo base sem alterar a copy original.
+/// Todas as propriedades são opcionais; null = comportamento padrão do template.
+/// </summary>
+public sealed record LpVariantOptions(
+    /// <summary>Substitui o headline do modelo (ângulo problema/solução/resultado).</summary>
+    string? HeadlineOverride = null,
+    /// <summary>Rótulo do CTA primário (ex.: "Baixar agora", "Acessar", "Quero agora").</summary>
+    string? CtaLabel = null,
+    /// <summary>Quando true, exibe estatísticas/depoimentos antes da seção de problema (prova antecipada).</summary>
+    bool EarlyProof = false);
+
+/// <summary>
 /// Constrói a landing page como HTML auto-contido (CSS inline, capa em data URI),
 /// pronta para servir estaticamente. Função pura — sem dependência de infraestrutura.
 /// Blocos da LP 2.0 (docs/12) só renderizam quando há dados — copy honesta.
@@ -197,15 +209,34 @@ public static class LandingPageBuilder
             string.IsNullOrWhiteSpace(coverUrl) ? null : coverUrl);
     }
 
-    public static string Render(LpModel model, LpTemplate template) => template switch
+    public static string Render(LpModel model, LpTemplate template, LpVariantOptions? variant = null)
     {
-        LpTemplate.Editorial => RenderEditorial(model),
-        LpTemplate.Vibrant => RenderVibrant(model),
-        _ => RenderAurora(model)
-    };
+        var m = ApplyVariant(model, variant);
+        return template switch
+        {
+            LpTemplate.Editorial => RenderEditorial(m, variant),
+            LpTemplate.Vibrant => RenderVibrant(m, variant),
+            _ => RenderAurora(m, variant),
+        };
+    }
+
+    /// <summary>Aplica as opções de variante sobre o modelo (headline/CTA override).</summary>
+    private static LpModel ApplyVariant(LpModel model, LpVariantOptions? variant)
+    {
+        if (variant is null) return model;
+        var headline = string.IsNullOrWhiteSpace(variant.HeadlineOverride) ? model.Headline : variant.HeadlineOverride!;
+        return model with { Headline = headline };
+    }
+
+    // Resolve o rótulo do CTA levando em conta as opções de variante.
+    private static string VariantCtaLabel(LpModel m, LpVariantOptions? variant, string fallback)
+    {
+        if (!string.IsNullOrWhiteSpace(variant?.CtaLabel)) return variant!.CtaLabel!;
+        return string.IsNullOrWhiteSpace(m.FinalCta?.Button) ? fallback : m.FinalCta!.Button!;
+    }
 
     // ---- Template Aurora: herói escuro com gradiente, CTA em destaque, sans moderno ----
-    private static string RenderAurora(LpModel m)
+    private static string RenderAurora(LpModel m, LpVariantOptions? variant = null)
     {
         var bg = m.Palette.Background;
         var accent = m.Palette.Accent;
@@ -302,9 +333,16 @@ public static class LandingPageBuilder
         sb.Append(AnnouncementBar(m));
         sb.Append(TopNav(m));
 
-        sb.Append(HeroSection(m));
+        sb.Append(HeroSection(m, variant));
 
         sb.Append(MediaBar(m));
+
+        // EarlyProof: exibe prova social antes da seção de problema (v. prova antecipada)
+        if (variant?.EarlyProof == true)
+        {
+            sb.Append(StatsBlock(m));
+            sb.Append(Testimonials(m));
+        }
 
         if (!string.IsNullOrWhiteSpace(m.PainSection))
         {
@@ -323,8 +361,13 @@ public static class LandingPageBuilder
         }
 
         sb.Append(StepsTimeline(m, "Como funciona"));
-        sb.Append(StatsBlock(m));
-        sb.Append(Testimonials(m));
+
+        if (variant?.EarlyProof != true)
+        {
+            sb.Append(StatsBlock(m));
+            sb.Append(Testimonials(m));
+        }
+
         sb.Append(AuthorBlock(m));
         sb.Append(ShowcaseBand(m));
 
@@ -333,7 +376,7 @@ public static class LandingPageBuilder
         sb.Append($"<h2 style=\"color:var(--on-dark)\">{Esc(m.Title)}</h2>");
         sb.Append(BonusStack(m));
         sb.Append(PriceBlock(m));
-        sb.Append(CtaButton(m, "Garantir meu acesso", "offer"));
+        sb.Append(CtaButton(m, VariantCtaLabel(m, variant, "Garantir meu acesso"), "offer"));
         sb.Append(SecureBadge(m));
         sb.Append(TrustRow(m));
         sb.Append("</div></section>");
@@ -350,7 +393,7 @@ public static class LandingPageBuilder
     }
 
     // ---- Template Editorial: claro, headings serifados, ar de revista ----
-    private static string RenderEditorial(LpModel m)
+    private static string RenderEditorial(LpModel m, LpVariantOptions? variant = null)
     {
         var bg = m.Palette.Background;
         var accent = m.Palette.Accent;
@@ -412,7 +455,7 @@ public static class LandingPageBuilder
         {
             sb.Append($"<p class=\"sub\">{Esc(m.Subheadline!)}</p>");
         }
-        sb.Append(CtaButton(m, "Começar agora", "hero"));
+        sb.Append(CtaButton(m, VariantCtaLabel(m, variant, "Começar agora"), "hero"));
         sb.Append(HeroProof(m));
         if (m.HeroArt() is not null)
         {
@@ -421,6 +464,12 @@ public static class LandingPageBuilder
         sb.Append("</div></header>");
 
         sb.Append(MediaBar(m));
+
+        if (variant?.EarlyProof == true)
+        {
+            sb.Append(StatsBlock(m));
+            sb.Append(Testimonials(m));
+        }
 
         if (!string.IsNullOrWhiteSpace(m.PainSection))
         {
@@ -439,8 +488,13 @@ public static class LandingPageBuilder
         }
 
         sb.Append(StepsTimeline(m, "Como funciona"));
-        sb.Append(StatsBlock(m));
-        sb.Append(Testimonials(m));
+
+        if (variant?.EarlyProof != true)
+        {
+            sb.Append(StatsBlock(m));
+            sb.Append(Testimonials(m));
+        }
+
         sb.Append(AuthorBlock(m));
         sb.Append(ShowcaseBand(m));
 
@@ -448,7 +502,7 @@ public static class LandingPageBuilder
         sb.Append($"<h2>{Esc(m.Title)}</h2>");
         sb.Append(BonusStack(m));
         sb.Append(PriceBlock(m));
-        sb.Append(CtaButton(m, "Quero garantir", "offer"));
+        sb.Append(CtaButton(m, VariantCtaLabel(m, variant, "Quero garantir"), "offer"));
         sb.Append(SecureBadge(m));
         sb.Append(TrustRow(m));
         sb.Append("</div></section>");
@@ -465,7 +519,7 @@ public static class LandingPageBuilder
     }
 
     // ---- Template Vibrant: claro/quente, acento vibrante, cards modernos, oferta em faixa escura ----
-    private static string RenderVibrant(LpModel m)
+    private static string RenderVibrant(LpModel m, LpVariantOptions? variant = null)
     {
         var bg = m.Palette.Background;
         var accent = m.Palette.Accent;
@@ -524,6 +578,12 @@ public static class LandingPageBuilder
 
         sb.Append(MediaBar(m));
 
+        if (variant?.EarlyProof == true)
+        {
+            sb.Append(StatsBlock(m));
+            sb.Append(Testimonials(m));
+        }
+
         if (!string.IsNullOrWhiteSpace(m.PainSection))
         {
             sb.Append($"<section class=\"pain\"><div class=\"wrap\"><h2>O problema</h2><p>{Esc(m.PainSection!)}</p></div></section>");
@@ -541,8 +601,13 @@ public static class LandingPageBuilder
         }
 
         sb.Append(StepsTimeline(m, "Como funciona"));
-        sb.Append(StatsBlock(m));
-        sb.Append(Testimonials(m));
+
+        if (variant?.EarlyProof != true)
+        {
+            sb.Append(StatsBlock(m));
+            sb.Append(Testimonials(m));
+        }
+
         sb.Append(AuthorBlock(m));
         sb.Append(ShowcaseBand(m));
 
@@ -550,7 +615,7 @@ public static class LandingPageBuilder
         sb.Append($"<h2>{Esc(m.Title)}</h2>");
         sb.Append(BonusStack(m));
         sb.Append(PriceBlock(m));
-        sb.Append(CtaButton(m, "Garantir meu acesso", "offer"));
+        sb.Append(CtaButton(m, VariantCtaLabel(m, variant, "Garantir meu acesso"), "offer"));
         sb.Append(SecureBadge(m));
         sb.Append(TrustRow(m));
         sb.Append("</div></section>");
@@ -716,7 +781,7 @@ public static class LandingPageBuilder
 
     // Hero v2 (docs/18): fundo de IMAGEM (free-first, via Showcase) com BLUR sobre a cor da paleta +
     // glow accent; CTA duplo (comprar + "ver o método"); prova social colada ao CTA. CSS por template.
-    private static string HeroSection(LpModel m)
+    private static string HeroSection(LpModel m, LpVariantOptions? variant = null)
     {
         var sb = new StringBuilder("<header class=\"hero\">");
         if (m.Showcase() is { } heroImg)
@@ -732,7 +797,7 @@ public static class LandingPageBuilder
             sb.Append($"<p class=\"sub\">{Esc(m.Subheadline!)}</p>");
         }
         sb.Append("<div class=\"hero-actions\">");
-        sb.Append(CtaButton(m, PrimaryCtaLabel(m), "hero"));
+        sb.Append(CtaButton(m, VariantCtaLabel(m, variant, PrimaryCtaLabel(m)), "hero"));
         if (m.Steps.Count > 0 || !string.IsNullOrWhiteSpace(m.SolutionSection))
         {
             sb.Append("<a class=\"cta ghost\" href=\"#metodo\">Ver o método</a>");

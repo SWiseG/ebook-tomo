@@ -1,9 +1,11 @@
 using Ebook.Application.Analytics;
 using Ebook.Application.Common.Messaging;
+using Ebook.Application.Common.Settings;
 using Ebook.Application.Content;
 using Ebook.Application.Publishing;
 using Ebook.Domain.Abstractions;
 using Ebook.Domain.Analytics;
+using Ebook.Domain.Products;
 using Ebook.Infrastructure.Persistence;
 using Ebook.Infrastructure.Publishing;
 using Microsoft.AspNetCore.Mvc;
@@ -27,11 +29,34 @@ public static class PublicEndpoints
     {
         var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("LandingPage");
 
-        app.MapGet("/lp/{slug}", async (string slug, IArtifactStore artifacts, CancellationToken ct) =>
+        app.MapGet("/lp/{slug}", async (
+            string slug,
+            [FromQuery(Name = "v")] string? variantTag,
+            IArtifactStore artifacts,
+            ILpVariantRepository lpVariants,
+            IMetricsReader metricsReader,
+            ISettingsStore settings,
+            IRandom rng,
+            CancellationToken ct) =>
         {
             if (!IsValidSlug(slug))
             {
                 return Results.NotFound();
+            }
+
+            // Resolve qual variante servir
+            var resolvedTag = await ResolveVariantTagAsync(
+                slug, variantTag, lpVariants, metricsReader, settings, rng, ct);
+
+            // Tenta servir a variante pedida/escolhida; se não existir, cai no bundle padrão
+            if (resolvedTag is not null)
+            {
+                var variantPath = ContentPaths.LpVariant(slug, resolvedTag);
+                var variantBytes = await artifacts.ReadBytesAsync(variantPath, ct);
+                if (variantBytes is not null)
+                {
+                    return Results.Bytes(variantBytes, "text/html; charset=utf-8");
+                }
             }
 
             var bytes = await artifacts.ReadBytesAsync(ContentPaths.LpBundle(slug), ct);
@@ -94,6 +119,7 @@ public static class PublicEndpoints
 
         app.MapGet("/px.gif", async (
             string? s,
+            [FromQuery(Name = "v")] string? variantTag,
             [FromQuery(Name = "utm_source")] string? utmSource,
             [FromQuery(Name = "utm_campaign")] string? utmCampaign,
             [FromQuery(Name = "utm_content")] string? utmContent,
@@ -102,8 +128,9 @@ public static class PublicEndpoints
         {
             if (!string.IsNullOrWhiteSpace(s) && IsValidSlug(s))
             {
+                var safeTag = IsValidVariantTag(variantTag) ? variantTag : null;
                 await TryRecordAsync(recorder, new AnalyticsHit(
-                    s, AnalyticsEventType.Visit, utmSource, utmCampaign, utmContent), logger, ct);
+                    s, AnalyticsEventType.Visit, utmSource, utmCampaign, utmContent, safeTag), logger, ct);
             }
 
             return Results.Bytes(TransparentGif, "image/gif");
@@ -214,5 +241,43 @@ public static class PublicEndpoints
         }
 
         return true;
+    }
+
+    private static bool IsValidVariantTag(string? tag) =>
+        !string.IsNullOrEmpty(tag) && tag.Length <= 20 &&
+        tag.All(c => char.IsAsciiLetterLower(c) || char.IsAsciiDigit(c) || c == '-');
+
+    private static async Task<string?> ResolveVariantTagAsync(
+        string slug,
+        string? requestedTag,
+        ILpVariantRepository lpVariants,
+        IMetricsReader metricsReader,
+        ISettingsStore settings,
+        IRandom rng,
+        CancellationToken ct)
+    {
+        // Explicit tag via ?v= — honour directly (served by the file existence check upstream)
+        if (IsValidVariantTag(requestedTag))
+            return requestedTag;
+
+        var variants = await lpVariants.GetBySlugAsync(slug, ct);
+        if (variants.Count <= 1) return null;
+
+        var smartTraffic = await settings.GetOrDefaultAsync(SettingKeys.LpSmartTraffic, false, ct);
+        if (!smartTraffic)
+        {
+            // Stateless round-robin: distribute by TickCount to avoid any persistent state
+            return variants[Math.Abs(Environment.TickCount) % variants.Count].VariantTag;
+        }
+
+        // Thompson Sampling: read real conversion stats from AnalyticsEvent
+        var productId = variants[0].ProductId;
+        var raw = await metricsReader.GetVariantStatsAsync(productId, days: 30, ct);
+        var allStats = variants
+            .Select(v => raw.FirstOrDefault(s => s.VariantTag == v.VariantTag)
+                         ?? new VariantStats(v.VariantTag, 0, 0))
+            .ToList();
+
+        return LpVariantRouter.Route(allStats, rng);
     }
 }

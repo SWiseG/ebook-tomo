@@ -8,7 +8,8 @@ public sealed record AnalyticsHit(
     AnalyticsEventType Type,
     string? UtmSource,
     string? UtmCampaign,
-    string? UtmContent);
+    string? UtmContent,
+    string? VariantTag = null);
 
 /// <summary>
 /// Grava eventos brutos de tráfego (E11-01). Resiliente: nunca deve quebrar o pixel/redirect.

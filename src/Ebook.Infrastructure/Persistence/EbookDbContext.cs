@@ -22,6 +22,7 @@ public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : D
     public DbSet<Channel> Channels => Set<Channel>();
     public DbSet<AnalyticsEvent> AnalyticsEvents => Set<AnalyticsEvent>();
     public DbSet<MetricDaily> MetricDailies => Set<MetricDaily>();
+    public DbSet<LpVariant> LpVariants => Set<LpVariant>();
     public DbSet<OptimizationRun> OptimizationRuns => Set<OptimizationRun>();
     public DbSet<OptimizationDecision> OptimizationDecisions => Set<OptimizationDecision>();
     public DbSet<OutboxEventRecord> OutboxEvents => Set<OutboxEventRecord>();
@@ -161,8 +162,19 @@ public sealed class EbookDbContext(DbContextOptions<EbookDbContext> options) : D
             e.Property(x => x.UtmSource).HasMaxLength(120);
             e.Property(x => x.UtmCampaign).HasMaxLength(120);
             e.Property(x => x.UtmContent).HasMaxLength(120);
+            e.Property(x => x.VariantTag).HasMaxLength(20);
             e.HasIndex(x => x.OccurredAtUtc);
             e.HasIndex(x => new { x.ProductId, x.OccurredAtUtc });
+            e.HasIndex(x => new { x.ProductId, x.VariantTag, x.OccurredAtUtc });
+        });
+
+        modelBuilder.Entity<LpVariant>(e =>
+        {
+            e.ToTable("LpVariant");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.VariantTag).HasMaxLength(20);
+            e.Property(x => x.FilePath).HasMaxLength(400);
+            e.HasIndex(x => new { x.ProductId, x.VariantTag }).IsUnique();
         });
 
         modelBuilder.Entity<MetricDaily>(e =>

@@ -34,6 +34,9 @@ public sealed class AnalyticsEvent : Entity
     public string? UtmCampaign { get; private set; }
     public string? UtmContent { get; private set; }
 
+    /// <summary>Tag da variante de LP que gerou o evento (ex.: "v1", "v2"). Null = variante única.</summary>
+    public string? VariantTag { get; private set; }
+
     public static AnalyticsEvent Create(
         Guid? productId,
         AnalyticsEventType type,
@@ -41,7 +44,8 @@ public sealed class AnalyticsEvent : Entity
         DateTime occurredAtUtc,
         string? utmSource,
         string? utmCampaign,
-        string? utmContent) =>
+        string? utmContent,
+        string? variantTag = null) =>
         new()
         {
             ProductId = productId,
@@ -50,7 +54,8 @@ public sealed class AnalyticsEvent : Entity
             OccurredAtUtc = occurredAtUtc,
             UtmSource = utmSource,
             UtmCampaign = utmCampaign,
-            UtmContent = utmContent
+            UtmContent = utmContent,
+            VariantTag = variantTag,
         };
 }
 
