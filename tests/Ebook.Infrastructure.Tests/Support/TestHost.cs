@@ -41,6 +41,7 @@ public static class TestHost
         services.AddSingleton<IMediaGateway, FakeMediaGateway>();
         services.AddSingleton<IPromptLibrary, NullPromptLibrary>();
         services.AddSingleton<IEbookExporter, FakeEbookExporter>();
+        services.AddSingleton<IDocxExporter, FakeDocxExporter>();
         services.AddSingleton<IStyleAnalyzer, FakeStyleAnalyzer>();
         services.AddSingleton<Application.Content.Images.ICoverQa, FakeCoverQa>();
 

@@ -38,12 +38,14 @@ public class EbookGenerationTests
         var pdf = new FakePdfRenderer();
         var img = new FakeImageComposer();
         var epub = new FakeEbookExporter();
+        var docx = new FakeDocxExporter();
         var provider = TestHost.Build(s =>
         {
             s.AddApplication(); // dispatcher + KnowledgeService + handlers (command/query/job) por scan
             s.AddSingleton<IAiGateway>(ai);
             s.AddSingleton<IPdfRenderer>(pdf);
             s.AddSingleton<IEbookExporter>(epub);
+            s.AddSingleton<IDocxExporter>(docx);
             s.AddSingleton<IImageComposer>(img);
             s.AddSingleton<IPhotoProvider, NullPhotoProvider>();
             s.AddSingleton<IKiwifyPublisher>(new FakeKiwifyPublisher());
@@ -162,8 +164,9 @@ public class EbookGenerationTests
         Assert.Equal(1, await db.Artifacts.CountAsync(a => a.Type == ArtifactType.Mockup));
         Assert.Equal(1, await db.Artifacts.CountAsync(a => a.Type == ArtifactType.Pdf));
         Assert.Equal(1, await db.Artifacts.CountAsync(a => a.Type == ArtifactType.Epub));
+        Assert.Equal(1, await db.Artifacts.CountAsync(a => a.Type == ArtifactType.Docx));
         Assert.Equal(1, await db.Artifacts.CountAsync(a => a.Type == ArtifactType.LpBundle));
-        Assert.Equal(8, await db.Jobs.CountAsync()); // outline + 2 capítulos + review + cover + pdf + epub + lp
+        Assert.Equal(9, await db.Jobs.CountAsync()); // outline + 2 capítulos + review + cover + pdf + epub + docx + lp
         Assert.True(await db.Jobs.AllAsync(j => j.Status == JobStatus.Succeeded));
 
         // EPUB gerado uma vez pelo exporter fake

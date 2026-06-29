@@ -74,6 +74,12 @@ public sealed class CoverJobHandler(
             ContentJobs.EpubKey(product.Id),
             ProductId: product.Id), ct);
 
+        await jobQueue.EnqueueAsync(new JobRequest(
+            ContentJobs.Docx,
+            JsonSerializer.Serialize(new DocxJobPayload(product.Id), JsonOptions),
+            ContentJobs.DocxKey(product.Id),
+            ProductId: product.Id), ct);
+
         return Result.Success();
     }
 

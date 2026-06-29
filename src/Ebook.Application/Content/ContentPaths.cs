@@ -21,6 +21,9 @@ public static class ContentPaths
     /// <summary>Caminho do EPUB no <c>IArtifactStore</c> (/data/artifacts).</summary>
     public static string Epub(string slug, int version = 1) => $"products/{slug}/epub/ebook.v{version}.epub";
 
+    /// <summary>Caminho do DOCX no <c>IArtifactStore</c> (/data/artifacts).</summary>
+    public static string Docx(string slug, int version = 1) => $"products/{slug}/docx/ebook.v{version}.docx";
+
     /// <summary>Imagens no <c>IArtifactStore</c> (/data/artifacts).</summary>
     public static string Cover(string slug) => $"products/{slug}/images/cover.png";
 
