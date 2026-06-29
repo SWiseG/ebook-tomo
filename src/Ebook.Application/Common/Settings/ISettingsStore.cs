@@ -72,4 +72,11 @@ public static class SettingKeys
 
     /// <summary>Loop de aprendizado de estilo (E15): Claude vision analisa capas e grava playbook por nicho (default false; exige CLI Claude com visão).</summary>
     public const string StyleLearnEnabled = "style.learn.enabled";
+
+    /// <summary>
+    /// Número de candidatas no torneio de capas (A3). Default 1 = comportamento atual (uma geração + QA
+    /// booleano). Valores maiores geram N variações (cena × cor) e escolhem a de maior score de visão.
+    /// Cada candidata consome uma chamada de cota do IMediaGateway — use com moderação.
+    /// </summary>
+    public const string CoverTournamentSize = "cover.tournamentSize";
 }

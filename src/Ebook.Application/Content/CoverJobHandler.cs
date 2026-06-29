@@ -41,6 +41,7 @@ public sealed class CoverJobHandler(
     ILogger<CoverJobHandler> logger) : IJobHandler
 {
     private const int Version = 1;
+    private const int TournamentScoreThreshold = 30;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     public string Type => ContentJobs.Cover;
@@ -105,10 +106,9 @@ public sealed class CoverJobHandler(
             Features: plan?.Features.Select(f => new CoverFeature(f.Text, f.Icon)).ToList(),
             Seal: plan?.Seal);
 
-        // Caminho full-AI (docs/14 WP-5), gated: a IA gera a capa INTEIRA com texto; QA de visão
-        // (WP-8) confere o título e, se reprovar (ou estiver desligado), usa a composição Skia rica.
-        var coverPng = await TryFullAiCoverAsync(title, plan, palette, nicheSlug, product.Id, ct)
-            ?? composer.RenderCover(art, background);
+        // Torneio de capas (A3): gera N candidatas full-AI, escore cada uma, escolhe a melhor.
+        // tournamentSize=1 → comportamento original (tenta 1 capa full-AI + gate ReviewAsync).
+        var coverPng = await RunTournamentAsync(title, plan, palette, nicheSlug, art, background, product.Id, ct);
         var coverStored = await artifactStore.WriteBytesAsync(ContentPaths.Cover(product.Slug), coverPng, ct);
         await AddArtifactIfNewAsync(product.Id, ArtifactType.Cover, coverStored, ct);
 
@@ -125,10 +125,116 @@ public sealed class CoverJobHandler(
             product.Slug, plan is not null, background is not null);
     }
 
+    // Torneio de capas (A3):
+    // - tournamentSize=1 (default): comportamento original — 1 tentativa full-AI + ReviewAsync gate.
+    // - tournamentSize>1: gera até N candidatas (variando cena e cor), escore cada uma com ScoreAsync,
+    //   escolhe a de maior score; fallback Skia se todas ficarem abaixo do limiar ou nenhuma gerar.
+    private async Task<byte[]> RunTournamentAsync(
+        string title, CoverPlanDto? plan, NichePalette palette, string nicheSlug,
+        CoverArt art, byte[]? background, Guid productId, CancellationToken ct)
+    {
+        var size = await settings.GetOrDefaultAsync(SettingKeys.CoverTournamentSize, 1, ct);
+
+        if (size <= 1)
+        {
+            return await TryFullAiCoverAsync(title, plan, palette, nicheSlug, productId, ct)
+                ?? composer.RenderCover(art, background);
+        }
+
+        // Torneio: só roda se a geração full-AI estiver habilitada
+        if (plan is null || !await settings.GetOrDefaultAsync(SettingKeys.CoverAiFullCover, false, ct))
+        {
+            return composer.RenderCover(art, background);
+        }
+
+        var variants = BuildVariants(plan, palette, size);
+        var candidates = new List<(byte[] Png, int Score)>(variants.Count);
+
+        foreach (var (varPlan, varPalette) in variants)
+        {
+            var png = await TryGenerateCandidateAsync(title, varPlan, varPalette, nicheSlug, productId, ct);
+            if (png is null) continue;
+            var score = await coverQa.ScoreAsync(png, title, nicheSlug, ct);
+            candidates.Add((png, score.Score));
+        }
+
+        if (candidates.Count == 0)
+        {
+            logger.LogInformation("Torneio de capas: nenhuma candidata gerada; usando Skia.");
+            return composer.RenderCover(art, background);
+        }
+
+        var winner = candidates.MaxBy(c => c.Score);
+        if (winner.Score < TournamentScoreThreshold)
+        {
+            logger.LogInformation(
+                "Torneio de capas: melhor score {Score} abaixo do limiar {Threshold}; usando Skia.",
+                winner.Score, TournamentScoreThreshold);
+            return composer.RenderCover(art, background);
+        }
+
+        logger.LogInformation("Torneio de capas: vencedora com score {Score} entre {Total} candidatas.",
+            winner.Score, candidates.Count);
+        return winner.Png;
+    }
+
+    // Gera variações do plano: 2 enquadramentos de cena × 2 esquemas de cor → até 4 candidatas.
+    private static IReadOnlyList<(CoverPlanDto Plan, NichePalette Palette)> BuildVariants(
+        CoverPlanDto plan, NichePalette palette, int count)
+    {
+        var scenes = new[]
+        {
+            plan.Scene,
+            plan.Scene + ", close-up composition, intimate framing",
+        };
+        var palettes = new[]
+        {
+            palette,
+            palette with { Background = palette.Accent, Accent = palette.Background },
+        };
+
+        var result = new List<(CoverPlanDto, NichePalette)>(Math.Min(count, 4));
+        foreach (var scene in scenes)
+        {
+            foreach (var pal in palettes)
+            {
+                result.Add((plan with { Scene = scene }, pal));
+                if (result.Count >= count) return result;
+            }
+        }
+        return result;
+    }
+
+    // Gera apenas os bytes da imagem (sem scoring) para o torneio.
+    private async Task<byte[]?> TryGenerateCandidateAsync(
+        string title, CoverPlanDto plan, NichePalette palette, string nicheSlug, Guid productId, CancellationToken ct)
+    {
+        var prompt = await promptLibrary.RenderAsync("media/cover-full", new Dictionary<string, string>
+        {
+            ["title"] = title,
+            ["subtitle"] = plan.Subtitle,
+            ["eyebrow"] = plan.Eyebrow,
+            ["seal"] = plan.Seal,
+            ["features"] = string.Join("; ", plan.Features.Select(f => f.Text)),
+            ["scene"] = plan.Scene,
+            ["background"] = palette.Background,
+            ["accent"] = palette.Accent,
+            ["onDark"] = palette.OnDark,
+            ["displayFont"] = palette.Display,
+        }, ct);
+        if (prompt.IsFailure) return null;
+
+        var media = await mediaGateway.GenerateAsync(
+            new MediaBrief("cover-full", prompt.Value, nicheSlug, nicheSlug, 1600, 2400, productId, MediaKind.CoverWithText), ct);
+        if (media.IsFailure) return null;
+
+        return composer.FitCover(media.Value.Bytes);
+    }
+
     // Ilustração de fundo da capa: cena concreta planejada pela IA via Media Gateway (free-first),
     // com fallback para a foto de banco por nome do nicho. Best-effort: null → gradiente da paleta.
     private async Task<byte[]?> ResolveBackgroundAsync(
-        Content.Images.CoverPlanDto? plan, ProductBrand brand, NichePalette palette, string title,
+        CoverPlanDto? plan, ProductBrand brand, NichePalette palette, string title,
         string nicheName, string nicheSlug, Guid productId, CancellationToken ct)
     {
         if (!string.IsNullOrWhiteSpace(plan?.Scene))
@@ -160,47 +266,25 @@ public sealed class CoverJobHandler(
     // Gera via modelo capaz de texto → QA de visão (WP-8) → aceita (normaliza p/ 1600×2400) ou null
     // (o chamador então usa a composição Skia). Best-effort: qualquer falha → null.
     private async Task<byte[]?> TryFullAiCoverAsync(
-        string title, Content.Images.CoverPlanDto? plan, NichePalette palette, string nicheSlug, Guid productId, CancellationToken ct)
+        string title, CoverPlanDto? plan, NichePalette palette, string nicheSlug, Guid productId, CancellationToken ct)
     {
         if (plan is null || !await settings.GetOrDefaultAsync(SettingKeys.CoverAiFullCover, false, ct))
         {
             return null;
         }
 
-        var prompt = await promptLibrary.RenderAsync("media/cover-full", new Dictionary<string, string>
-        {
-            ["title"] = title,
-            ["subtitle"] = plan.Subtitle,
-            ["eyebrow"] = plan.Eyebrow,
-            ["seal"] = plan.Seal,
-            ["features"] = string.Join("; ", plan.Features.Select(f => f.Text)),
-            ["scene"] = plan.Scene,
-            ["background"] = palette.Background,
-            ["accent"] = palette.Accent,
-            ["onDark"] = palette.OnDark,
-            ["displayFont"] = palette.Display,
-        }, ct);
-        if (prompt.IsFailure)
-        {
-            return null;
-        }
+        var png = await TryGenerateCandidateAsync(title, plan, palette, nicheSlug, productId, ct);
+        if (png is null) return null;
 
-        var media = await mediaGateway.GenerateAsync(
-            new MediaBrief("cover-full", prompt.Value, nicheSlug, nicheSlug, 1600, 2400, productId, MediaKind.CoverWithText), ct);
-        if (media.IsFailure)
-        {
-            return null;
-        }
-
-        var verdict = await coverQa.ReviewAsync(media.Value.Bytes, title, ct);
+        var verdict = await coverQa.ReviewAsync(png, title, ct);
         if (!verdict.Accepted)
         {
             logger.LogInformation("Capa full-AI reprovada no QA ({Issues}); usando composição Skia.", verdict.Issues);
             return null;
         }
 
-        logger.LogInformation("Capa full-AI aprovada (score {Score}) via {Provider}.", verdict.Score, media.Value.Provider);
-        return composer.FitCover(media.Value.Bytes);
+        logger.LogInformation("Capa full-AI aprovada (score {Score}).", verdict.Score);
+        return png;
     }
 
     private async Task AddArtifactIfNewAsync(Guid productId, ArtifactType type, StoredFile stored, CancellationToken ct)

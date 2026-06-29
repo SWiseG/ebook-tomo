@@ -1,5 +1,17 @@
 namespace Ebook.Application.Content.Images;
 
+/// <summary>Score detalhado do QA de visão de uma capa (torneio A3).</summary>
+public sealed record CoverScore(
+    int Score,
+    int ThumbnailScore,
+    int Contrast,
+    bool TitleLegible,
+    bool GenreFit,
+    IReadOnlyList<string> Issues)
+{
+    public static CoverScore Failed => new(0, 0, 0, false, false, ["QA indisponível"]);
+}
+
 /// <summary>Veredito do QA de visão sobre uma capa gerada por IA (docs/14 WP-8).</summary>
 public sealed record CoverQaVerdict(bool Legible, bool TitleMatches, int Score, string Issues)
 {
@@ -15,4 +27,7 @@ public sealed record CoverQaVerdict(bool Legible, bool TitleMatches, int Score, 
 public interface ICoverQa
 {
     Task<CoverQaVerdict> ReviewAsync(byte[] coverPng, string title, CancellationToken ct = default);
+
+    /// <summary>Score detalhado para o torneio de capas (A3): avalia tamanho cheio + thumbnail ~150px.</summary>
+    Task<CoverScore> ScoreAsync(byte[] coverPng, string title, string nicheSlug, CancellationToken ct = default);
 }
