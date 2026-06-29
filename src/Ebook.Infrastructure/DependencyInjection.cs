@@ -12,7 +12,6 @@ using Ebook.Application.Content.Pdf;
 using Ebook.Application.Analytics;
 using Ebook.Application.Knowledge;
 using Ebook.Application.Discovery;
-using Ebook.Application.Knowledge;
 using Ebook.Application.Media;
 using Ebook.Application.Optimization;
 using Ebook.Application.Publishing;
