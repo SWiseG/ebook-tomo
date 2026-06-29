@@ -101,6 +101,16 @@ public sealed class FakeAiGateway : IAiGateway
               ]
             }
             """,
+        "ebook.continuity" => """
+            {
+              "bridges": [
+                { "chapterN": 1, "text": "No próximo capítulo, você transforma esse diagnóstico em ação concreta." },
+                { "chapterN": 2, "text": "Você agora tem o mapa completo — o próximo passo é executar sem hesitar." }
+              ],
+              "removals": [],
+              "hookFixes": []
+            }
+            """,
         "ebook.sales-copy" => """
             {
               "headline": "Assuma o controle do seu dinheiro",

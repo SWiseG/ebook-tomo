@@ -166,18 +166,17 @@ O pipeline gera texto competente em um corpo visualmente amador. Evidências no 
 - `chapter.md` emite os marcadores. 156 testes OK.
 - **Pendente (próxima leva):** bloco de imagem no corpo (vem com a Frente D/E14), CTA-respiro no meio, sumário visual com ícones (Phosphor/Lucide).
 
-### 🔵 Frente D — Imagens no corpo *(monta sobre a Onda 2 — E14 Media Gateway)*
-- 1 imagem / 2-3 páginas, de: E14 (geração free-first) para conceitos + Unsplash/Pixabay (hoje só Pexels) para foto editorial.
-- A `query` por seção (Frente B) alimenta o gateway; o `PdfJobHandler` injeta as imagens.
+### ✅ Frente D — Imagens no corpo *(CONCLUÍDA)*
+- `PdfJobHandler.InjectIllustrationsAsync` injeta 1 imagem / 2–3 páginas via E14 Media Gateway (cadeia free-first: Pollinations → Pexels → Skia local), bannerizadas 2:1, cache content-addressable.
+- `ComposeInfographics` gera infográficos inline por seção.
+- A `query` por seção (Frente B) alimenta o gateway; imagens injetadas por capítulo com teto de custo configurável.
 
-### 🔵 Frente E — Auditoria de conversão *(liga ao E16 + E15)*
-- Passada de IA validando o checklist da Fase 4 como **gate antes de publicar** — o "linter de persuasão" do E16 aplicado ao e-book.
+### ✅ Frente E — Auditoria de conversão *(ConversionAudit implementado)*
+- `ConversionAudit` faz passada de IA validando o checklist da Fase 4 (copy, estrutura PAS, hook, imagens, micro-CTA).
+- **Pendente (Sprint B2):** gate automático que bloqueia a publicação quando o score estiver abaixo do limiar configurado.
 
 ### Sequência recomendada
 ```
-JÁ (quick wins, paralelo):  Frente A (fontes/cor) + Frente B (prompts)
-Depois:                     Frente C (layout rico, usa marcadores de B)
-Com a Onda 2 (E14):         Frente D (imagens no corpo)
-Com a Onda 5 (E16):         Frente E (auditoria de conversão)
+✅ A (fontes/cor)  →  ✅ B (prompts)  →  ✅ C (layout rico)  →  ✅ D (imagens)  →  ✅ E (ConversionAudit)
+Pendente: Sprint B2 — gate automático (bloqueia publicação se score < limiar)
 ```
-A e B entregam salto imediato sem tocar em IA de imagem nem migrations. C e D dependem da infra de imagem (E14, já no roadmap).

@@ -151,6 +151,7 @@ public class EbookGenerationTests
         Assert.Equal(1, ai.CallsFor("ebook.outline"));
         Assert.Equal(2, ai.CallsFor("ebook.chapter"));
         Assert.Equal(1, ai.CallsFor("ebook.review"));
+        Assert.Equal(1, ai.CallsFor("ebook.continuity")); // 1 chamada extra por e-book (A1)
         Assert.Equal(1, ai.CallsFor("ebook.sales-copy"));
 
         Assert.Equal(1, await db.KnowledgeAssets.CountAsync());
@@ -173,7 +174,8 @@ public class EbookGenerationTests
 
         await RunJobsAsync(provider);
 
-        Assert.Equal(0, ai.CallsFor("ebook.review")); // Draft usa moldura templada
+        Assert.Equal(0, ai.CallsFor("ebook.review"));      // Draft usa moldura templada
+        Assert.Equal(0, ai.CallsFor("ebook.continuity"));  // Draft pula continuidade
     }
 
     [Fact]

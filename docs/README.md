@@ -18,12 +18,13 @@ SaaS autônomo para descoberta de nichos, geração, publicação, divulgação 
 | [10-geracao-ia-midia.md](10-geracao-ia-midia.md) | Media Gateway (E14): geração de imagens free-first + loop de aprendizado de estilo (E15) |
 | [11-padrao-editorial.md](11-padrao-editorial.md) | Padrão editorial inegociável (fontes, cores, imagens, copy, arquitetura) + diagnóstico + plano de melhoria |
 | [12-pdf-recursos-visuais.md](12-pdf-recursos-visuais.md) | Pesquisa: PDF mais bonito (QuestPDF SVG/Layers/gradientes/drop cap) + repositórios de imagens/SVGs + perfil visual por segmento |
+| [17-landing-page-roadmap.md](17-landing-page-roadmap.md) | Roadmap de LPs de alta conversão (6 fases ✅): modelo de copy persuasiva, design por nicho, interatividade, SEO/JSON-LD, compliance |
 | [19-salto-produto-pdf-lp-capa.md](19-salto-produto-pdf-lp-capa.md) | Estratégia do "salto": multi-superfície + motor de conversão + profundidade editorial (com pesquisa de mercado 2026) |
 | [sprints/](sprints/README.md) | Planos de execução detalhados (Sprints A–E) do salto — "ensinar o Claude do futuro a fazer" |
 
 ## Resumo executivo
 
-- **Monolito modular** ASP.NET Core 8 em **1 container Docker** num VPS Linux barato (~US$ 5/mês) — API + jobs + scheduler + Angular estático no mesmo processo.
+- **Monolito modular** .NET 10 em **1 container Docker** num VPS Linux barato (~US$ 5/mês) — API + jobs + scheduler + Angular estático no mesmo processo.
 - **SQLite (WAL) + filesystem**: banco apenas para índice/estado; todo conteúdo gerado (capítulos, conhecimento, prompts, métricas brutas) vive em **JSON/arquivos versionáveis**.
 - **AI Gateway com hierarquia de custo**: cache → base de conhecimento reutilizável → **Claude via assinatura Pro (CLI headless)** → API paga (desligada por padrão). Orçamento de tokens por pipeline.
 - **Ciclo autônomo de 30 dias**: descobrir nichos → enriquecer conhecimento → gerar e-book + PDF + capa → landing page → Kiwify → posts sociais → coletar métricas → **ROI Optimizer** decide matar/iterar/escalar, mantendo ≥ 10 produtos ativos.
@@ -31,4 +32,4 @@ SaaS autônomo para descoberta de nichos, geração, publicação, divulgação 
 
 ## Status
 
-🟢 **Em produção** (https://app.tomolibrary.com.br). M1 concluído (1º produto sincronizado Kiwify). Próximo marco: M2 (3 produtos ativos + funil de conversão medido). Ver [roadmap](03-roadmap-mvp.md) para as ondas de entrega.
+🟢 **Em produção** (https://app.tomolibrary.com.br). M1 concluído (1º produto sincronizado Kiwify). Pipeline editorial completo: PDF com tipografia profissional + imagens por capítulo + layout editorial rico; LP de alta conversão (14 blocos persuasivos, 3 templates por nicho, SEO/JSON-LD, compliance); capa com identidade visual por nicho (paleta emocional + fontes por categoria). 236 testes verdes. Sprint E em andamento (doc drift). Próximos marcos: Sprints A–D (multi-formato, motor de conversão, profundidade editorial). Ver [roadmap](03-roadmap-mvp.md) e [sprints/](sprints/README.md).
