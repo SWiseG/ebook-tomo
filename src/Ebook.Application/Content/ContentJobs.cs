@@ -9,6 +9,7 @@ public static class ContentJobs
     public const string Cover = "ebook.cover";
     public const string Pdf = "ebook.pdf";
     public const string Lp = "lp.generate";
+    public const string LpLab = "lp.lab";
 
     public static string OutlineKey(Guid productId) => $"outline:{productId}";
     public static string ChapterKey(Guid productId, int n) => $"chapter:{productId}:{n}";
@@ -16,6 +17,7 @@ public static class ContentJobs
     public static string CoverKey(Guid productId) => $"cover:{productId}";
     public static string PdfKey(Guid productId) => $"pdf:{productId}";
     public static string LpKey(Guid productId) => $"lp:{productId}";
+    public static string LpLabKey(Guid runId) => $"lp-lab:{runId}";
 }
 
 public sealed record OutlineJobPayload(Guid ProductId);
@@ -29,3 +31,5 @@ public sealed record CoverJobPayload(Guid ProductId);
 public sealed record PdfJobPayload(Guid ProductId);
 
 public sealed record LpJobPayload(Guid ProductId);
+
+public sealed record LpLabJobPayload(Guid RunId, Guid NicheId, string? Feedback);

@@ -35,7 +35,7 @@ public sealed class MediaGateway(
             {
                 cached.HitCount++;
                 cached.LastHitAtUtc = clock.UtcNow;
-                await RecordUsageAsync(brief.Purpose, MediaProvider.Cache, cacheHit: true, bytes.Length, 0, ct);
+                await RecordUsageAsync(brief.Purpose, MediaProvider.Cache, cacheHit: true, bytes.Length, 0, brief.ProductId, ct);
                 return Result.Success(new MediaResult(bytes, MediaProvider.Cache, CacheHit: true));
             }
 
@@ -43,8 +43,8 @@ public sealed class MediaGateway(
             await db.SaveChangesAsync(ct);
         }
 
-        // 2. cadeia de provedores (na ordem de registro)
-        foreach (var resolver in resolvers)
+        // 2. cadeia de provedores (ordenada pelo tipo desejado — Fase 4)
+        foreach (var resolver in Prioritize(brief.Kind))
         {
             if (!resolver.Enabled || await OverQuotaAsync(resolver, ct))
             {
@@ -78,7 +78,7 @@ public sealed class MediaGateway(
                 Path = path,
                 CreatedAtUtc = clock.UtcNow,
             });
-            await RecordUsageAsync(brief.Purpose, resolver.Provider, cacheHit: false, bytes.Length, (int)stopwatch.ElapsedMilliseconds, ct);
+            await RecordUsageAsync(brief.Purpose, resolver.Provider, cacheHit: false, bytes.Length, (int)stopwatch.ElapsedMilliseconds, brief.ProductId, ct);
 
             logger.LogInformation("Imagem gerada por {Provider} ({Bytes} bytes) para {Purpose}",
                 resolver.Provider, bytes.Length, brief.Purpose);
@@ -87,6 +87,40 @@ public sealed class MediaGateway(
 
         return Result.Failure<MediaResult>(MediaErrors.NoProvider);
     }
+
+    // Fase 4: ordena a cadeia conforme o tipo desejado (foto vs ilustração); piso local sempre por último.
+    private IEnumerable<IMediaResolver> Prioritize(MediaKind kind) => kind switch
+    {
+        MediaKind.Photo => resolvers.OrderBy(r => RankPhoto(r.Provider)),
+        MediaKind.Illustration => resolvers.OrderBy(r => RankIllustration(r.Provider)),
+        // Capa com texto: só generativos (Gemini primeiro); bancos de foto fora (não rendem texto).
+        MediaKind.CoverWithText => resolvers.Where(r => !IsPhotoBank(r.Provider)).OrderBy(r => RankCover(r.Provider)),
+        _ => resolvers,
+    };
+
+    private static bool IsPhotoBank(MediaProvider p) =>
+        p is MediaProvider.Pexels or MediaProvider.Unsplash or MediaProvider.Pixabay;
+
+    private static int RankCover(MediaProvider p) => p switch
+    {
+        MediaProvider.Gemini => 0,        // melhor em tipografia
+        MediaProvider.LocalSkia => 2,     // piso (sem texto real) — QA reprova e cai no Skia rico
+        _ => 1,                           // demais generativos
+    };
+
+    private static int RankPhoto(MediaProvider p) => p switch
+    {
+        MediaProvider.Pexels or MediaProvider.Unsplash or MediaProvider.Pixabay => 0, // fotos primeiro
+        MediaProvider.LocalSkia => 2,                                                 // piso por último
+        _ => 1,                                                                       // generativos no meio
+    };
+
+    private static int RankIllustration(MediaProvider p) => p switch
+    {
+        MediaProvider.Pexels or MediaProvider.Unsplash or MediaProvider.Pixabay => 1, // fotos depois
+        MediaProvider.LocalSkia => 2,                                                 // piso por último
+        _ => 0,                                                                       // generativos primeiro
+    };
 
     private async Task<bool> OverQuotaAsync(IMediaResolver resolver, CancellationToken ct)
     {
@@ -103,7 +137,7 @@ public sealed class MediaGateway(
     }
 
     private async Task RecordUsageAsync(
-        string purpose, MediaProvider provider, bool cacheHit, int bytes, int durationMs, CancellationToken ct)
+        string purpose, MediaProvider provider, bool cacheHit, int bytes, int durationMs, Guid? productId, CancellationToken ct)
     {
         db.MediaUsages.Add(new MediaUsageRecord
         {
@@ -113,6 +147,7 @@ public sealed class MediaGateway(
             CacheHit = cacheHit,
             Bytes = bytes,
             DurationMs = durationMs,
+            ProductId = productId,
             CreatedAtUtc = clock.UtcNow,
         });
         await db.SaveChangesAsync(ct);

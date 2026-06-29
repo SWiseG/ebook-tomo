@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ButtonModule } from 'primeng/button';
@@ -10,6 +10,7 @@ import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridReadyEvent, ICellRendererParams } from 'ag-grid-community';
 import { tomoAgTheme } from '../../shared/ag-grid/tomo-ag-theme';
 import { Channel, NicheItem } from '../../core/api.types';
+import { LayoutService } from '../../core/layout.service';
 import { NotificationService } from '../../core/notification.service';
 import { Loading } from '../../shared/loading';
 
@@ -32,6 +33,7 @@ export class Channels {
   private readonly http = inject(HttpClient);
   private readonly notify = inject(NotificationService);
   private readonly t = inject(TranslocoService);
+  private readonly layout = inject(LayoutService);
 
   readonly channels = signal<Channel[] | null>(null);
   readonly niches = signal<NicheItem[]>([]);
@@ -76,9 +78,20 @@ export class Channels {
     context: { openConnect: (c: Channel) => this.openConnect(c) },
   };
 
-  constructor() { this.load(); }
+  constructor() {
+    this.load();
+    effect(() => { this.layout.isMobile(); this.applyMobileCols(); });
+  }
 
-  onGridReady(e: GridReadyEvent<Channel>): void { this.gridApi = e.api; }
+  onGridReady(e: GridReadyEvent<Channel>): void {
+    this.gridApi = e.api;
+    this.applyMobileCols();
+  }
+
+  private applyMobileCols(): void {
+    if (!this.gridApi) return;
+    this.gridApi.setColumnsVisible(['name', 'platform'], !this.layout.isMobile());
+  }
 
   onSearch(): void {
     this.gridApi?.setGridOption('quickFilterText', this.quickFilter);

@@ -105,4 +105,50 @@ public class MediaGatewayTests
         Assert.True(result.IsFailure);
         Assert.Equal(MediaErrors.NoProvider.Code, result.Error.Code);
     }
+
+    // Fase 4: o tipo pedido reordena a cadeia (foto vs ilustração), mesmo contra a ordem de registro.
+    [Fact]
+    public async Task Kind_Photo_prioriza_banco_de_fotos_sobre_generativo()
+    {
+        var pollinations = new FakeMediaResolver(MediaProvider.Pollinations, Png); // generativo, registrado 1º
+        var pexels = new FakeMediaResolver(MediaProvider.Pexels, Png);             // foto, registrado 2º
+        using var provider = Build(pollinations, pexels);
+
+        var result = await GenerateAsync(provider, Brief() with { Kind = MediaKind.Photo });
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(MediaProvider.Pexels, result.Value.Provider); // foto venceu apesar de vir depois
+        Assert.Equal(0, pollinations.Calls);                       // generativo nem foi chamado
+    }
+
+    [Fact]
+    public async Task Kind_Illustration_prioriza_generativo_sobre_foto()
+    {
+        var pexels = new FakeMediaResolver(MediaProvider.Pexels, Png);             // foto, registrado 1º
+        var pollinations = new FakeMediaResolver(MediaProvider.Pollinations, Png); // generativo, registrado 2º
+        using var provider = Build(pexels, pollinations);
+
+        var result = await GenerateAsync(provider, Brief() with { Kind = MediaKind.Illustration });
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(MediaProvider.Pollinations, result.Value.Provider);
+        Assert.Equal(0, pexels.Calls);
+    }
+
+    // docs/14 WP-5: capa com texto exclui bancos de foto (não rendem texto) e prefere Gemini.
+    [Fact]
+    public async Task Kind_CoverWithText_exclui_bancos_de_foto_e_prefere_gemini()
+    {
+        var pexels = new FakeMediaResolver(MediaProvider.Pexels, Png);       // foto: deve ser EXCLUÍDA
+        var pollinations = new FakeMediaResolver(MediaProvider.Pollinations, Png);
+        var gemini = new FakeMediaResolver(MediaProvider.Gemini, Png);       // generativo de texto: vence
+        using var provider = Build(pexels, pollinations, gemini);
+
+        var result = await GenerateAsync(provider, Brief() with { Kind = MediaKind.CoverWithText });
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(MediaProvider.Gemini, result.Value.Provider);
+        Assert.Equal(0, pexels.Calls);       // banco de foto nem foi chamado
+        Assert.Equal(0, pollinations.Calls); // Gemini veio antes
+    }
 }

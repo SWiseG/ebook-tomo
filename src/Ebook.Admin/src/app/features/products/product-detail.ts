@@ -15,10 +15,12 @@ import { TextareaModule } from 'primeng/textarea';
 import { DialogModule } from 'primeng/dialog';
 import { ConfirmationService } from 'primeng/api';
 import {
+  ConversionAudit,
   KiwifyMatch,
   Outline,
   ProductDetail as ProductDetailDto,
   ProductMetrics,
+  ProductProvenance,
   SocialPostItem,
 } from '../../core/api.types';
 import { renderMarkdown } from '../../shared/markdown';
@@ -70,6 +72,16 @@ export class ProductDetail implements OnDestroy {
   kiwifyProductId = '';
   checkoutUrl = '';
   readonly matching = signal(false);
+
+  // Proveniência do PDF (Fase 3B): quem gerou texto/imagens.
+  readonly provenance = signal<ProductProvenance | null>(null);
+  readonly provenanceDialog = signal(false);
+  readonly loadingProvenance = signal(false);
+
+  // Auditoria de conversão por IA (Fase 7).
+  readonly audit = signal<ConversionAudit | null>(null);
+  readonly auditDialog = signal(false);
+  readonly loadingAudit = signal(false);
 
   // Calendário social: edição de copy (dialog) + ações do gate.
   readonly editPostDialog = signal(false);
@@ -331,6 +343,64 @@ export class ProductDetail implements OnDestroy {
     const url = this.detail()?.lpUrl;
     if (url) {
       window.open(url, '_blank', 'noopener');
+    }
+  }
+
+  openProvenance(): void {
+    this.provenanceDialog.set(true);
+    if (this.provenance()) {
+      return; // já carregado nesta visita
+    }
+    this.loadingProvenance.set(true);
+    this.http.get<ProductProvenance>(`/api/v1/products/${this.id}/provenance`).subscribe({
+      next: (p) => {
+        this.provenance.set(p);
+        this.loadingProvenance.set(false);
+      },
+      error: () => {
+        this.notify.error(this.t.translate('common.actionFailed'));
+        this.loadingProvenance.set(false);
+      },
+    });
+  }
+
+  formatBytes(bytes: number): string {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+  }
+
+  openAudit(): void {
+    this.auditDialog.set(true);
+    if (this.audit() || this.loadingAudit()) {
+      return; // já carregado/carregando nesta visita (chamada de IA é cara)
+    }
+    this.loadingAudit.set(true);
+    this.http.get<ConversionAudit>(`/api/v1/products/${this.id}/audit`).subscribe({
+      next: (a) => {
+        this.audit.set(a);
+        this.loadingAudit.set(false);
+      },
+      error: (e: { error?: { detail?: string } }) => {
+        this.notify.error(e.error?.detail ?? this.t.translate('common.actionFailed'));
+        this.loadingAudit.set(false);
+        this.auditDialog.set(false);
+      },
+    });
+  }
+
+  verdictSeverity(verdict: string): 'success' | 'warn' | 'danger' | 'secondary' {
+    switch (verdict) {
+      case 'pass':
+        return 'success';
+      case 'warn':
+        return 'warn';
+      case 'fail':
+        return 'danger';
+      default:
+        return 'secondary';
     }
   }
 

@@ -55,8 +55,61 @@ public sealed class FakeAiGateway : IAiGateway
             }
             """,
         "ebook.chapter" => "Conteúdo do capítulo gerado pela IA fake.\n\nSegundo parágrafo com exemplo prático.",
+        "ebook.palette" => """
+            { "background": "#0E2A47", "accent": "#E0B978", "onDark": "#F5F8FC",
+              "headingFont": "Manrope", "bodyFont": "Merriweather", "displayFont": "Archivo Black" }
+            """,
+        "ebook.brand" => """
+            { "mood": "confident, calm", "imageStyle": "documentary photography, natural light",
+              "subjectGuidance": "real people managing money, notebooks" }
+            """,
+        "cover.plan" => """
+            {
+              "eyebrow": "Guia Completo",
+              "subtitle": "Do caos ao controle em 30 dias",
+              "features": [
+                { "text": "Elimine dívidas e organize seu orçamento", "icon": "money" },
+                { "text": "Crie sua reserva de emergência", "icon": "shield" },
+                { "text": "Invista com confiança", "icon": "chart" }
+              ],
+              "seal": "MÉTODO VALIDADO",
+              "scene": "a person reviewing finances at a tidy desk, warm light, editorial photo, no text",
+              "layout": "classic"
+            }
+            """,
+        "ebook.visual-plan" => """
+            {
+              "chapters": [
+                { "title": "Mapeie seu dinheiro", "mode": "photo", "query": "person budgeting notebook", "prompt": "person reviewing finances at a desk, editorial photo, no text" },
+                { "title": "Crie sua reserva", "mode": "illustration", "query": "financial safety net", "prompt": "conceptual safety net catching coins, editorial illustration, no text" }
+              ]
+            }
+            """,
         "ebook.review" => """
             { "introduction": "Introdução envolvente sobre dinheiro.", "conclusion": "Conclusão com CTA: comece hoje." }
+            """,
+        "ebook.audit" => """
+            {
+              "verdict": "warn",
+              "score": 72,
+              "summary": "Boa estrutura; falta prova social em mais capítulos.",
+              "items": [
+                { "item": "Promessa clara (4 U's)", "pass": true, "note": "Headline específica e urgente." },
+                { "item": "Hook por capítulo", "pass": true, "note": "Aberturas nomeiam a dor." },
+                { "item": "Prova social/autoridade", "pass": false, "note": "Só 1 capítulo traz caso real." },
+                { "item": "CTA final forte", "pass": true, "note": "CTA único e específico no fim." }
+              ]
+            }
+            """,
+        "ebook.continuity" => """
+            {
+              "bridges": [
+                { "chapterN": 1, "text": "No próximo capítulo, você transforma esse diagnóstico em ação concreta." },
+                { "chapterN": 2, "text": "Você agora tem o mapa completo — o próximo passo é executar sem hesitar." }
+              ],
+              "removals": [],
+              "hookFixes": []
+            }
             """,
         "ebook.sales-copy" => """
             {

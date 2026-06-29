@@ -3,6 +3,77 @@
 /* página sem grid full-screen: altura natural; rolagem fica no .content */
 :host { display: block; flex: none; }
 
+/* Proveniência do PDF (Fase 3B) */
+.prov {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-5;
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: t.$space-2;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: t.$space-2;
+    font-weight: 650;
+    color: var(--p-text-color);
+
+    .prov__count {
+      margin-left: auto;
+      font-weight: 500;
+      font-size: 0.82rem;
+      color: var(--p-text-muted-color);
+    }
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: t.$space-3;
+    padding: t.$space-2 t.$space-3;
+    border-radius: t.$radius;
+    background: var(--app-panel);
+  }
+
+  &__provider { font-weight: 600; min-width: 96px; }
+  &__purpose { color: var(--p-text-muted-color); font-size: 0.86rem; }
+  &__meta { margin-left: auto; font-variant-numeric: tabular-nums; font-size: 0.82rem; }
+  &__empty { color: var(--p-text-muted-color); font-size: 0.88rem; padding: t.$space-2 0; }
+}
+
+/* Auditoria de conversão (Fase 7) */
+.audit {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-3;
+
+  &__head { display: flex; align-items: center; gap: t.$space-3; }
+  &__verdict { text-transform: uppercase; letter-spacing: 0.04em; }
+  &__score { font-weight: 700; font-variant-numeric: tabular-nums; }
+  &__summary { margin: 0; color: var(--p-text-muted-color); font-size: 0.9rem; }
+
+  &__row {
+    display: flex;
+    align-items: flex-start;
+    gap: t.$space-3;
+    padding: t.$space-2 t.$space-3;
+    border-radius: t.$radius;
+    background: var(--app-panel);
+
+    i { margin-top: 2px; }
+    .pi-check-circle { color: var(--p-green-500, #22c55e); }
+    .pi-times-circle { color: var(--p-red-500, #ef4444); }
+  }
+
+  &__body { display: flex; flex-direction: column; gap: 1px; }
+  &__item { font-weight: 600; }
+  &__note { font-size: 0.84rem; color: var(--p-text-muted-color); }
+}
+
 .back {
   display: inline-flex;
   align-items: center;
@@ -236,4 +307,17 @@
   display: flex;
   flex-direction: column;
   gap: t.$space-1;
+}
+
+@media (max-width: 860px) {
+  .back {
+    padding-left: t.$space-4;
+  }
+  .stepper {
+    gap: t.$space-1;
+    .step {
+      font-size: 0.78rem;
+      padding: t.$space-1 t.$space-2;
+    }
+  }
 }

@@ -166,6 +166,45 @@ export interface OptimizationRun {
   decisionCount: number;
 }
 
+/** Laboratório de LP: um passo do caminho percorrido pela landing page (modal de detalhes). */
+export interface LpTraceStep {
+  stage: string;
+  actor: string;
+  detail: string;
+  result: string;
+}
+
+export interface LpTrace {
+  nicheName: string;
+  category: string;
+  template: string;
+  paletteBackground: string;
+  paletteAccent: string;
+  headingFont: string;
+  bodyFont: string;
+  title: string;
+  feedbackUsed: boolean;
+  steps: LpTraceStep[];
+}
+
+export interface GenerateTestLpResult {
+  html: string;
+  trace: LpTrace;
+}
+
+/** Resposta do enfileiramento de um run de teste de LP (geração assíncrona). */
+export interface EnqueueTestLpResult {
+  runId: string;
+}
+
+/** Estado de um run de teste de LP buscado por polling. status: pending | succeeded | failed. */
+export interface LpLabRun {
+  status: 'pending' | 'succeeded' | 'failed';
+  html: string | null;
+  trace: LpTrace | null;
+  error: string | null;
+}
+
 export type OptimizationDecisionKind = 'Scale' | 'Keep' | 'Iterate' | 'Kill';
 
 export interface OptimizationDecision {
@@ -219,4 +258,55 @@ export interface MediaTelemetry {
   cacheHitsToday: number;
   cacheEntriesTotal: number;
   cacheSizeBytes: number;
+}
+
+// Fase 3 — telemetria unificada de fontes externas (texto + imagem)
+export interface SourceStat {
+  provider: string;
+  kind: string; // "Texto" | "Imagem"
+  generatedToday: number;
+  generatedThisMonth: number;
+  tokensToday: number;
+  bytesToday: number;
+  avgDurationMsToday: number;
+}
+
+export interface SourcesTelemetry {
+  sources: SourceStat[];
+  cacheHitsToday: number;
+  mediaCacheEntriesTotal: number;
+  mediaCacheSizeBytes: number;
+}
+
+// Fase 3B — proveniência do PDF (quem fez texto/imagens)
+export interface ProvenanceEntry {
+  purpose: string;
+  provider: string;
+  cacheHit: boolean;
+  tokens: number;
+  bytes: number;
+  atUtc: string;
+}
+
+export interface ProductProvenance {
+  text: ProvenanceEntry[];
+  images: ProvenanceEntry[];
+  textCount: number;
+  imageCount: number;
+  totalTokens: number;
+  totalBytes: number;
+}
+
+// Fase 7 — auditoria de conversão por IA
+export interface AuditItem {
+  item: string;
+  pass: boolean;
+  note: string;
+}
+
+export interface ConversionAudit {
+  verdict: string; // pass | warn | fail
+  score: number;
+  summary: string;
+  items: AuditItem[];
 }

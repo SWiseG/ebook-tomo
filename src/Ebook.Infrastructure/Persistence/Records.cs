@@ -75,6 +75,7 @@ public sealed class MediaUsageRecord
     public bool CacheHit { get; set; }
     public int Bytes { get; set; }
     public int DurationMs { get; set; }
+    public Guid? ProductId { get; set; } // proveniência (Fase 3B): produto que originou a imagem
     public DateTime CreatedAtUtc { get; set; }
 }
 

@@ -23,6 +23,38 @@ public static class SettingKeys
     /// <summary>Base URL pública para links de checkout/pixel na LP. Vazio = caminhos relativos.</summary>
     public const string LpBaseUrl = "lp.baseUrl";
 
+    /// <summary>
+    /// Capa INTEIRA gerada por IA com texto (docs/14 WP-5). Default false: usa a composição Skia rica
+    /// (determinística, sempre legível). Ative só com um modelo generativo capaz de texto configurado
+    /// (ex.: Gemini); o resultado ainda passa por QA de visão e cai no Skia se reprovar.
+    /// </summary>
+    public const string CoverAiFullCover = "cover.aiFullCover";
+
+    /// <summary>
+    /// Prazo REAL da oferta (ISO-8601 UTC) para o contador da LP. Vazio = sem contador
+    /// (nunca usar urgência falsa). Só renderiza se o prazo for futuro no momento do render.
+    /// </summary>
+    public const string LpOfferDeadlineUtc = "lp.offerDeadlineUtc";
+
+    /// <summary>Horas de validade rolante da oferta quando NÃO há prazo fixo (docs/15). 0 = sem
+    /// contador. Ex.: 72 → o contador da LP sempre mostra ~72h a partir do render.</summary>
+    public const string LpDefaultOfferHours = "lp.defaultOfferHours";
+
+    /// <summary>Razão social no rodapé legal da LP. Vazio = usa o título do produto.</summary>
+    public const string LegalCompanyName = "legal.companyName";
+
+    /// <summary>CNPJ exibido no rodapé legal da LP. Vazio = omitido.</summary>
+    public const string LegalCnpj = "legal.cnpj";
+
+    /// <summary>E-mail de contato (vira link mailto no rodapé). Vazio = omitido.</summary>
+    public const string LegalContactEmail = "legal.contactEmail";
+
+    /// <summary>URL da política de privacidade (rodapé). Vazio = omitido.</summary>
+    public const string LegalPrivacyUrl = "legal.privacyUrl";
+
+    /// <summary>URL dos termos de uso (rodapé). Vazio = omitido.</summary>
+    public const string LegalTermsUrl = "legal.termsUrl";
+
     /// <summary>Publicar na Kiwify automaticamente ao iniciar a publicação (default false = manual-assistido).</summary>
     public const string KiwifyAutoPublish = "kiwify.autoPublish";
 
@@ -40,4 +72,11 @@ public static class SettingKeys
 
     /// <summary>Loop de aprendizado de estilo (E15): Claude vision analisa capas e grava playbook por nicho (default false; exige CLI Claude com visão).</summary>
     public const string StyleLearnEnabled = "style.learn.enabled";
+
+    /// <summary>
+    /// Número de candidatas no torneio de capas (A3). Default 1 = comportamento atual (uma geração + QA
+    /// booleano). Valores maiores geram N variações (cena × cor) e escolhem a de maior score de visão.
+    /// Cada candidata consome uma chamada de cota do IMediaGateway — use com moderação.
+    /// </summary>
+    public const string CoverTournamentSize = "cover.tournamentSize";
 }

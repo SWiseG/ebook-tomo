@@ -11,6 +11,7 @@ import { ColDef, GridApi, GridReadyEvent, ICellRendererParams } from 'ag-grid-co
 import { tomoAgTheme } from '../../shared/ag-grid/tomo-ag-theme';
 import { NicheItem, NicheStatus } from '../../core/api.types';
 import { LanguageService } from '../../core/language.service';
+import { LayoutService } from '../../core/layout.service';
 import { NotificationService } from '../../core/notification.service';
 import { Loading } from '../../shared/loading';
 
@@ -43,6 +44,7 @@ export class Niches {
   private readonly confirm = inject(ConfirmationService);
   private readonly t = inject(TranslocoService);
   private readonly language = inject(LanguageService);
+  private readonly layout = inject(LayoutService);
 
   readonly niches = signal<NicheItem[] | null>(null);
   readonly busy = signal<string | null>(null);
@@ -73,7 +75,7 @@ export class Niches {
     filter: true,
   };
 
-  readonly colDefs: ColDef<NicheItem>[] = this.buildCols();
+  readonly colDefs = signal<ColDef<NicheItem>[]>(this.buildCols());
 
   readonly gridOptions = {
     context: {
@@ -86,10 +88,12 @@ export class Niches {
 
   constructor() {
     this.load();
-    // Quando busy muda, refaz as células de ação para atualizar estado disabled/loading.
     effect(() => {
       this.busy();
       this.gridApi?.refreshCells({ columns: ['actions'], force: true });
+    });
+    effect(() => {
+      this.colDefs.set(this.buildCols(this.layout.isMobile()));
     });
   }
 
@@ -101,10 +105,50 @@ export class Niches {
     this.gridApi?.setGridOption('quickFilterText', this.quickFilter);
   }
 
-  private buildCols(): ColDef<NicheItem>[] {
+  private buildCols(mobile = false): ColDef<NicheItem>[] {
     const t = this.t;
     const fmt = (d: string) =>
       new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+
+    if (mobile) {
+      return [
+        {
+          headerName: t.translate('niches.col.niche'),
+          flex: 1,
+          minWidth: 0,
+          valueGetter: (p) => p.data?.name ?? '',
+          cellRenderer: (params: ICellRendererParams<NicheItem>) => {
+            const n = params.data!;
+            const sev = SEVERITY[n.status];
+            const badge = `<span class="tomo-badge tomo-badge--${sev ?? 'default'}" style="font-size:0.7rem;padding:1px 7px">${t.translate('status.niche.' + n.status)}</span>`;
+            return `<div class="cell-two-line"><strong>${n.name}</strong><span>${badge}</span></div>`;
+          },
+        },
+        {
+          colId: 'actions',
+          headerName: '',
+          width: 120,
+          sortable: false,
+          resizable: false,
+          cellRenderer: (params: ICellRendererParams<NicheItem>) => {
+            const ctx = params.context as {
+              generate: (n: NicheItem) => void;
+              isBusy: (id: string) => boolean;
+            };
+            const n = params.data!;
+            const busy = ctx.isBusy(n.id);
+            const btn = document.createElement('button');
+            btn.className = 'tomo-row-btn tomo-row-btn--primary';
+            btn.disabled = busy;
+            btn.innerHTML = busy
+              ? `<span class="pi pi-spinner pi-spin"></span>`
+              : `<span class="pi pi-sparkles"></span> ${t.translate('niches.generate')}`;
+            btn.addEventListener('click', (e) => { e.stopPropagation(); ctx.generate(n); });
+            return btn;
+          },
+        },
+      ];
+    }
 
     return [
       {

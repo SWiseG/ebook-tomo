@@ -200,9 +200,10 @@
 /* ── Coluna principal (deslocada pela largura da sidebar) ── */
 .main-col {
   padding-left: var(--sw);
-  min-height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   transition: padding-left t.$dur-slow t.$ease-out;
 }
 
@@ -568,6 +569,13 @@
   .content {
     padding: 0;
   }
+
+  // Compacta a topbar: esconde seletor de idioma e botão de ajuda
+  .lang { display: none; }
+  .topbar-help { display: none !important; }
+
+  // Conn-dot mais visível (fica sozinho com bell + theme)
+  .conn-dot { margin-right: t.$space-1; }
 }
 
 /* sidebar acima do backdrop no mobile */

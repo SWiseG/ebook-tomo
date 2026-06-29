@@ -56,6 +56,12 @@ public sealed class ReviewJobHandler(
             return Result.Failure(manuscriptResult.Error);
         }
 
+        var continuityResult = await EnsureContinuityAsync(product, outline.Value, ct);
+        if (continuityResult.IsFailure)
+        {
+            return Result.Failure(continuityResult.Error);
+        }
+
         var salesCopyResult = await EnsureSalesCopyAsync(product, outline.Value, ct);
         if (salesCopyResult.IsFailure)
         {
@@ -161,6 +167,101 @@ public sealed class ReviewJobHandler(
             : AiJson.Parse<ReviewDto>(ai.Value.Content, "ebook.review");
     }
 
+    private async Task<Result> EnsureContinuityAsync(Product product, OutlineDto outline, CancellationToken ct)
+    {
+        if (product.QualityTier == QualityTier.Draft) return Result.Success();
+
+        var markerPath = ContentPaths.ContinuityMarker(product.Slug);
+        if (fileStore.Exists(markerPath)) return Result.Success();
+
+        var manuscriptPath = ContentPaths.Manuscript(product.Slug, ManuscriptVersion);
+        var manuscript = await fileStore.ReadTextAsync(manuscriptPath, ct);
+        if (manuscript is null) return Result.Failure(ContentErrors.ManuscriptMissing(product.Slug));
+
+        var outlineJson = await fileStore.ReadTextAsync(ContentPaths.Outline(product.Slug), ct) ?? "{}";
+
+        var ai = await aiGateway.CompleteAsync(new AiRequest(
+            Purpose: "ebook.continuity",
+            PromptTemplate: "ebook/continuity",
+            Variables: new Dictionary<string, string>
+            {
+                ["outline"] = outlineJson,
+                ["manuscript"] = manuscript
+            },
+            Tier: product.QualityTier,
+            MaxOutputTokensEst: 1200,
+            ProductId: product.Id), ct);
+
+        if (ai.IsFailure) return Result.Failure(ai.Error);
+
+        var continuity = AiJson.Parse<ContinuityDto>(ai.Value.Content, "ebook.continuity");
+        if (continuity.IsFailure) return Result.Failure(continuity.Error);
+
+        var patched = ApplyContinuityPatches(manuscript, continuity.Value);
+        await fileStore.WriteTextAsync(manuscriptPath, patched, ct);
+        await fileStore.WriteTextAsync(markerPath, clock.UtcNow.ToString("O"), ct);
+
+        logger.LogInformation(
+            "Continuidade aplicada em {Slug}: {Bridges} pontes, {Removals} remoções, {Hooks} hooks ajustados",
+            product.Slug,
+            continuity.Value.Bridges.Count,
+            continuity.Value.Removals.Count,
+            continuity.Value.HookFixes.Count);
+
+        return Result.Success();
+    }
+
+    private static string ApplyContinuityPatches(string manuscript, ContinuityDto continuity)
+    {
+        var ms = manuscript;
+
+        // HookFixes: prepend substituto antes do primeiro parágrafo do capítulo.
+        // Processado em ordem decrescente para não invalidar posições de capítulos anteriores.
+        foreach (var fix in continuity.HookFixes.OrderByDescending(f => f.ChapterN))
+        {
+            var heading = $"## Capítulo {fix.ChapterN} — ";
+            var headingIdx = ms.IndexOf(heading, StringComparison.Ordinal);
+            if (headingIdx < 0) continue;
+
+            var afterNewline = ms.IndexOf('\n', headingIdx);
+            if (afterNewline < 0) continue;
+            afterNewline++;
+
+            while (afterNewline < ms.Length && ms[afterNewline] == '\n') afterNewline++;
+            ms = ms[..afterNewline] + fix.Text.Trim() + "\n\n" + ms[afterNewline..];
+        }
+
+        // Bridges: inseridas ao fim do conteúdo do capítulo, antes do próximo heading.
+        // Processado em ordem decrescente pelo mesmo motivo.
+        foreach (var bridge in continuity.Bridges.OrderByDescending(b => b.ChapterN))
+        {
+            var heading = $"## Capítulo {bridge.ChapterN} — ";
+            var headingIdx = ms.IndexOf(heading, StringComparison.Ordinal);
+            if (headingIdx < 0) continue;
+
+            var afterHeadingLine = ms.IndexOf('\n', headingIdx);
+            if (afterHeadingLine < 0) continue;
+
+            var nextSection = ms.IndexOf("\n## ", afterHeadingLine, StringComparison.Ordinal);
+            var insertAt = nextSection >= 0 ? nextSection : ms.Length;
+
+            var insertAdj = insertAt;
+            while (insertAdj > 0 && ms[insertAdj - 1] == '\n') insertAdj--;
+
+            ms = ms[..insertAdj] + "\n\n" + bridge.Text.Trim() + ms[insertAt..];
+        }
+
+        // Removals: correspondência exata, primeira ocorrência.
+        foreach (var removal in continuity.Removals)
+        {
+            if (string.IsNullOrWhiteSpace(removal.Text)) continue;
+            var idx = ms.IndexOf(removal.Text, StringComparison.Ordinal);
+            if (idx >= 0) ms = ms[..idx] + ms[(idx + removal.Text.Length)..];
+        }
+
+        return ms;
+    }
+
     private async Task<Result> EnsureSalesCopyAsync(Product product, OutlineDto outline, CancellationToken ct)
     {
         var path = ContentPaths.SalesCopy(product.Slug);
@@ -196,7 +297,7 @@ public sealed class ReviewJobHandler(
                 ["language"] = "pt-BR"
             },
             Tier: product.QualityTier,
-            MaxOutputTokensEst: 1000,
+            MaxOutputTokensEst: 1800,
             ProductId: product.Id), ct);
 
         if (ai.IsFailure)

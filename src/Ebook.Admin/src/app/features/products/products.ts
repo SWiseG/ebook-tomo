@@ -19,6 +19,7 @@ import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridApi, GridReadyEvent, ICellRendererParams } from 'ag-grid-community';
 import { tomoAgTheme } from '../../shared/ag-grid/tomo-ag-theme';
 import { ProductDetail, ProductItem, ProductStatus } from '../../core/api.types';
+import { LayoutService } from '../../core/layout.service';
 import { NotificationService } from '../../core/notification.service';
 import { RealtimeService } from '../../core/realtime.service';
 import { Loading } from '../../shared/loading';
@@ -72,6 +73,7 @@ export class Products {
   private readonly notify = inject(NotificationService);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly t = inject(TranslocoService);
+  private readonly layout = inject(LayoutService);
 
   @ViewChild('actionsMenu') actionsMenu!: Menu;
 
@@ -137,10 +139,17 @@ export class Products {
     this.realtime.productChanged$
       .pipe(debounceTime(600), takeUntilDestroyed())
       .subscribe(() => this.load());
+    effect(() => { this.layout.isMobile(); this.applyMobileCols(); });
   }
 
   onGridReady(e: GridReadyEvent<ProductItem>): void {
     this.gridApi = e.api;
+    this.applyMobileCols();
+  }
+
+  private applyMobileCols(): void {
+    if (!this.gridApi) return;
+    this.gridApi.setColumnsVisible(['stage', 'publicationPlatform', 'price', 'createdAtUtc'], !this.layout.isMobile());
   }
 
   onSearch(): void {

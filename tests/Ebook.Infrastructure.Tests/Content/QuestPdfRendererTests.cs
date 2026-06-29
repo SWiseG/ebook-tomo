@@ -61,6 +61,32 @@ public class QuestPdfRendererTests
         Assert.True(bytes.Length > 1000);
     }
 
+    // Regressão: a capitular (1ª letra do parágrafo após o capítulo) com letra larga (W/M) estourava
+    // o ConstantItem fixo, e um "número" longo no card de Stat estourava o card — ambos geravam
+    // "conflicting size constraints" e abortavam a etapa ebook.pdf. Devem renderizar sem lançar.
+    [Theory]
+    [InlineData(PdfTheme.Classic)]
+    [InlineData(PdfTheme.Modern)]
+    [InlineData(PdfTheme.Editorial)]
+    public void Render_nao_estoura_layout_com_capitular_larga_e_stat_longo(PdfTheme theme)
+    {
+        var book = SampleBook(theme) with
+        {
+            Body =
+            [
+                MarkdownBlock.Heading(2, "Capítulo 1 — Workflows que Multiplicam Resultados"),
+                MarkdownBlock.Paragraph("Whatsapp mudou tudo para sempre nos negócios digitais modernos."),
+                MarkdownBlock.Stat("87% de todos os profissionais de marketing digital do mundo", "afirmam que conteúdo gera ROI"),
+                MarkdownBlock.Stat("R$ 1.000.000", string.Empty),
+            ],
+        };
+
+        var bytes = new QuestPdfRenderer().Render(book);
+
+        Assert.Equal("%PDF", Encoding.ASCII.GetString(bytes[..4]));
+        Assert.True(bytes.Length > 1000);
+    }
+
     [Fact]
     public void Render_com_capa_de_imagem_embute_a_capa_gerada()
     {

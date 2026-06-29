@@ -1,0 +1,54 @@
+<ng-container *transloco="let t">
+  <div class="page-head anim-in">
+    <div>
+      <h1>{{ t('sources.title') }}</h1>
+      <div class="sub">{{ t('sources.subtitle') }}</div>
+    </div>
+    <div class="actions">
+      <p-button [label]="t('sources.refresh')" icon="pi pi-refresh" severity="secondary" [loading]="loading()" (onClick)="load()" />
+    </div>
+  </div>
+
+  @if (data(); as d) {
+    <div class="kpi-row anim-in">
+      <div class="kpi">
+        <div class="kpi__value">{{ d.cacheHitsToday | number }}</div>
+        <div class="kpi__label">{{ t('sources.cacheHitsToday') }}</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__value">{{ d.mediaCacheEntriesTotal | number }}</div>
+        <div class="kpi__label">{{ t('sources.cacheEntriesTotal') }}</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__value">{{ formatBytes(d.mediaCacheSizeBytes) }}</div>
+        <div class="kpi__label">{{ t('sources.cacheSizeTotal') }}</div>
+      </div>
+    </div>
+
+    <div class="sources-list anim-in">
+      <div class="block__title">{{ t('sources.list') }}</div>
+      <div class="grid-toolbar">
+        <label class="grid-search">
+          <i class="pi pi-search"></i>
+          <input type="search" [(ngModel)]="quickFilter" (ngModelChange)="onSearch()" [placeholder]="t('common.search')" />
+        </label>
+      </div>
+      @if (d.sources.length === 0) {
+        <div class="empty">{{ t('sources.noUsage') }}</div>
+      } @else {
+        <ag-grid-angular
+          class="tomo-grid-fill"
+          [rowData]="d.sources"
+          [columnDefs]="colDefs"
+          [defaultColDef]="defaultColDef"
+          [theme]="theme"
+          [pagination]="true"
+          [paginationAutoPageSize]="true"
+          (gridReady)="onGridReady($event)"
+        />
+      }
+    </div>
+  } @else if (loading()) {
+    <app-loading variant="table" [rows]="5" />
+  }
+</ng-container>

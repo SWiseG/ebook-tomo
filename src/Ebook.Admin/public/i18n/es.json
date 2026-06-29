@@ -27,7 +27,9 @@
     "channels": "Canales",
     "jobs": "Jobs",
     "optimizer": "Optimizador",
+    "lpLab": "Lab de LP",
     "media": "Medios IA",
+    "sources": "Fuentes",
     "logs": "Logs",
     "settings": "Configuración",
     "tutorial": "Cómo usar"
@@ -248,6 +250,25 @@
       "status": "Estado"
     }
   },
+  "sources": {
+    "title": "Fuentes Externas",
+    "subtitle": "Uso de cada fuente: generación de texto (IA) e de imagen (Media Gateway).",
+    "refresh": "Actualizar",
+    "loadError": "Error al cargar la telemetría de fuentes.",
+    "list": "Fuentes",
+    "noUsage": "Aún no hay uso registrado. Genera un e-book o portada para ver datos aquí.",
+    "cacheHitsToday": "Cache hits hoy",
+    "cacheEntriesTotal": "Entradas en caché de medios",
+    "cacheSizeTotal": "Volumen de medios generado",
+    "col": {
+      "provider": "Fuente",
+      "kind": "Tipo",
+      "today": "Hoy",
+      "month": "Este mes",
+      "volume": "Volumen hoy",
+      "avgMs": "Tiempo medio"
+    }
+  },
   "media": {
     "title": "Medios IA",
     "subtitle": "Telemetría del Media Gateway: uso por proveedor, caché de imágenes y cuotas diarias.",
@@ -301,6 +322,11 @@
     "reject": "Rechazar",
     "openLp": "Abrir LP",
     "downloadPdf": "Descargar PDF",
+    "provenance": "Procedencia",
+    "provText": "Texto (IA)",
+    "provImages": "Imágenes",
+    "provEmpty": "Sin registros.",
+    "audit": "Auditar conversión",
     "manuscript": "Manuscrito",
     "manuscriptPending": "Manuscrito aún no generado.",
     "cover": "Portada",

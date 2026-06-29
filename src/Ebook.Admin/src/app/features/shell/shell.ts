@@ -94,7 +94,9 @@ export class Shell {
       items: [
         { path: '/jobs', label: 'nav.jobs', icon: 'pi pi-bolt' },
         { path: '/optimizer', label: 'nav.optimizer', icon: 'pi pi-bullseye' },
+        { path: '/lp-lab', label: 'nav.lpLab', icon: 'pi pi-palette' },
         { path: '/media', label: 'nav.media', icon: 'pi pi-image' },
+        { path: '/sources', label: 'nav.sources', icon: 'pi pi-server' },
         { path: '/logs', label: 'nav.logs', icon: 'pi pi-desktop' },
         { path: '/settings', label: 'nav.settings', icon: 'pi pi-sliders-h' },
       ],

@@ -2,6 +2,7 @@ using System.Text.Json;
 using Ebook.Application.Ai;
 using Ebook.Application.Common.Jobs;
 using Ebook.Application.Common.Text;
+using Ebook.Application.Content.Images;
 using Ebook.Application.Content.Pdf;
 using Ebook.Application.Media;
 using Ebook.Domain.Abstractions;
@@ -27,7 +28,11 @@ public sealed class PdfJobHandler(
     IArtifactStore artifactStore,
     IJobQueue jobQueue,
     IMediaGateway mediaGateway,
+    IImageComposer imageComposer,
+    IAiGateway aiGateway,
     IPromptLibrary promptLibrary,
+    IPaletteResolver paletteResolver,
+    IBrandResolver brandResolver,
     IUnitOfWork unitOfWork,
     IClock clock,
     ILogger<PdfJobHandler> logger) : IJobHandler
@@ -90,13 +95,22 @@ public sealed class PdfJobHandler(
 
         var nicheSlug = await NicheSlugAsync(product, ct);
         var theme = PdfThemeSelector.ForNiche(nicheSlug);
-        var palette = Images.PaletteCatalog.ForNiche(nicheSlug);
+        var palette = await paletteResolver.ResolveAsync(product.Slug, nicheSlug, ct);
         var cta = await BuildCtaAsync(product, ct);
         var book = PdfBookComposer.Build(manuscript, product.Title, tagline, cta, theme, palette);
 
-        // Frente D: ilustrações por capítulo (geradas em paralelo via Media Gateway)
-        var bodyWithImages = await InjectIllustrationsAsync(book.Body, nicheSlug, ct);
+        // Fase 4: Diretor de Arte por IA decide, por capítulo, foto vs ilustração + query/prompt concretos.
+        var visualPlan = outline.IsSuccess
+            ? await BuildVisualPlanAsync(outline.Value, nicheSlug, product.Id, ct)
+            : EmptyPlan;
+
+        // Frente D: ilustrações por capítulo (geradas em paralelo via Media Gateway), guiadas pelo plano.
+        var brand = await brandResolver.ResolveAsync(product.Slug, nicheSlug, ct); // docs/15 Frente A
+        var bodyWithImages = await InjectIllustrationsAsync(book.Body, nicheSlug, product.Id, visualPlan, brand, ct);
         book = book with { Body = bodyWithImages };
+
+        // WS-E: infográficos de métricas compostos no Skia (blocos Infographic → imagens)
+        book = book with { Body = ComposeInfographics(book.Body, palette) };
 
         var coverImage = await artifactStore.ReadBytesAsync(ContentPaths.Cover(product.Slug), ct);
         var bytes = renderer.Render(book, coverImage);
@@ -122,11 +136,15 @@ public sealed class PdfJobHandler(
     private async Task<IReadOnlyList<MarkdownBlock>> InjectIllustrationsAsync(
         IReadOnlyList<MarkdownBlock> body,
         string nicheSlug,
+        Guid productId,
+        IReadOnlyDictionary<string, VisualDirectiveDto> plan,
+        ProductBrand brand,
         CancellationToken ct)
     {
+        // docs/17 P1-4: 1 ilustração por capítulo (antes só 6); teto p/ conter custo em livros longos.
         var chapters = body
             .Where(b => b.Kind == MarkdownBlockKind.Heading && b.Level == 2)
-            .Take(6)
+            .Take(12)
             .ToList();
 
         if (chapters.Count == 0)
@@ -134,10 +152,10 @@ public sealed class PdfJobHandler(
             return body;
         }
 
-        // gera todas as imagens em paralelo (cada uma pode vir de um provedor diferente da cadeia)
+        // gera todas as imagens em paralelo, cada capítulo guiado pela diretriz do Diretor de Arte (Fase 4)
         var imageTasks = chapters.ToDictionary(
             c => c.Text,
-            c => GenerateIllustrationAsync(c.Text, nicheSlug, ct));
+            c => GenerateIllustrationAsync(c.Text, nicheSlug, productId, plan.GetValueOrDefault(ChapterKey(c.Text)), brand, ct));
 
         await Task.WhenAll(imageTasks.Values);
 
@@ -163,27 +181,159 @@ public sealed class PdfJobHandler(
         return result;
     }
 
-    private async Task<byte[]?> GenerateIllustrationAsync(string chapterTitle, string nicheSlug, CancellationToken ct)
+    /// <summary>
+    /// WS-E (docs/13): substitui cada bloco Infographic por uma imagem composta no Skia (banda de
+    /// 2–3 métricas com as cores do nicho). Falha de composição apenas descarta o bloco — sem quebrar o PDF.
+    /// </summary>
+    private IReadOnlyList<MarkdownBlock> ComposeInfographics(IReadOnlyList<MarkdownBlock> body, NichePalette palette)
+    {
+        if (!body.Any(b => b.Kind == MarkdownBlockKind.Infographic))
+        {
+            return body;
+        }
+
+        var result = new List<MarkdownBlock>(body.Count);
+        foreach (var block in body)
+        {
+            if (block.Kind != MarkdownBlockKind.Infographic)
+            {
+                result.Add(block);
+                continue;
+            }
+
+            var metrics = block.Items.Select(ParseMetric).OfType<InfographicMetric>().ToList();
+            if (metrics.Count == 0)
+            {
+                continue; // sem métricas válidas: descarta o bloco
+            }
+
+            try
+            {
+                var bytes = imageComposer.RenderInfographic(new InfographicArt(metrics, palette));
+                result.Add(MarkdownBlock.Image(bytes));
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Falha ao compor infográfico; ignorando o bloco");
+            }
+        }
+
+        return result;
+    }
+
+    // "97% | descrição" → InfographicMetric; sem número → null.
+    private static InfographicMetric? ParseMetric(string cell)
+    {
+        var idx = cell.IndexOf('|');
+        if (idx <= 0)
+        {
+            return null;
+        }
+
+        var number = cell[..idx].Trim();
+        var label = cell[(idx + 1)..].Trim();
+        return number.Length > 0 ? new InfographicMetric(number, label) : null;
+    }
+
+    private async Task<byte[]?> GenerateIllustrationAsync(
+        string chapterTitle, string nicheSlug, Guid productId, VisualDirectiveDto? directive, ProductBrand brand, CancellationToken ct)
     {
         try
         {
-            var prompt = await BuildIllustrationPromptAsync(chapterTitle, nicheSlug, ct);
+            var isPhoto = string.Equals(directive?.Mode, "photo", StringComparison.OrdinalIgnoreCase);
+            var basePrompt = !string.IsNullOrWhiteSpace(directive?.Prompt)
+                ? directive!.Prompt
+                : await BuildIllustrationPromptAsync(chapterTitle, nicheSlug, ct);
+            var prompt = brand.Decorate(basePrompt); // docs/15 Frente A: direção de arte única
+            var query = !string.IsNullOrWhiteSpace(directive?.Query)
+                ? directive!.Query
+                : nicheSlug.Replace('-', ' '); // palavras-chave p/ bancos de foto
+
             var brief = new MediaBrief(
                 Purpose: "chapter-illustration",
                 Prompt: prompt,
-                Query: nicheSlug,
+                Query: query,
                 NicheSlug: nicheSlug,
-                Width: 800,
-                Height: 400);
+                Width: 1280,
+                Height: 640,
+                ProductId: productId,
+                Kind: directive is null ? MediaKind.Auto : isPhoto ? MediaKind.Photo : MediaKind.Illustration);
 
             var result = await mediaGateway.GenerateAsync(brief, ct);
-            return result.IsSuccess ? result.Value.Bytes : null;
+            // docs/17 P1-5: normaliza p/ banner 2:1 — evita ilustração retrato/quadrada minúscula no PDF.
+            return result.IsSuccess ? imageComposer.FitBanner(result.Value.Bytes) : null;
         }
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Falha ao gerar ilustração para capítulo '{Title}'; ignorando", chapterTitle);
             return null;
         }
+    }
+
+    private static readonly IReadOnlyDictionary<string, VisualDirectiveDto> EmptyPlan =
+        new Dictionary<string, VisualDirectiveDto>();
+
+    /// <summary>
+    /// Fase 4 — Diretor de Arte por IA: a partir do outline, a IA decide por capítulo o tipo de imagem
+    /// (foto vs ilustração) e a query/prompt concretos. Indexado por <see cref="ChapterKey"/>. Cacheado
+    /// pelo AI Gateway; qualquer falha cai para os prompts genéricos (não quebra a geração).
+    /// </summary>
+    private async Task<IReadOnlyDictionary<string, VisualDirectiveDto>> BuildVisualPlanAsync(
+        OutlineDto outline, string nicheSlug, Guid productId, CancellationToken ct)
+    {
+        try
+        {
+            var chapters = string.Join("\n", outline.Chapters.Select(c =>
+                $"- {c.Title} | objetivo: {c.Goal} | pontos: {string.Join(", ", c.KeyPoints)}"));
+
+            var ai = await aiGateway.CompleteAsync(new AiRequest(
+                Purpose: "ebook.visual-plan",
+                PromptTemplate: "ebook/visual-plan",
+                Variables: new Dictionary<string, string>
+                {
+                    ["niche"] = nicheSlug.Replace('-', ' '),
+                    ["chapters"] = chapters,
+                },
+                ProductId: productId), ct);
+
+            if (ai.IsFailure)
+            {
+                return EmptyPlan;
+            }
+
+            var parsed = AiJson.Parse<VisualPlanDto>(ai.Value.Content, "ebook.visual-plan");
+            if (parsed.IsFailure || parsed.Value.Chapters is null)
+            {
+                return EmptyPlan;
+            }
+
+            return parsed.Value.Chapters
+                .Where(d => !string.IsNullOrWhiteSpace(d.Title))
+                .GroupBy(d => ChapterKey(d.Title))
+                .ToDictionary(g => g.Key, g => g.First());
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Plano visual da IA falhou; usando prompts genéricos");
+            return EmptyPlan;
+        }
+    }
+
+    // chave de capítulo: remove o prefixo "Capítulo N — " e normaliza, casando o título do plano com o H2.
+    private static string ChapterKey(string text)
+    {
+        string[] seps = [" — ", " – ", " - ", ": "];
+        foreach (var sep in seps)
+        {
+            var idx = text.IndexOf(sep, StringComparison.Ordinal);
+            if (idx > 0 && text.StartsWith("Cap", StringComparison.OrdinalIgnoreCase))
+            {
+                text = text[(idx + sep.Length)..];
+                break;
+            }
+        }
+
+        return text.Trim().ToLowerInvariant();
     }
 
     private async Task<string> BuildIllustrationPromptAsync(string chapterTitle, string nicheSlug, CancellationToken ct)

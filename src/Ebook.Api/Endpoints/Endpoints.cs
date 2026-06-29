@@ -1,15 +1,19 @@
 using Ebook.Application.Administration.Auth;
 using Ebook.Application.Administration.Dashboard;
 using Ebook.Application.Administration.Media;
+using Ebook.Application.Administration.Provenance;
+using Ebook.Application.Administration.Sources;
 using Ebook.Application.Analytics;
 using Ebook.Application.Common.Messaging;
 using Ebook.Application.Common.Settings;
 using Ebook.Application.Content;
+using Ebook.Application.Content.Lp.Lab;
 using Ebook.Application.DevTools;
 using Ebook.Application.Discovery;
 using Ebook.Application.Optimization;
 using Ebook.Application.Publishing;
 using Ebook.Application.Social;
+using Ebook.Domain.Abstractions;
 using Ebook.Domain.Products;
 using Ebook.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -46,6 +50,10 @@ public sealed record SetApprovalRequest(bool Approved);
 
 public sealed record EditPostRequest(string Caption, string Hashtags);
 
+public sealed record GenerateTestLpRequest(Guid NicheId, string? Feedback);
+
+public sealed record SaveLpMemoryRequest(Guid NicheId, string? Feedback);
+
 public static class Endpoints
 {
     public static void MapApiEndpoints(this WebApplication app)
@@ -69,6 +77,11 @@ public static class Endpoints
             (await dispatcher.QueryAsync(new GetMediaTelemetryQuery(), ct)).ToHttp())
             .WithTags("Media")
             .WithSummary("Telemetria do Media Gateway: uso por provedor, cache e cotas (E14-08)");
+
+        secured.MapGet("/sources/telemetry", async (IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.QueryAsync(new GetSourcesTelemetryQuery(), ct)).ToHttp())
+            .WithTags("Sources")
+            .WithSummary("Telemetria unificada de fontes externas: texto (IA) + imagem (Media Gateway)");
 
         secured.MapGet("/logs", (
             Ebook.Api.Observability.InMemoryLogBuffer buffer,
@@ -111,10 +124,10 @@ public static class Endpoints
                 return Results.NotFound();
             }
 
-            if (job.Status != JobStatus.Dead)
+            if (job.Status is not (JobStatus.Dead or JobStatus.Succeeded))
             {
-                return Results.Problem(title: "Job.NotDead",
-                    detail: "Apenas jobs em dead-letter podem ser reenfileirados.", statusCode: 400);
+                return Results.Problem(title: "Job.NotRetryable",
+                    detail: "Só jobs concluídos ou em dead-letter podem ser reenfileirados.", statusCode: 400);
             }
 
             job.Status = JobStatus.Pending;
@@ -285,6 +298,16 @@ public static class Endpoints
             .WithTags("Products")
             .WithSummary("Funil de métricas do produto (visitas → cliques → vendas, 30 dias)");
 
+        secured.MapGet("/products/{id:guid}/provenance", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.QueryAsync(new GetProductProvenanceQuery(id), ct)).ToHttp())
+            .WithTags("Products")
+            .WithSummary("Proveniência do PDF: quem gerou o texto (IA) e as imagens (Media Gateway)");
+
+        secured.MapGet("/products/{id:guid}/audit", async (Guid id, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.QueryAsync(new GetConversionAuditQuery(id), ct)).ToHttp())
+            .WithTags("Products")
+            .WithSummary("Auditoria de conversão por IA: pontua o e-book contra o checklist de persuasão (Fase 7)");
+
         secured.MapPost("/analytics/aggregate", async (IMetricsAggregator aggregator, CancellationToken ct) =>
         {
             var rows = await aggregator.AggregateAsync(DateTime.UtcNow.Date, ct);
@@ -348,5 +371,32 @@ public static class Endpoints
             (await dispatcher.SendAsync(new AiEchoCommand(request.Text), ct)).ToHttp())
             .WithTags("Dev")
             .WithSummary("Smoke test do AI Gateway (cache → Claude CLI via assinatura Pro)");
+
+        // Laboratório de LP: gera uma landing page de teste a partir de um nicho (sem criar e-book),
+        // injetando a "memória" (feedback) na copy. Assíncrono: a geração de IA leva minutos e
+        // estourava o timeout do proxy reverso (~120s) na request síncrona — então só enfileira o
+        // run e devolve o RunId; o painel busca HTML + caminho por polling em /lp-lab/result.
+        secured.MapPost("/lp-lab/generate", async (GenerateTestLpRequest request, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.SendAsync(new EnqueueTestLpCommand(request.NicheId, request.Feedback), ct)).ToHttp())
+            .WithTags("LpLab")
+            .WithSummary("Enfileira a geração de uma landing page de teste para um nicho");
+
+        secured.MapGet("/lp-lab/result", async (Guid runId, IDispatcher dispatcher, CancellationToken ct) =>
+            (await dispatcher.QueryAsync(new GetTestLpResultQuery(runId), ct)).ToHttp())
+            .WithTags("LpLab")
+            .WithSummary("Lê o resultado de um run de teste de LP (pending/succeeded/failed)");
+
+        secured.MapPost("/lp-lab/memory", async (SaveLpMemoryRequest request, IFileStore fileStore, CancellationToken ct) =>
+        {
+            await fileStore.WriteTextAsync($"lp-lab/{request.NicheId}/memory.txt", request.Feedback ?? string.Empty, ct);
+            return Results.NoContent();
+        })
+            .WithTags("LpLab")
+            .WithSummary("Salva a memória (feedback) de teste de LP de um nicho");
+
+        secured.MapGet("/lp-lab/memory", async (Guid nicheId, IFileStore fileStore, CancellationToken ct) =>
+            Results.Ok(new { feedback = await fileStore.ReadTextAsync($"lp-lab/{nicheId}/memory.txt", ct) ?? string.Empty }))
+            .WithTags("LpLab")
+            .WithSummary("Lê a memória (feedback) de teste de LP de um nicho");
     }
 }

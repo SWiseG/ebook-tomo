@@ -1,10 +1,13 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Ebook.Application.Common.Jobs;
+using Ebook.Application.Ai;
 using Ebook.Application.Common.Settings;
 using Ebook.Application.Common.Text;
 using Ebook.Application.Content.Images;
 using Ebook.Application.Content.Lp;
+using Ebook.Application.Media;
 using Ebook.Domain.Abstractions;
 using Ebook.Domain.Common;
 using Ebook.Domain.Niches;
@@ -26,6 +29,10 @@ public sealed class LpJobHandler(
     IFileStore fileStore,
     IArtifactStore artifactStore,
     ISettingsStore settings,
+    IMediaGateway mediaGateway,
+    IPromptLibrary promptLibrary,
+    IPaletteResolver paletteResolver,
+    IBrandResolver brandResolver,
     IUnitOfWork unitOfWork,
     IClock clock,
     ILogger<LpJobHandler> logger) : IJobHandler
@@ -74,15 +81,39 @@ public sealed class LpJobHandler(
     {
         var niche = await niches.GetByIdAsync(product.NicheId, ct);
         var nicheSlug = niche?.Slug ?? product.Slug;
-        var palette = await ResolvePaletteAsync(nicheSlug, ct);
+        var palette = await paletteResolver.ResolveAsync(product.Slug, nicheSlug, ct);
 
         var copy = await ReadCopyAsync(product.Slug, ct);
         var cover = await artifactStore.ReadBytesAsync(ContentPaths.Cover(product.Slug), ct);
+        var mockup = await artifactStore.ReadBytesAsync(ContentPaths.Mockup(product.Slug), ct); // hero 3D
 
         var checkoutUrl = $"{baseUrl}/go/{product.Slug}";
         var pixelUrl = $"{baseUrl}/px.gif?s={Uri.EscapeDataString(product.Slug)}";
+        var deadline = await ResolveOfferDeadlineAsync(ct);
 
-        var model = LandingPageBuilder.BuildModel(product.Title, copy, cover, checkoutUrl, pixelUrl, palette);
+        // URLs absolutas para canonical/OG só fazem sentido com baseUrl público; capa via /media (E08).
+        var canonicalUrl = string.IsNullOrWhiteSpace(baseUrl) ? null : $"{baseUrl}/lp/{product.Slug}";
+        var coverImageUrl = !string.IsNullOrWhiteSpace(baseUrl) && cover is not null
+            ? $"{baseUrl}/media/{ContentPaths.Cover(product.Slug)}"
+            : null;
+
+        var legal = await ResolveLegalAsync(ct);
+        var disclaimer = NicheStyleCatalog.DisclaimerFor(NicheStyleCatalog.Classify(nicheSlug));
+        var showcase = await EnsureShowcaseAsync(product, nicheSlug, ct);
+
+        // docs/17 P2-9: com baseUrl público, serve mockup/hero via /media/ e NÃO embute base64 (LP leve).
+        var hasBase = !string.IsNullOrWhiteSpace(baseUrl);
+        var mockupUrl = hasBase && mockup is not null ? $"{baseUrl}/media/{ContentPaths.Mockup(product.Slug)}" : null;
+        var showcaseUrl = hasBase && showcase is not null ? $"{baseUrl}/media/{ContentPaths.LpHero(product.Slug)}" : null;
+
+        // docs/18 P3: com baseUrl público, a capa também vai por /media/ (CoverUrl é fallback do hero)
+        // e NÃO é embutida em base64 — LP leve p/ mobile. Em dev (sem baseUrl), embute como antes.
+        var model = LandingPageBuilder.BuildModel(
+            product.Title, copy, hasBase ? null : cover, checkoutUrl, pixelUrl, palette, deadline, canonicalUrl, coverImageUrl,
+            legal, disclaimer,
+            showcaseImage: showcaseUrl is null ? showcase : null,
+            mockupImage: mockupUrl is null ? mockup : null,
+            mockupUrl: mockupUrl, showcaseUrl: showcaseUrl, coverUrl: coverImageUrl);
         var template = LpTemplateSelector.ForNiche(nicheSlug);
         var html = LandingPageBuilder.Render(model, template);
 
@@ -113,18 +144,85 @@ public sealed class LpJobHandler(
         return parsed.IsSuccess ? parsed.Value : null;
     }
 
-    private async Task<NichePalette> ResolvePaletteAsync(string nicheSlug, CancellationToken ct)
+    // Ilustração de herói por IA (Media Gateway, free-first + cache). Re-entrante: reusa o artefato
+    // se já existe. Best-effort: qualquer falha → null e a seção showcase é omitida.
+    private async Task<byte[]?> EnsureShowcaseAsync(Product product, string nicheSlug, CancellationToken ct)
     {
-        var config = await fileStore.ReadTextAsync(ContentPaths.PaletteConfig(nicheSlug), ct);
-        if (config is not null)
+        var path = ContentPaths.LpHero(product.Slug);
+        var existing = await artifactStore.ReadBytesAsync(path, ct);
+        if (existing is not null)
         {
-            var parsed = AiJson.Parse<NichePalette>(config, "palette");
-            if (parsed.IsSuccess && !string.IsNullOrWhiteSpace(parsed.Value.Background))
-            {
-                return parsed.Value;
-            }
+            return existing;
         }
 
-        return PaletteCatalog.ForNiche(nicheSlug);
+        try
+        {
+            var vars = new Dictionary<string, string>
+            {
+                ["title"] = product.Title,
+                ["nicheSlug"] = nicheSlug,
+            };
+            var rendered = await promptLibrary.RenderAsync("media/lp-hero", vars, ct);
+            var basePrompt = rendered.IsSuccess
+                ? rendered.Value
+                : $"premium aspirational landing page hero illustration about {nicheSlug}, no text, modern editorial, 2:1 banner";
+            var brand = await brandResolver.ResolveAsync(product.Slug, nicheSlug, ct); // docs/15 Frente A
+            var prompt = brand.Decorate(basePrompt);
+
+            var result = await mediaGateway.GenerateAsync(
+                new MediaBrief("lp-hero", prompt, nicheSlug, nicheSlug, 1024, 512), ct);
+            if (result.IsFailure)
+            {
+                return null;
+            }
+
+            await artifactStore.WriteBytesAsync(path, result.Value.Bytes, ct);
+            logger.LogInformation("Ilustração da LP gerada para {Slug} via {Provider}",
+                product.Slug, result.Value.Provider);
+            return result.Value.Bytes;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Falha ao gerar ilustração da LP para {Slug}; seguindo sem ela", product.Slug);
+            return null;
+        }
+    }
+
+    // Dados legais do rodapé (config). Null se nada configurado → rodapé mínimo.
+    private async Task<LpLegalDto?> ResolveLegalAsync(CancellationToken ct)
+    {
+        var company = await settings.GetOrDefaultAsync(SettingKeys.LegalCompanyName, string.Empty, ct);
+        var cnpj = await settings.GetOrDefaultAsync(SettingKeys.LegalCnpj, string.Empty, ct);
+        var email = await settings.GetOrDefaultAsync(SettingKeys.LegalContactEmail, string.Empty, ct);
+        var privacy = await settings.GetOrDefaultAsync(SettingKeys.LegalPrivacyUrl, string.Empty, ct);
+        var terms = await settings.GetOrDefaultAsync(SettingKeys.LegalTermsUrl, string.Empty, ct);
+
+        if (string.IsNullOrWhiteSpace(company) && string.IsNullOrWhiteSpace(cnpj) && string.IsNullOrWhiteSpace(email)
+            && string.IsNullOrWhiteSpace(privacy) && string.IsNullOrWhiteSpace(terms))
+        {
+            return null;
+        }
+
+        return new LpLegalDto(Nz(company), Nz(cnpj), Nz(email), Nz(privacy), Nz(terms));
+
+        static string? Nz(string s) => string.IsNullOrWhiteSpace(s) ? null : s;
+    }
+
+    // Prazo da oferta para o contador: só se configurado (ISO-8601) e futuro. Vazio = sem contador.
+    private async Task<DateTime?> ResolveOfferDeadlineAsync(CancellationToken ct)
+    {
+        var raw = await settings.GetOrDefaultAsync(SettingKeys.LpOfferDeadlineUtc, string.Empty, ct);
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            // sem prazo fixo: contador rolante de N horas, se configurado (docs/15)
+            var hours = await settings.GetOrDefaultAsync(SettingKeys.LpDefaultOfferHours, 0, ct);
+            return hours > 0 ? clock.UtcNow.AddHours(hours) : null;
+        }
+
+        return DateTime.TryParse(raw, CultureInfo.InvariantCulture,
+            DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var parsed)
+            && parsed > clock.UtcNow
+                ? parsed
+                : null;
     }
 }

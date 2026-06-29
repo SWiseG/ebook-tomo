@@ -7,11 +7,34 @@ public enum MediaProvider
 {
     Cache,
     Gemini,
+    Higgsfield,
     Cloudflare,
     HuggingFace,
     Pollinations,
     Pexels,
+    Unsplash,
+    Pixabay,
     LocalSkia
+}
+
+/// <summary>
+/// Tipo de imagem desejado (Fase 4 — Diretor de Arte por IA). Roteia a cadeia: <see cref="Photo"/>
+/// prioriza bancos de foto (Pexels/Unsplash/Pixabay); <see cref="Illustration"/> prioriza geração
+/// (Gemini/Cloudflare/HuggingFace/Pollinations). <see cref="Auto"/> = ordem de registro padrão.
+/// O piso local (Skia) é sempre o último recurso, independentemente do tipo.
+/// </summary>
+public enum MediaKind
+{
+    Auto,
+    Photo,
+    Illustration,
+
+    /// <summary>
+    /// Capa COMPLETA com texto gerada pela IA (docs/14 WP-5). Roteia só para modelos generativos
+    /// capazes de tipografia (Gemini primeiro); bancos de foto são excluídos (não rendem texto).
+    /// O resultado passa por QA de visão antes de ser aceito.
+    /// </summary>
+    CoverWithText
 }
 
 /// <summary>
@@ -24,7 +47,9 @@ public sealed record MediaBrief(
     string Query,
     string NicheSlug,
     int Width,
-    int Height);
+    int Height,
+    Guid? ProductId = null, // proveniência (Fase 3B): atribui a imagem ao produto, quando conhecido
+    MediaKind Kind = MediaKind.Auto); // roteamento por tipo (Fase 4): foto vs ilustração
 
 public sealed record MediaResult(byte[] Bytes, MediaProvider Provider, bool CacheHit);
 

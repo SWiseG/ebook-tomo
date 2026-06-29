@@ -27,7 +27,9 @@
     "channels": "Channels",
     "jobs": "Jobs",
     "optimizer": "Optimizer",
+    "lpLab": "LP Lab",
     "media": "AI Media",
+    "sources": "Sources",
     "logs": "Logs",
     "settings": "Settings",
     "tutorial": "How to use"
@@ -248,6 +250,25 @@
       "status": "Status"
     }
   },
+  "sources": {
+    "title": "External Sources",
+    "subtitle": "Usage per source: text generation (AI) and image generation (Media Gateway).",
+    "refresh": "Refresh",
+    "loadError": "Failed to load sources telemetry.",
+    "list": "Sources",
+    "noUsage": "No usage recorded yet. Generate an e-book or cover to see data here.",
+    "cacheHitsToday": "Cache hits today",
+    "cacheEntriesTotal": "Media cache entries",
+    "cacheSizeTotal": "Media volume generated",
+    "col": {
+      "provider": "Source",
+      "kind": "Type",
+      "today": "Today",
+      "month": "This month",
+      "volume": "Volume today",
+      "avgMs": "Avg time"
+    }
+  },
   "media": {
     "title": "AI Media",
     "subtitle": "Media Gateway telemetry: usage per provider, image cache and daily quotas.",
@@ -301,6 +322,11 @@
     "reject": "Reject",
     "openLp": "Open LP",
     "downloadPdf": "Download PDF",
+    "provenance": "Provenance",
+    "provText": "Text (AI)",
+    "provImages": "Images",
+    "provEmpty": "No records.",
+    "audit": "Audit conversion",
     "manuscript": "Manuscript",
     "manuscriptPending": "Manuscript not generated yet.",
     "cover": "Cover",

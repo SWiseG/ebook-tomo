@@ -1,3 +1,16 @@
 {
-    "claudeCode.allowDangerouslySkipPermissions": true
+  "claudeCode.allowDangerouslySkipPermissions": true,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[csharp]": {
+    "editor.defaultFormatter": "ms-dotnettools.csharp"
+  },
+  "dotnet-test-explorer.testProjectPath": "tests/**/*.csproj",
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/node_modules": true
+  },
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "angular.enable-strict-mode-prompt": false
 }

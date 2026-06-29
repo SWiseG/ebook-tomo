@@ -8,6 +8,7 @@ import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridApi, GridReadyEvent, ICellRendererParams } from 'ag-grid-community';
 import { tomoAgTheme } from '../../shared/ag-grid/tomo-ag-theme';
 import { OptimizationDecision, OptimizationRun } from '../../core/api.types';
+import { LayoutService } from '../../core/layout.service';
 import { NotificationService } from '../../core/notification.service';
 import { Loading } from '../../shared/loading';
 
@@ -23,6 +24,7 @@ export class Optimizer {
   private readonly http = inject(HttpClient);
   private readonly notify = inject(NotificationService);
   private readonly t = inject(TranslocoService);
+  private readonly layout = inject(LayoutService);
 
   readonly runs = signal<OptimizationRun[] | null>(null);
   readonly selected = signal<OptimizationRun | null>(null);
@@ -59,9 +61,18 @@ export class Optimizer {
       this.busy();
       this.gridApi?.refreshCells({ columns: ['actions'], force: true });
     });
+    effect(() => { this.layout.isMobile(); this.applyMobileCols(); });
   }
 
-  onGridReady(e: GridReadyEvent<OptimizationDecision>): void { this.gridApi = e.api; }
+  onGridReady(e: GridReadyEvent<OptimizationDecision>): void {
+    this.gridApi = e.api;
+    this.applyMobileCols();
+  }
+
+  private applyMobileCols(): void {
+    if (!this.gridApi) return;
+    this.gridApi.setColumnsVisible(['opt-status'], !this.layout.isMobile());
+  }
 
   onSearch(): void {
     this.gridApi?.setGridOption('quickFilterText', this.quickFilter);
@@ -88,6 +99,7 @@ export class Optimizer {
         },
       },
       {
+        colId: 'opt-status',
         headerName: t.translate('optimizer.col.status'),
         field: 'status',
         width: 120,

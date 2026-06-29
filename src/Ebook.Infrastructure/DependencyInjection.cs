@@ -1,6 +1,8 @@
 using Ebook.Application.Administration.Auth;
 using Ebook.Application.Administration.Dashboard;
 using Ebook.Application.Administration.Media;
+using Ebook.Application.Administration.Provenance;
+using Ebook.Application.Administration.Sources;
 using Ebook.Application.Ai;
 using Ebook.Application.Common.Jobs;
 using Ebook.Application.Common.Settings;
@@ -8,6 +10,7 @@ using Ebook.Application.Content;
 using Ebook.Application.Content.Images;
 using Ebook.Application.Content.Pdf;
 using Ebook.Application.Analytics;
+using Ebook.Application.Knowledge;
 using Ebook.Application.Discovery;
 using Ebook.Application.Knowledge;
 using Ebook.Application.Media;
@@ -54,6 +57,8 @@ public static class DependencyInjection
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<AdminAuthOptions>(configuration.GetSection(AdminAuthOptions.SectionName));
         services.Configure<PexelsOptions>(configuration.GetSection(PexelsOptions.SectionName));
+        services.Configure<Media.UnsplashOptions>(configuration.GetSection(Media.UnsplashOptions.SectionName));
+        services.Configure<Media.PixabayOptions>(configuration.GetSection(Media.PixabayOptions.SectionName));
         services.Configure<Media.MediaOptions>(configuration.GetSection(Media.MediaOptions.SectionName));
         services.Configure<KiwifyOptions>(configuration.GetSection(KiwifyOptions.SectionName));
         services.Configure<MetaOptions>(configuration.GetSection(MetaOptions.SectionName));
@@ -75,12 +80,16 @@ public static class DependencyInjection
         // Media Gateway (E14): cadeia free-first de geração de imagem por trás do seam IPhotoProvider.
         // Pexels deixa de ser o IPhotoProvider direto e vira o último elo da cadeia (banco de fotos).
         services.AddHttpClient<PexelsPhotoProvider>(c => c.Timeout = TimeSpan.FromSeconds(15));
-        // ordem de registro = ordem da cadeia: generativos com chave → Pollinations (grátis) → Pexels (fotos)
+        // ordem de registro = ordem da cadeia (qualidade-primeiro dentro do grátis):
+        // generativos premium (com chave) → bancos de foto (com chave) → Pollinations (grátis) → Skia (piso).
         services.AddHttpClient<IMediaResolver, Media.GeminiImageResolver>(c => c.Timeout = TimeSpan.FromSeconds(90));
+        services.AddHttpClient<IMediaResolver, Media.HiggsfieldImageResolver>(c => c.Timeout = TimeSpan.FromSeconds(60));
         services.AddHttpClient<IMediaResolver, Media.CloudflareImageResolver>(c => c.Timeout = TimeSpan.FromSeconds(90));
         services.AddHttpClient<IMediaResolver, Media.HuggingFaceImageResolver>(c => c.Timeout = TimeSpan.FromSeconds(90));
-        services.AddHttpClient<IMediaResolver, Media.PollinationsMediaResolver>(c => c.Timeout = TimeSpan.FromSeconds(60));
         services.AddScoped<IMediaResolver, Media.PexelsMediaResolver>();
+        services.AddHttpClient<IMediaResolver, Media.UnsplashMediaResolver>(c => c.Timeout = TimeSpan.FromSeconds(20));
+        services.AddHttpClient<IMediaResolver, Media.PixabayMediaResolver>(c => c.Timeout = TimeSpan.FromSeconds(20));
+        services.AddHttpClient<IMediaResolver, Media.PollinationsMediaResolver>(c => c.Timeout = TimeSpan.FromSeconds(60));
         services.AddSingleton<IMediaResolver, Media.LocalSkiaImageResolver>(); // piso garantido — nunca falha
         services.AddScoped<IMediaGateway, Media.MediaGateway>();
         services.AddScoped<IPhotoProvider, Media.MediaGatewayPhotoProvider>();
@@ -93,6 +102,8 @@ public static class DependencyInjection
         services.AddScoped<ISettingsStore, SettingsStore>();
         services.AddScoped<IDashboardReader, DashboardReader>();
         services.AddScoped<IMediaTelemetryReader, MediaTelemetryReader>();
+        services.AddScoped<ISourcesTelemetryReader, SourcesTelemetryReader>();
+        services.AddScoped<IProductProvenanceReader, ProductProvenanceReader>();
         services.AddScoped<IProductReader, ProductReader>();
         services.AddScoped<IAiGateway, AiGateway>();
 
@@ -116,6 +127,8 @@ public static class DependencyInjection
         services.AddHttpClient<ISocialPublisher, MetaGraphPublisher>(c => c.Timeout = TimeSpan.FromSeconds(60));
         services.AddSingleton<ITtsEngine, PiperTtsEngine>();
         services.AddSingleton<IVideoComposer, FfmpegVideoComposer>();
+        services.AddScoped<IStyleAnalyzer, ClaudeVisionStyleAnalyzer>();
+        services.AddScoped<Application.Content.Images.ICoverQa, ClaudeVisionCoverQa>();
 
         // fontes de tendência (E02): client nomeado compartilhado + múltiplas implementações de ITrendSource
         services.AddHttpClient("trends", c =>

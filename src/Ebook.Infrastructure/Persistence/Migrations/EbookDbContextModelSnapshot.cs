@@ -808,6 +808,9 @@ namespace Ebook.Infrastructure.Persistence.Migrations
                     b.Property<int>("DurationMs")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Provider")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -819,6 +822,8 @@ namespace Ebook.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
 
                     b.HasIndex("Provider", "CreatedAtUtc");
 
