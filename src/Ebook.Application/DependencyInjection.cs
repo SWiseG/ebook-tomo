@@ -2,6 +2,7 @@ using Ebook.Application.Common.Events;
 using Ebook.Application.Common.Jobs;
 using Ebook.Application.Common.Messaging;
 using Ebook.Application.Common.Realtime;
+using Ebook.Application.Content;
 using Ebook.Application.Knowledge;
 using Ebook.Application.Optimization;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<Content.Images.IBrandResolver, Content.Images.BrandResolver>();
         services.AddScoped<Content.Images.IBrandDirector, Content.Images.BrandDirector>();
         services.AddScoped<IKnowledgeService, KnowledgeService>();
+        services.AddScoped<IConversionAuditService, ConversionAuditService>();
         services.AddScoped<Knowledge.IStylePlaybookReader, Knowledge.StylePlaybookReader>();
         services.AddScoped<IOptimizationService, OptimizationService>();
         services.AddScoped<IOptimizationExecutor, OptimizationExecutor>();

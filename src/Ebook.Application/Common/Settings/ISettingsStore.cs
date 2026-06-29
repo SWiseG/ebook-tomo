@@ -79,4 +79,17 @@ public static class SettingKeys
     /// Cada candidata consome uma chamada de cota do IMediaGateway — use com moderação.
     /// </summary>
     public const string CoverTournamentSize = "cover.tournamentSize";
+
+    /// <summary>
+    /// Score mínimo de conversão (0–100) para que o manuscrito avance para a capa/PDF.
+    /// Default 0 = gate desligado (comportamento legado: avança sempre).
+    /// Valores sugeridos: 60 (permissivo), 70 (padrão B2), 80 (rigoroso).
+    /// </summary>
+    public const string AuditGateMinScore = "audit.gateMinScore";
+
+    /// <summary>
+    /// Número máximo de tentativas de melhoria antes de avançar mesmo com score abaixo do limiar.
+    /// Default 1 = uma iteração de melhoria. Zero = sem retry (avança imediatamente se reprovar).
+    /// </summary>
+    public const string AuditMaxRetries = "audit.maxRetries";
 }

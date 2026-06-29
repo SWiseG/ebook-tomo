@@ -53,6 +53,9 @@ public static class ContentPaths
     /// <summary>Sentinela que indica que o passe de coesão (A1) já foi aplicado ao manuscrito.</summary>
     public static string ContinuityMarker(string slug) => $"products/{slug}/manuscript/continuity.done";
 
+    /// <summary>Estado da auditoria de gate (score + tentativas). Persistido para o dashboard e para controle de retry.</summary>
+    public static string AuditState(string slug) => $"products/{slug}/audit-state.json";
+
     /// <summary>Override opcional de paleta por nicho, no FileStore de conteúdo (E09-03).</summary>
     public static string PaletteConfig(string nicheSlug) => $"niches/{nicheSlug}/palette.json";
 

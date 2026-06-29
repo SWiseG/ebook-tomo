@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Ebook.Application.Ai;
 using Ebook.Application.Common.Jobs;
+using Ebook.Application.Common.Settings;
 using Ebook.Application.Common.Text;
 using Ebook.Application.Knowledge;
 using Ebook.Domain.Abstractions;
@@ -16,7 +17,8 @@ namespace Ebook.Application.Content;
 /// <summary>
 /// Etapa Review: monta o manuscrito (capa + capítulos + moldura editorial),
 /// faz a passada de revisão conforme o tier, gera a copy de venda + preço e
-/// registra o artefato Manuscript. Avança o produto para Pdf (insumo da Fase E05).
+/// registra o artefato Manuscript. Se o gate de auditoria estiver ativo
+/// (audit.gateMinScore > 0), decide entre avançar para Pdf ou enfileirar retry.
 /// </summary>
 public sealed class ReviewJobHandler(
     IProductRepository products,
@@ -24,6 +26,8 @@ public sealed class ReviewJobHandler(
     IArtifactRepository artifacts,
     IKnowledgeService knowledge,
     IAiGateway aiGateway,
+    IConversionAuditService auditService,
+    ISettingsStore settings,
     IFileStore fileStore,
     IJobQueue jobQueue,
     IUnitOfWork unitOfWork,
@@ -50,13 +54,15 @@ public sealed class ReviewJobHandler(
             return Result.Failure(outline.Error);
         }
 
-        var manuscriptResult = await EnsureManuscriptAsync(product, outline.Value, ct);
+        var forceRegen = payload.RetryAttempt > 0;
+
+        var manuscriptResult = await EnsureManuscriptAsync(product, outline.Value, forceRegen, ct);
         if (manuscriptResult.IsFailure)
         {
             return Result.Failure(manuscriptResult.Error);
         }
 
-        var continuityResult = await EnsureContinuityAsync(product, outline.Value, ct);
+        var continuityResult = await EnsureContinuityAsync(product, outline.Value, forceRegen, ct);
         if (continuityResult.IsFailure)
         {
             return Result.Failure(continuityResult.Error);
@@ -71,13 +77,19 @@ public sealed class ReviewJobHandler(
         var enteredPdf = false;
         if (product.Stage == ProductStage.Review)
         {
-            var advanced = product.AdvanceStage(); // Review → Pdf (pronto para artes + renderização)
-            if (advanced.IsFailure)
-            {
-                return Result.Failure(advanced.Error);
-            }
+            var gateResult = await DecideAuditGateAsync(product, ct);
+            if (gateResult.IsFailure)
+                return Result.Failure(gateResult.Error);
 
-            enteredPdf = true;
+            if (gateResult.Value) // approved or gate disabled
+            {
+                var advanced = product.AdvanceStage(); // Review → Pdf
+                if (advanced.IsFailure)
+                    return Result.Failure(advanced.Error);
+
+                enteredPdf = true;
+            }
+            // else: ManuscriptAuditFailed foi emitido no produto; Outbox entregará ao handler de retry
         }
 
         await unitOfWork.SaveChangesAsync(ct);
@@ -96,10 +108,71 @@ public sealed class ReviewJobHandler(
         return Result.Success();
     }
 
-    private async Task<Result> EnsureManuscriptAsync(Product product, OutlineDto outline, CancellationToken ct)
+    /// <summary>
+    /// Decide se o manuscrito pode avançar.
+    /// minScore=0 (default) → gate desligado → aprovado sempre.
+    /// Abaixo do limiar e ainda há tentativas → emite ManuscriptAuditFailed → retorna false.
+    /// Abaixo do limiar e tentativas esgotadas → avança com aviso → retorna true.
+    /// </summary>
+    private async Task<Result<bool>> DecideAuditGateAsync(Product product, CancellationToken ct)
+    {
+        var minScore = await settings.GetOrDefaultAsync(SettingKeys.AuditGateMinScore, 0, ct);
+        if (minScore <= 0)
+            return Result.Success(true); // gate desligado
+
+        var maxRetries = await settings.GetOrDefaultAsync(SettingKeys.AuditMaxRetries, 1, ct);
+
+        // Lê estado anterior (score + tentativas já realizadas)
+        var statePath = ContentPaths.AuditState(product.Slug);
+        var stateJson = await fileStore.ReadTextAsync(statePath, ct);
+        var state = stateJson is not null
+            ? JsonSerializer.Deserialize<AuditStateDto>(stateJson, JsonOptions) ?? new AuditStateDto(0, 0)
+            : new AuditStateDto(0, 0);
+
+        var auditResult = await auditService.AuditAsync(product, ct);
+        if (auditResult.IsFailure)
+            return Result.Failure<bool>(auditResult.Error);
+
+        var score = auditResult.Value.Score;
+        var approved = score >= minScore || state.Attempts >= maxRetries;
+        var nextAttempts = approved ? state.Attempts : state.Attempts + 1;
+
+        // Persiste sempre o score para o dashboard
+        await fileStore.WriteTextAsync(statePath,
+            JsonSerializer.Serialize(new AuditStateDto(score, nextAttempts), JsonOptions), ct);
+
+        if (!approved)
+        {
+            logger.LogInformation(
+                "Gate de auditoria: {Slug} score {Score} < {MinScore} — tentativa {Attempt}/{MaxRetries}. Emitindo retry.",
+                product.Slug, score, minScore, nextAttempts, maxRetries);
+
+            product.RecordAuditFailure(score, nextAttempts);
+            return Result.Success(false);
+        }
+
+        if (score < minScore)
+        {
+            // aprovado apenas por esgotamento de tentativas
+            logger.LogWarning(
+                "Gate de auditoria: {Slug} score {Score} < {MinScore} após {Attempts} tentativas — avançando mesmo assim.",
+                product.Slug, score, minScore, state.Attempts);
+        }
+        else
+        {
+            logger.LogInformation(
+                "Gate de auditoria: {Slug} score {Score} >= {MinScore} — aprovado.",
+                product.Slug, score, minScore);
+        }
+
+        return Result.Success(true);
+    }
+
+    private async Task<Result> EnsureManuscriptAsync(
+        Product product, OutlineDto outline, bool forceRegen, CancellationToken ct)
     {
         var path = ContentPaths.Manuscript(product.Slug, ManuscriptVersion);
-        if (fileStore.Exists(path))
+        if (!forceRegen && fileStore.Exists(path))
         {
             return Result.Success();
         }
@@ -167,12 +240,13 @@ public sealed class ReviewJobHandler(
             : AiJson.Parse<ReviewDto>(ai.Value.Content, "ebook.review");
     }
 
-    private async Task<Result> EnsureContinuityAsync(Product product, OutlineDto outline, CancellationToken ct)
+    private async Task<Result> EnsureContinuityAsync(
+        Product product, OutlineDto outline, bool forceRegen, CancellationToken ct)
     {
         if (product.QualityTier == QualityTier.Draft) return Result.Success();
 
         var markerPath = ContentPaths.ContinuityMarker(product.Slug);
-        if (fileStore.Exists(markerPath)) return Result.Success();
+        if (!forceRegen && fileStore.Exists(markerPath)) return Result.Success();
 
         var manuscriptPath = ContentPaths.Manuscript(product.Slug, ManuscriptVersion);
         var manuscript = await fileStore.ReadTextAsync(manuscriptPath, ct);
@@ -340,4 +414,6 @@ public sealed class ReviewJobHandler(
         sb.Append("\n\n").Append(framing.Conclusion.Trim()).Append('\n');
         return sb.ToString();
     }
+
+    private sealed record AuditStateDto(int Score, int Attempts);
 }

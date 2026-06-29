@@ -295,6 +295,13 @@ public sealed class Product : AggregateRoot
 
     /// <summary>Refina o título a partir do outline gerado (o título inicial é provisório).</summary>
     public void SetTitle(string title) => Title = title;
+
+    /// <summary>
+    /// Registra a falha no gate de auditoria de conversão. O score e a tentativa são propagados
+    /// via Outbox para que o handler re-enfileire o job de revisão com força de regeneração.
+    /// </summary>
+    public void RecordAuditFailure(int score, int attempt) =>
+        Raise(new ManuscriptAuditFailed(Id, score, attempt));
 }
 
 public static class ProductErrors
@@ -327,3 +334,9 @@ public sealed record ProductPublished(Guid ProductId, string Platform) : DomainE
 public sealed record ProductSynchronized(Guid ProductId) : DomainEvent;
 public sealed record ProductUnsynchronized(Guid ProductId) : DomainEvent;
 public sealed record ProductRetired(Guid ProductId, string Reason) : DomainEvent;
+
+/// <summary>
+/// Emitido quando o manuscrito não atinge o limiar de conversão (audit.gateMinScore) e ainda
+/// há tentativas disponíveis. O handler re-enfileira a revisão com regeneração forçada.
+/// </summary>
+public sealed record ManuscriptAuditFailed(Guid ProductId, int Score, int Attempt) : DomainEvent;

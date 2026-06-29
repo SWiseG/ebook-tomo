@@ -15,6 +15,7 @@ public static class ContentJobs
     public static string OutlineKey(Guid productId) => $"outline:{productId}";
     public static string ChapterKey(Guid productId, int n) => $"chapter:{productId}:{n}";
     public static string ReviewKey(Guid productId) => $"review:{productId}";
+    public static string ReviewRetryKey(Guid productId, int attempt) => $"review:{productId}:retry:{attempt}";
     public static string CoverKey(Guid productId) => $"cover:{productId}";
     public static string PdfKey(Guid productId) => $"pdf:{productId}";
     public static string LpKey(Guid productId) => $"lp:{productId}";
@@ -26,7 +27,7 @@ public sealed record OutlineJobPayload(Guid ProductId);
 
 public sealed record ChapterJobPayload(Guid ProductId, int ChapterNumber);
 
-public sealed record ReviewJobPayload(Guid ProductId);
+public sealed record ReviewJobPayload(Guid ProductId, int RetryAttempt = 0);
 
 public sealed record CoverJobPayload(Guid ProductId);
 
