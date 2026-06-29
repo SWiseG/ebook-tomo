@@ -6,6 +6,7 @@ public enum ArtifactType
 {
     Manuscript,
     Pdf,
+    Epub,
     Cover,
     Mockup,
     Banner,

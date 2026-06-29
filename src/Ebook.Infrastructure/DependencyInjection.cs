@@ -73,6 +73,7 @@ public static class DependencyInjection
         services.AddSingleton<IFileStore, JsonFileStore>();
         services.AddSingleton<IArtifactStore, FileArtifactStore>();
         services.AddSingleton<IPdfRenderer, QuestPdfRenderer>();
+        services.AddSingleton<IEbookExporter, EpubRenderer>();
         services.AddSingleton<IImageComposer, SkiaImageComposer>();
         services.AddSingleton<IPromptLibrary, PromptLibrary>();
 

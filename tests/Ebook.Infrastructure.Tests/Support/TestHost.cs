@@ -1,4 +1,5 @@
 using Ebook.Application.Ai;
+using Ebook.Application.Content;
 using Ebook.Application.Knowledge;
 using Ebook.Application.Media;
 using Ebook.Application.Publishing;
@@ -36,9 +37,10 @@ public static class TestHost
             o.RootPath = Path.Combine(Path.GetTempPath(), "ebook-tests", Guid.NewGuid().ToString("N")));
         services.AddSingleton<IFileStore, JsonFileStore>();
 
-        // Media Gateway e PromptLibrary sem rede (PdfJobHandler precisa dos dois)
+        // Media Gateway, PromptLibrary e EPUB sem rede (handlers de conteúdo precisam dos três)
         services.AddSingleton<IMediaGateway, FakeMediaGateway>();
         services.AddSingleton<IPromptLibrary, NullPromptLibrary>();
+        services.AddSingleton<IEbookExporter, FakeEbookExporter>();
         services.AddSingleton<IStyleAnalyzer, FakeStyleAnalyzer>();
         services.AddSingleton<Application.Content.Images.ICoverQa, FakeCoverQa>();
 

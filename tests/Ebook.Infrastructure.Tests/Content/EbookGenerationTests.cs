@@ -32,16 +32,18 @@ namespace Ebook.Infrastructure.Tests.Content;
 /// </summary>
 public class EbookGenerationTests
 {
-    private static (ServiceProvider Provider, FakeAiGateway Ai, FakePdfRenderer Pdf, FakeImageComposer Img) Build()
+    private static (ServiceProvider Provider, FakeAiGateway Ai, FakePdfRenderer Pdf, FakeImageComposer Img, FakeEbookExporter Epub) Build()
     {
         var ai = new FakeAiGateway();
         var pdf = new FakePdfRenderer();
         var img = new FakeImageComposer();
+        var epub = new FakeEbookExporter();
         var provider = TestHost.Build(s =>
         {
             s.AddApplication(); // dispatcher + KnowledgeService + handlers (command/query/job) por scan
             s.AddSingleton<IAiGateway>(ai);
             s.AddSingleton<IPdfRenderer>(pdf);
+            s.AddSingleton<IEbookExporter>(epub);
             s.AddSingleton<IImageComposer>(img);
             s.AddSingleton<IPhotoProvider, NullPhotoProvider>();
             s.AddSingleton<IKiwifyPublisher>(new FakeKiwifyPublisher());
@@ -59,7 +61,7 @@ public class EbookGenerationTests
             s.AddScoped<ISocialPostRepository, SocialPostRepository>();
             s.AddScoped<IProductReader, ProductReader>();
         });
-        return (provider, ai, pdf, img);
+        return (provider, ai, pdf, img, epub);
     }
 
     private static async Task<Guid> SeedNicheAsync(ServiceProvider provider)
@@ -94,9 +96,9 @@ public class EbookGenerationTests
     }
 
     [Fact]
-    public async Task Pipeline_gera_manuscrito_copy_capa_pdf_e_avanca_ate_lp()
+    public async Task Pipeline_gera_manuscrito_copy_capa_pdf_epub_e_avanca_ate_lp()
     {
-        var (provider, ai, pdf, img) = Build();
+        var (provider, ai, pdf, img, epub) = Build();
         using var _ = provider;
         var nicheId = await SeedNicheAsync(provider);
         var productId = await GenerateAsync(provider, nicheId, QualityTier.Commercial);
@@ -159,15 +161,20 @@ public class EbookGenerationTests
         Assert.Equal(1, await db.Artifacts.CountAsync(a => a.Type == ArtifactType.Cover));
         Assert.Equal(1, await db.Artifacts.CountAsync(a => a.Type == ArtifactType.Mockup));
         Assert.Equal(1, await db.Artifacts.CountAsync(a => a.Type == ArtifactType.Pdf));
+        Assert.Equal(1, await db.Artifacts.CountAsync(a => a.Type == ArtifactType.Epub));
         Assert.Equal(1, await db.Artifacts.CountAsync(a => a.Type == ArtifactType.LpBundle));
-        Assert.Equal(7, await db.Jobs.CountAsync()); // outline + 2 capítulos + review + cover + pdf + lp
+        Assert.Equal(8, await db.Jobs.CountAsync()); // outline + 2 capítulos + review + cover + pdf + epub + lp
         Assert.True(await db.Jobs.AllAsync(j => j.Status == JobStatus.Succeeded));
+
+        // EPUB gerado uma vez pelo exporter fake
+        Assert.Equal(1, epub.ExportCount);
+        Assert.Equal("Dinheiro Sob Controle", epub.Last!.Title);
     }
 
     [Fact]
     public async Task Draft_nao_chama_revisao_de_IA()
     {
-        var (provider, ai, _, _) = Build();
+        var (provider, ai, _, _, _) = Build();
         using var _ = provider;
         var nicheId = await SeedNicheAsync(provider);
         await GenerateAsync(provider, nicheId, QualityTier.Draft);
@@ -181,7 +188,7 @@ public class EbookGenerationTests
     [Fact]
     public async Task Modo_Auto_publica_sem_gate_de_aprovacao()
     {
-        var (provider, _, _, _) = Build();
+        var (provider, _, _, _, _) = Build();
         using var _ = provider;
         var nicheId = await SeedNicheAsync(provider);
 
@@ -205,7 +212,7 @@ public class EbookGenerationTests
     [Fact]
     public async Task Knowledge_pack_e_reaproveitado_entre_produtos_do_mesmo_nicho()
     {
-        var (provider, ai, _, _) = Build();
+        var (provider, ai, _, _, _) = Build();
         using var _ = provider;
         var nicheId = await SeedNicheAsync(provider);
 
@@ -225,7 +232,7 @@ public class EbookGenerationTests
     [Fact]
     public async Task Reexecutar_jobs_e_idempotente_nao_duplica_artefatos()
     {
-        var (provider, ai, pdf, img) = Build();
+        var (provider, ai, pdf, img, epub) = Build();
         using var _ = provider;
         var nicheId = await SeedNicheAsync(provider);
         var productId = await GenerateAsync(provider, nicheId, QualityTier.Commercial);
@@ -245,6 +252,7 @@ public class EbookGenerationTests
         var chapterCallsBefore = ai.CallsFor("ebook.chapter");
         var rendersBefore = pdf.RenderCount;
         var coversBefore = img.CoverCount;
+        var epubsBefore = epub.ExportCount;
         await RunJobsAsync(provider);
 
         using var verify = provider.CreateScope();
@@ -256,9 +264,11 @@ public class EbookGenerationTests
         Assert.Equal(chapterCallsBefore, ai.CallsFor("ebook.chapter")); // arquivos já existem: zero IA extra
         Assert.Equal(rendersBefore, pdf.RenderCount); // PDF já existe: zero re-render
         Assert.Equal(coversBefore, img.CoverCount); // capa já existe: zero re-render
+        Assert.Equal(epubsBefore, epub.ExportCount); // EPUB já existe: zero re-export
         Assert.Equal(1, await verifyDb.Artifacts.CountAsync(a => a.Type == ArtifactType.Manuscript));
         Assert.Equal(1, await verifyDb.Artifacts.CountAsync(a => a.Type == ArtifactType.Cover));
         Assert.Equal(1, await verifyDb.Artifacts.CountAsync(a => a.Type == ArtifactType.Pdf));
+        Assert.Equal(1, await verifyDb.Artifacts.CountAsync(a => a.Type == ArtifactType.Epub));
         Assert.Equal(1, await verifyDb.Artifacts.CountAsync(a => a.Type == ArtifactType.LpBundle));
     }
 }

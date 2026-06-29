@@ -6,8 +6,22 @@ namespace Ebook.Infrastructure.Tests.Support;
 
 public sealed class FakeStyleAnalyzer : IStyleAnalyzer
 {
+    private readonly bool _fail;
+    private int _calls;
+
+    public FakeStyleAnalyzer(bool fail = false) => _fail = fail;
+
+    public int Calls => _calls;
+
     public Task<Result<string>> AnalyzeAsync(byte[] imageBytes, string nicheName, CancellationToken ct = default)
     {
+        Interlocked.Increment(ref _calls);
+
+        if (_fail)
+        {
+            return Task.FromResult(Result.Failure<string>(new Error("vision.unavailable", "fake vision failure")));
+        }
+
         var json = """
             {
               "summary": "Estilo minimalista com cores vibrantes",
@@ -15,7 +29,7 @@ public sealed class FakeStyleAnalyzer : IStyleAnalyzer
               "typography": "Sans-serif bold para títulos",
               "composition": "Centralizado com muito espaço negativo",
               "visualHook": "Contraste forte entre fundo escuro e texto claro",
-              "promptHints": ["dark background", "bold typography", "high contrast"]
+              "promptHints": ["warm gold accents", "bold typography", "high contrast"]
             }
             """;
         return Task.FromResult(Result.Success(json));

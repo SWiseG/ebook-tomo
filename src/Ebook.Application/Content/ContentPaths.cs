@@ -18,6 +18,9 @@ public static class ContentPaths
     /// <summary>Caminho no <c>IArtifactStore</c> (/data/artifacts), não no FileStore de conteúdo.</summary>
     public static string Pdf(string slug, int version) => $"products/{slug}/pdf/ebook.v{version}.pdf";
 
+    /// <summary>Caminho do EPUB no <c>IArtifactStore</c> (/data/artifacts).</summary>
+    public static string Epub(string slug, int version = 1) => $"products/{slug}/epub/ebook.v{version}.epub";
+
     /// <summary>Imagens no <c>IArtifactStore</c> (/data/artifacts).</summary>
     public static string Cover(string slug) => $"products/{slug}/images/cover.png";
 
