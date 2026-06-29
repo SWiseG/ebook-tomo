@@ -107,4 +107,48 @@ public class SkiaImageComposerTests
         Assert.True(IsPng(png));
         Assert.True(png.Length > 1000);
     }
+
+    [Fact]
+    public void RenderChart_bar_com_serie_fixa_produz_png_800x400()
+    {
+        var art = new ChartData(
+            "Crescimento Mensal", ChartType.Bar,
+            [new ChartSeries("Receita", [10.0, 20.0, 30.0, 25.0])],
+            Palette);
+
+        var png = new SkiaImageComposer().RenderChart(art);
+
+        Assert.True(IsPng(png));
+        Assert.True(png.Length > 1000, "Gráfico deveria ter conteúdo substancial");
+        Assert.Equal((800, 400), PngSize(png));
+    }
+
+    [Fact]
+    public void RenderChart_line_com_multiplas_series_produz_png_800x400()
+    {
+        var art = new ChartData(
+            "Comparativo", ChartType.Line,
+            [
+                new ChartSeries("Série A", [1.0, 3.0, 2.0, 4.0]),
+                new ChartSeries("Série B", [2.0, 1.0, 4.0, 3.0]),
+            ],
+            Palette);
+
+        var png = new SkiaImageComposer().RenderChart(art);
+
+        Assert.True(IsPng(png));
+        Assert.Equal((800, 400), PngSize(png));
+    }
+
+    [Fact]
+    public void RenderChart_sem_series_nao_lanca_excecao_e_produz_png_valido()
+    {
+        // Bloco sem série numérica: RenderChart retorna PNG vazio mas válido — não lança.
+        // O fallback para infográfico ocorre no PdfJobHandler (ComposeCharts).
+        var art = new ChartData("Sem Dados", ChartType.Bar, [], Palette);
+
+        var png = new SkiaImageComposer().RenderChart(art);
+
+        Assert.True(IsPng(png)); // sempre retorna PNG, mesmo sem dados
+    }
 }

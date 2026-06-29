@@ -48,6 +48,14 @@ public sealed class FakeImageComposer : IImageComposer
         InfographicCount++;
         return [.. Png];
     }
+
+    public int ChartCount { get; private set; }
+
+    public byte[] RenderChart(ChartData art)
+    {
+        ChartCount++;
+        return [.. Png];
+    }
 }
 
 /// <summary>Photo provider fake: sem foto (composer cai no gradiente da paleta).</summary>

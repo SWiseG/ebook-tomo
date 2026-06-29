@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Ebook.Application.Content.Images;
+using ScottPlot;
 using SkiaSharp;
 
 namespace Ebook.Infrastructure.Content;
@@ -764,6 +765,52 @@ public sealed class SkiaImageComposer : IImageComposer
         FontRegistry.Resolve(family, weight >= SKFontStyleWeight.SemiBold)
         ?? SKTypeface.FromFamilyName(family, weight, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)
         ?? SKTypeface.Default;
+
+    /// <summary>
+    /// Gráfico de barra ou linha via ScottPlot 5 (MIT, renderiza sobre SKCanvas existente).
+    /// 800×400 PNG com cores da paleta do nicho. Sem série → PNG vazio válido (não lança).
+    /// </summary>
+    public byte[] RenderChart(ChartData art)
+    {
+        const int w = 800;
+        const int h = 400;
+
+        var plot = new Plot();
+        // Paleta de cores do nicho para as séries (accent primeiro, depois secundárias)
+        plot.Add.Palette = Palette.FromColors([art.Palette.Accent, art.Palette.OnDark]);
+        plot.Title(art.Title);
+
+        foreach (var series in art.Series)
+        {
+            if (series.Values.Count == 0)
+            {
+                continue;
+            }
+
+            var values = series.Values.ToArray();
+            if (art.Type == ChartType.Bar)
+            {
+                var bars = plot.Add.Bars(values);
+                bars.LegendText = series.Name;
+            }
+            else
+            {
+                var xs = Enumerable.Range(0, values.Length).Select(i => (double)i).ToArray();
+                var scatter = plot.Add.Scatter(xs, values);
+                scatter.LegendText = series.Name;
+            }
+        }
+
+        if (art.Series.Count > 1)
+        {
+            plot.ShowLegend();
+        }
+
+        using var surface = SKSurface.Create(new SKImageInfo(w, h));
+        surface.Canvas.Clear(SKColors.White);
+        plot.Render(surface.Canvas, w, h);
+        return Encode(surface);
+    }
 
     private static SKColor Darken(SKColor c) =>
         new((byte)(c.Red * 0.55), (byte)(c.Green * 0.55), (byte)(c.Blue * 0.55));

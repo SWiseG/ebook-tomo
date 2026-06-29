@@ -228,11 +228,12 @@ public sealed class EpubRenderer : IEbookExporter
 
         var sb = new StringBuilder();
         sb.AppendLine("@charset \"UTF-8\";");
-        sb.AppendLine($"body {{ font-family: \"{body}\", sans-serif; font-size: 1em; line-height: 1.5; color: #222222; background-color: {bg}; margin: 1em 1.5em; }}");
-        sb.AppendLine($"h1, h2, h3 {{ font-family: \"{heading}\", serif; color: {accent}; line-height: 1.2; margin-top: 1.5em; margin-bottom: 0.5em; }}");
-        sb.AppendLine("h1 { font-size: 2em; }");
-        sb.AppendLine("h2 { font-size: 1.5em; }");
-        sb.AppendLine("h3 { font-size: 1.2em; }");
+        // escala tipográfica docs/11: H1=40, H2=26, H3=18, body=12, caption=10 (razões em rem sobre base 12pt)
+        sb.AppendLine($"body {{ font-family: \"{body}\", sans-serif; font-size: 1rem; line-height: 1.5; color: #222222; background-color: {bg}; margin: 1.8em 2em; }}");
+        sb.AppendLine($"h1, h2, h3 {{ font-family: \"{heading}\", serif; color: {accent}; line-height: 1.2; margin-top: 2em; margin-bottom: 0.5em; }}");
+        sb.AppendLine("h1 { font-size: 3.33rem; }");  // 40/12
+        sb.AppendLine("h2 { font-size: 2.17rem; }");  // 26/12
+        sb.AppendLine("h3 { font-size: 1.5rem; }");   // 18/12
         sb.AppendLine("p { margin: 0.6em 0; text-align: justify; }");
         sb.AppendLine("ul, ol { padding-left: 1.5em; }");
         sb.AppendLine("li { margin: 0.3em 0; }");

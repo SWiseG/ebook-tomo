@@ -37,6 +37,15 @@ public sealed record InfographicMetric(string Number, string Label);
 /// <summary>Conteúdo de um infográfico de métricas (banda com 2–3 números) — docs/13 WS-E.</summary>
 public sealed record InfographicArt(IReadOnlyList<InfographicMetric> Metrics, NichePalette Palette);
 
+/// <summary>Tipo de gráfico para data-viz real (B3).</summary>
+public enum ChartType { Bar, Line }
+
+/// <summary>Uma série de valores para gráfico (nome + pontos numéricos).</summary>
+public sealed record ChartSeries(string Name, IReadOnlyList<double> Values);
+
+/// <summary>Dados de um gráfico: título, tipo, séries e paleta do nicho (B3).</summary>
+public sealed record ChartData(string Title, ChartType Type, IReadOnlyList<ChartSeries> Series, NichePalette Palette);
+
 /// <summary>
 /// Composição programática de imagens (E09-01). Implementado na Infrastructure (SkiaSharp).
 /// A foto de fundo é opcional; sem ela, usa-se gradiente da paleta.
@@ -67,6 +76,9 @@ public interface IImageComposer
 
     /// <summary>Infográfico de métricas (banda horizontal com 2–3 números de impacto). Para o corpo do PDF.</summary>
     byte[] RenderInfographic(InfographicArt art);
+
+    /// <summary>Gráfico de dados reais (barra/linha) via ScottPlot com cores da paleta do nicho (B3). 800×400 PNG.</summary>
+    byte[] RenderChart(ChartData art);
 }
 
 /// <summary>

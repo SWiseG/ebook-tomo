@@ -55,12 +55,13 @@ public sealed class QuestPdfRenderer(ILogger<QuestPdfRenderer>? logger = null) :
             doc.Page(content =>
             {
                 content.Size(PageSizes.A5);
-                content.Margin(42);
+                content.MarginHorizontal(57); // 20 mm em pontos (20 × 2.8346 ≈ 57pt)
+                content.MarginVertical(71);   // 25 mm em pontos (25 × 2.8346 ≈ 71pt)
                 content.DefaultTextStyle(x => x.FontFamily(theme.BodyFont).FontSize(12).FontColor(theme.Text).LineHeight(1.5f));
                 content.Header().Element(h => ComposeHeader(h, book, theme));
                 content.Footer().AlignCenter().Text(t =>
                 {
-                    t.DefaultTextStyle(s => s.FontSize(9).FontColor("#9CA3AF"));
+                    t.DefaultTextStyle(s => s.FontSize(10).FontColor("#9CA3AF"));
                     t.CurrentPageNumber();
                 });
                 content.Content().Column(col =>
@@ -88,12 +89,12 @@ public sealed class QuestPdfRenderer(ILogger<QuestPdfRenderer>? logger = null) :
                 case MarkdownBlockKind.Heading when block.Level == 2:
                     col.Item().PageBreak();
                     col.Item().PaddingBottom(12).Text(block.Text)
-                        .FontFamily(theme.HeadingFont).FontSize(24).Bold().FontColor(theme.Primary);
+                        .FontFamily(theme.HeadingFont).FontSize(26).Bold().FontColor(theme.Primary);
                     break;
 
                 case MarkdownBlockKind.Heading:
                     col.Item().PaddingTop(10).PaddingBottom(4).Text(block.Text)
-                        .FontFamily(theme.HeadingFont).FontSize(16).SemiBold().FontColor(theme.Primary);
+                        .FontFamily(theme.HeadingFont).FontSize(18).SemiBold().FontColor(theme.Primary);
                     break;
 
                 case MarkdownBlockKind.Bullets:
@@ -148,6 +149,7 @@ public sealed class QuestPdfRenderer(ILogger<QuestPdfRenderer>? logger = null) :
 
                 case MarkdownBlockKind.Image:
                 case MarkdownBlockKind.Infographic:
+                case MarkdownBlockKind.Chart:
                 case MarkdownBlockKind.Divider:
                     break; // omitidos no modo seguro
 
@@ -597,7 +599,8 @@ public sealed class QuestPdfRenderer(ILogger<QuestPdfRenderer>? logger = null) :
                 break;
 
             case MarkdownBlockKind.Infographic:
-                // pré-composto no Skia (PdfJobHandler) e já convertido em Image; bloco cru aqui = ignora
+            case MarkdownBlockKind.Chart:
+                // pré-composto (PdfJobHandler) e já convertido em Image; bloco cru aqui = ignora
                 break;
 
             case MarkdownBlockKind.Image:

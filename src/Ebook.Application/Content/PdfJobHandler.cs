@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Ebook.Application.Ai;
 using Ebook.Application.Common.Jobs;
@@ -111,6 +112,9 @@ public sealed class PdfJobHandler(
 
         // WS-E: infográficos de métricas compostos no Skia (blocos Infographic → imagens)
         book = book with { Body = ComposeInfographics(book.Body, palette) };
+
+        // B3: gráficos ScottPlot para blocos Chart (fallback para infográfico quando sem série numérica)
+        book = book with { Body = ComposeCharts(book.Body, palette) };
 
         var coverImage = await artifactStore.ReadBytesAsync(ContentPaths.Cover(product.Slug), ct);
         var bytes = renderer.Render(book, coverImage);
@@ -370,5 +374,84 @@ public sealed class PdfJobHandler(
         }
 
         return new PdfCta(headline, product.CheckoutUrl);
+    }
+
+    /// <summary>
+    /// B3: substitui cada bloco Chart por um gráfico ScottPlot (barra/linha com cores do nicho).
+    /// Fallback: série sem numéricos → tenta renderizar como infográfico; sem métricas → descarta.
+    /// </summary>
+    private IReadOnlyList<MarkdownBlock> ComposeCharts(IReadOnlyList<MarkdownBlock> body, NichePalette palette)
+    {
+        if (!body.Any(b => b.Kind == MarkdownBlockKind.Chart))
+        {
+            return body;
+        }
+
+        var result = new List<MarkdownBlock>(body.Count);
+        foreach (var block in body)
+        {
+            if (block.Kind != MarkdownBlockKind.Chart)
+            {
+                result.Add(block);
+                continue;
+            }
+
+            var series = block.Items.Select(ParseChartSeries).OfType<ChartSeries>().ToList();
+            if (series.Count > 0)
+            {
+                var chartType = block.Label.Equals("Line", StringComparison.OrdinalIgnoreCase)
+                    ? ChartType.Line : ChartType.Bar;
+                try
+                {
+                    var bytes = imageComposer.RenderChart(new ChartData(block.Text, chartType, series, palette));
+                    result.Add(MarkdownBlock.Image(bytes));
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Falha ao renderizar gráfico; ignorando bloco");
+                }
+            }
+            else
+            {
+                // fallback: tenta ler os itens como métricas de infográfico
+                var metrics = block.Items.Select(ParseMetric).OfType<InfographicMetric>().ToList();
+                if (metrics.Count > 0)
+                {
+                    try
+                    {
+                        var bytes = imageComposer.RenderInfographic(new InfographicArt(metrics, palette));
+                        result.Add(MarkdownBlock.Image(bytes));
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(ex, "Falha ao compor infográfico fallback de Chart; ignorando bloco");
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    // "Receita | 10 | 20 | 30" → ChartSeries("Receita", [10.0, 20.0, 30.0]); sem valores numéricos → null.
+    private static ChartSeries? ParseChartSeries(string line)
+    {
+        var parts = line.Split('|', StringSplitOptions.TrimEntries);
+        if (parts.Length < 2)
+        {
+            return null;
+        }
+
+        var name = parts[0];
+        var values = new List<double>();
+        for (var i = 1; i < parts.Length; i++)
+        {
+            if (double.TryParse(parts[i], NumberStyles.Any, CultureInfo.InvariantCulture, out var v))
+            {
+                values.Add(v);
+            }
+        }
+
+        return values.Count > 0 ? new ChartSeries(name, values) : null;
     }
 }

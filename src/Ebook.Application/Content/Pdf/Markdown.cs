@@ -13,7 +13,8 @@ public enum MarkdownBlockKind
     Comparison,  // tabela antes→depois: "> [!VS] Antes | Depois" + linhas "> esquerda | direita"
     Divider,     // divisor de seção decorativo: linha "---" (ou "***"/"___")
     Infographic, // banda de métricas composta no Skia: "> [!INFO] 97% | a ; 3x | b ; 30 dias | c"
-    Image   // ilustração gerada por IA (Frente D): 1 por capítulo via IMediaGateway
+    Image,  // ilustração gerada por IA (Frente D): 1 por capítulo via IMediaGateway
+    Chart   // gráfico de dados reais via ScottPlot (B3): "> [!CHART] Bar | Título" + "Série | v1 | v2"
 }
 
 /// <summary>Bloco estrutural de Markdown (nível para Heading, itens para Bullets, rótulo para Callout, bytes para Image).</summary>
@@ -61,6 +62,12 @@ public sealed record MarkdownBlock
 
     public static MarkdownBlock Infographic(IReadOnlyList<string> cells) =>
         new() { Kind = MarkdownBlockKind.Infographic, Items = cells };
+
+    /// <param name="title">Título do gráfico.</param>
+    /// <param name="type">Tipo: "Bar" ou "Line".</param>
+    /// <param name="series">Linhas "NomeSérie | v1 | v2 | ...".</param>
+    public static MarkdownBlock Chart(string title, string type, IReadOnlyList<string> series) =>
+        new() { Kind = MarkdownBlockKind.Chart, Text = title, Label = type, Items = series };
 }
 
 /// <summary>
@@ -116,6 +123,22 @@ public static class MarkdownParser
                 }
 
                 blocks.Add(MarkdownBlock.Comparison(header, [.. rows]));
+                quote.Clear();
+                return;
+            }
+
+            // gráfico de dados: 1ª linha "[!CHART] Bar | Título", linhas seguintes "Série | v1 | v2 | ..."
+            if (first.StartsWith("[!CHART]", StringComparison.OrdinalIgnoreCase))
+            {
+                var chartHeader = first["[!CHART]".Length..].Trim();
+                var (chartType, chartTitle) = SplitStat(chartHeader); // "Bar | Título" → ("Bar", "Título")
+                var seriesLines = new List<string>();
+                for (var i = 1; i < quote.Count; i++)
+                {
+                    seriesLines.Add(quote[i]);
+                }
+
+                blocks.Add(MarkdownBlock.Chart(chartTitle, chartType, [.. seriesLines]));
                 quote.Clear();
                 return;
             }
