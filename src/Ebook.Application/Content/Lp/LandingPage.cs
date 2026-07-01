@@ -81,7 +81,9 @@ public sealed record LpModel(
     string? MockupUrl = null,
     string? ShowcaseUrl = null,
     /// <summary>URL pública (/media/) da capa 2D — fallback leve do hero, sem base64 (docs/18 P3).</summary>
-    string? CoverUrl = null);
+    string? CoverUrl = null,
+    /// <summary>Mapa JSON de DTR por utm_source (C4). Null = script de substituição não injetado.</summary>
+    string? DtrMapJson = null);
 
 /// <summary>Imagem do hero: URL pública (leve) tem prioridade sobre o data URI.</summary>
 file static class LpModelImageExtensions
@@ -206,7 +208,8 @@ public static class LandingPageBuilder
             mockupDataUri,
             string.IsNullOrWhiteSpace(mockupUrl) ? null : mockupUrl,
             string.IsNullOrWhiteSpace(showcaseUrl) ? null : showcaseUrl,
-            string.IsNullOrWhiteSpace(coverUrl) ? null : coverUrl);
+            string.IsNullOrWhiteSpace(coverUrl) ? null : coverUrl,
+            string.IsNullOrWhiteSpace(copy?.DtrMapJson) ? null : copy!.DtrMapJson);
     }
 
     public static string Render(LpModel model, LpTemplate template, LpVariantOptions? variant = null)
@@ -388,6 +391,7 @@ public static class LandingPageBuilder
         sb.Append(StickyCtaBar(m));
         sb.Append(Behaviors());
         sb.Append(Pixel(m));
+        sb.Append(DtrScript(m));
         sb.Append("</body></html>");
         return sb.ToString();
     }
@@ -450,7 +454,8 @@ public static class LandingPageBuilder
         sb.Append("<div class=\"hero-tint\"></div>");
         sb.Append("<div class=\"wrap\">");
         sb.Append(ProofPill(m));
-        sb.Append($"<h1>{Esc(m.Headline)}</h1>");
+        var editH1Dtr = string.IsNullOrWhiteSpace(m.DtrMapJson) ? "" : " data-dtr-headline";
+        sb.Append($"<h1{editH1Dtr}>{Esc(m.Headline)}</h1>");
         if (!string.IsNullOrWhiteSpace(m.Subheadline))
         {
             sb.Append($"<p class=\"sub\">{Esc(m.Subheadline!)}</p>");
@@ -514,6 +519,7 @@ public static class LandingPageBuilder
         sb.Append(StickyCtaBar(m));
         sb.Append(Behaviors());
         sb.Append(Pixel(m));
+        sb.Append(DtrScript(m));
         sb.Append("</body></html>");
         return sb.ToString();
     }
@@ -627,6 +633,7 @@ public static class LandingPageBuilder
         sb.Append(StickyCtaBar(m));
         sb.Append(Behaviors());
         sb.Append(Pixel(m));
+        sb.Append(DtrScript(m));
         sb.Append("</body></html>");
         return sb.ToString();
     }
@@ -776,8 +783,12 @@ public static class LandingPageBuilder
         m.Stats.Count == 0 ? string.Empty
         : $"<span class=\"hero-badge\"><b>{Esc(m.Stats[0].Value!)}</b><i>{Esc(m.Stats[0].Label!)}</i></span>";
 
-    private static string ProofPill(LpModel m) =>
-        string.IsNullOrWhiteSpace(m.ProofPill) ? string.Empty : $"<span class=\"proof-pill\">{Esc(m.ProofPill!)}</span>";
+    private static string ProofPill(LpModel m)
+    {
+        if (string.IsNullOrWhiteSpace(m.ProofPill)) return string.Empty;
+        var dtr = string.IsNullOrWhiteSpace(m.DtrMapJson) ? "" : " data-dtr-eyebrow";
+        return $"<span class=\"proof-pill\"{dtr}>{Esc(m.ProofPill!)}</span>";
+    }
 
     // Hero v2 (docs/18): fundo de IMAGEM (free-first, via Showcase) com BLUR sobre a cor da paleta +
     // glow accent; CTA duplo (comprar + "ver o método"); prova social colada ao CTA. CSS por template.
@@ -791,7 +802,8 @@ public static class LandingPageBuilder
         sb.Append("<div class=\"hero-tint\"></div>");
         sb.Append("<div class=\"wrap\"><div class=\"grid\"><div>");
         sb.Append(ProofPill(m));
-        sb.Append($"<h1>{Esc(m.Headline)}</h1>");
+        var h1Dtr = string.IsNullOrWhiteSpace(m.DtrMapJson) ? "" : " data-dtr-headline";
+        sb.Append($"<h1{h1Dtr}>{Esc(m.Headline)}</h1>");
         if (!string.IsNullOrWhiteSpace(m.Subheadline))
         {
             sb.Append($"<p class=\"sub\">{Esc(m.Subheadline!)}</p>");
@@ -1430,6 +1442,23 @@ public static class LandingPageBuilder
         "document.querySelectorAll('a.cta').forEach(function(a){" +
         "if(u){a.href=a.href+(a.href.indexOf('?')>-1?'&':'?')+u;}});" +
         "})();</script>";
+
+    // C4 DTR: substitui headline e eyebrow por entrada do mapa de UTM source, sem alterar fallback.
+    private static string DtrScript(LpModel m)
+    {
+        if (string.IsNullOrWhiteSpace(m.DtrMapJson)) return string.Empty;
+        var safeJson = m.DtrMapJson
+            .Replace("</script>", "<\\/script>", StringComparison.OrdinalIgnoreCase);
+        return "<script>(function(){try{" +
+            "var map=" + safeJson + ";" +
+            "var src=new URLSearchParams(location.search).get('utm_source')||'';" +
+            "var e=map[src]||null;if(!e)return;" +
+            "var h=document.querySelector('[data-dtr-headline]');" +
+            "if(h&&e.headline)h.textContent=e.headline;" +
+            "var p=document.querySelector('[data-dtr-eyebrow]');" +
+            "if(p&&e.eyebrow)p.textContent=e.eyebrow;" +
+            "}catch(x){}})();</script>";
+    }
 
     private static string Money(decimal value, string currency)
     {

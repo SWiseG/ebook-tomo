@@ -208,4 +208,95 @@ public class OptimizationTests
         Assert.Equal(OptimizationDecisionStatus.Executed,
             (await db.OptimizationDecisions.AsNoTracking().SingleAsync()).Status);
     }
+
+    // ── C3 — Promoção automática de variante ─────────────────────────────────
+
+    private static async Task SeedVariantStatsAsync(
+        ServiceProvider provider, Guid productId, string tag, int visits, int checkouts)
+    {
+        using var scope = provider.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EbookDbContext>();
+        var now = DateTime.UtcNow;
+        for (int i = 0; i < visits; i++)
+        {
+            db.AnalyticsEvents.Add(AnalyticsEvent.Create(
+                productId, AnalyticsEventType.Visit, AnalyticsChannel.Direct, now, null, null, null, tag));
+        }
+        for (int i = 0; i < checkouts; i++)
+        {
+            db.AnalyticsEvents.Add(AnalyticsEvent.Create(
+                productId, AnalyticsEventType.CheckoutClick, AnalyticsChannel.Direct, now, null, null, null, tag));
+        }
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task SetPromoteSettingsAsync(ServiceProvider provider, int minVisits, int minDays)
+    {
+        using var scope = provider.CreateScope();
+        var settings = scope.ServiceProvider.GetRequiredService<ISettingsStore>();
+        await settings.SetAsync(SettingKeys.LpPromoteMinVisits, minVisits);
+        await settings.SetAsync(SettingKeys.LpPromoteMinDays, minDays);
+    }
+
+    [Fact]
+    public async Task Iterate_com_vencedora_e_autoExecute_emite_LpVariantPromoted()
+    {
+        using var provider = Build();
+        var id = await SeedLiveProductAsync(provider, "p", 30m);
+        await SeedMetricsAsync(provider, id, visits: 300, sales: 2, revenue: 60m); // → Iterate
+        // v1: 15 visitas, 1 checkout (6.7%); v2: 15 visitas, 5 checkouts (33%) — margem >5pp
+        await SeedVariantStatsAsync(provider, id, "v1", 15, 1);
+        await SeedVariantStatsAsync(provider, id, "v2", 15, 5);
+        await SetPromoteSettingsAsync(provider, minVisits: 10, minDays: 1);
+        await SetAutoExecuteAsync(provider, true);
+
+        await RunCycleAsync(provider);
+
+        using var verify = provider.CreateScope();
+        var db = verify.ServiceProvider.GetRequiredService<EbookDbContext>();
+        Assert.True(await db.OutboxEvents.AnyAsync(e => e.Type == nameof(LpVariantPromoted)),
+            "Esperado evento LpVariantPromoted no Outbox");
+    }
+
+    [Fact]
+    public async Task Iterate_com_volume_insuficiente_nao_emite_LpVariantPromoted()
+    {
+        using var provider = Build();
+        var id = await SeedLiveProductAsync(provider, "p", 30m);
+        await SeedMetricsAsync(provider, id, visits: 300, sales: 2, revenue: 60m); // → Iterate
+        // apenas 5 visitas — abaixo do minVisits=10
+        await SeedVariantStatsAsync(provider, id, "v1", 5, 0);
+        await SeedVariantStatsAsync(provider, id, "v2", 5, 2);
+        await SetPromoteSettingsAsync(provider, minVisits: 10, minDays: 1);
+        await SetAutoExecuteAsync(provider, true);
+
+        await RunCycleAsync(provider);
+
+        using var verify = provider.CreateScope();
+        var db = verify.ServiceProvider.GetRequiredService<EbookDbContext>();
+        Assert.False(await db.OutboxEvents.AnyAsync(e => e.Type == nameof(LpVariantPromoted)),
+            "Não deveria ter evento LpVariantPromoted com volume insuficiente");
+    }
+
+    [Fact]
+    public async Task Iterate_com_vencedora_e_autoExecute_false_propoe_sem_evento()
+    {
+        using var provider = Build();
+        var id = await SeedLiveProductAsync(provider, "p", 30m);
+        await SeedMetricsAsync(provider, id, visits: 300, sales: 2, revenue: 60m); // → Iterate
+        await SeedVariantStatsAsync(provider, id, "v1", 15, 1);
+        await SeedVariantStatsAsync(provider, id, "v2", 15, 5);
+        await SetPromoteSettingsAsync(provider, minVisits: 10, minDays: 1);
+        // autoExecute = false (padrão)
+
+        await RunCycleAsync(provider);
+
+        using var verify = provider.CreateScope();
+        var db = verify.ServiceProvider.GetRequiredService<EbookDbContext>();
+        // Sem execução automática: evento NÃO deve estar no Outbox
+        Assert.False(await db.OutboxEvents.AnyAsync(e => e.Type == nameof(LpVariantPromoted)));
+        // A proposta deve conter o winnerVariantTag
+        var decision = await db.OptimizationDecisions.AsNoTracking().SingleAsync(d => d.ProductId == id);
+        Assert.Contains("\"winnerVariantTag\":\"v2\"", decision.ActionsJson, StringComparison.Ordinal);
+    }
 }

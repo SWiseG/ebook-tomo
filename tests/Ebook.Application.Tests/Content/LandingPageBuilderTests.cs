@@ -291,6 +291,36 @@ public class LandingPageBuilderTests
         Assert.Contains("psicológico", NicheStyleCatalog.DisclaimerFor(NicheCategory.SelfHelp), StringComparison.Ordinal);
     }
 
+    // ── C4 — Dynamic Text Replacement ────────────────────────────────────────
+
+    [Theory]
+    [InlineData(LpTemplate.Aurora)]
+    [InlineData(LpTemplate.Editorial)]
+    [InlineData(LpTemplate.Vibrant)]
+    public void DtrMap_injeta_atributos_e_script_quando_presente(LpTemplate template)
+    {
+        const string dtrMap = """{"instagram":{"headline":"Conquiste via Instagram","eyebrow":"Para seguidores"}}""";
+        var copy = FullCopy() with { DtrMapJson = dtrMap };
+        var model = LandingPageBuilder.BuildModel("P", copy, null, "/go/p", "/px.gif?s=p", Palette);
+
+        var html = LandingPageBuilder.Render(model, template);
+
+        Assert.Contains("data-dtr-headline", html, StringComparison.Ordinal);
+        Assert.Contains("data-dtr-eyebrow", html, StringComparison.Ordinal);
+        Assert.Contains("querySelector('[data-dtr-headline]')", html, StringComparison.Ordinal);
+        Assert.Contains("instagram", html, StringComparison.Ordinal); // mapa embutido no script
+    }
+
+    [Fact]
+    public void Sem_DtrMap_nao_injeta_atributos_de_substituicao_nao_regressao()
+    {
+        var model = LandingPageBuilder.BuildModel("P", FullCopy(), null, "/go/p", "/px.gif?s=p", Palette);
+        var html = LandingPageBuilder.Render(model, LpTemplate.Aurora);
+
+        Assert.DoesNotContain("data-dtr-headline", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("data-dtr-eyebrow", html, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void Selector_mapeia_template_por_categoria_e_e_deterministico()
     {

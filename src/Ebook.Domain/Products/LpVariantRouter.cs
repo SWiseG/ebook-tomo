@@ -1,7 +1,7 @@
 namespace Ebook.Domain.Products;
 
-/// <summary>Estatísticas de uma variante de LP para o roteador.</summary>
-public sealed record VariantStats(string VariantTag, int Visits, int Conversions);
+/// <summary>Estatísticas de uma variante de LP para o roteador e para o critério de promoção (C3).</summary>
+public sealed record VariantStats(string VariantTag, int Visits, int Conversions, int DaysActive = 0);
 
 /// <summary>Fonte de aleatoriedade injetável (permite seed fixo em testes).</summary>
 public interface IRandom

@@ -302,6 +302,10 @@ public sealed class Product : AggregateRoot
     /// </summary>
     public void RecordAuditFailure(int score, int attempt) =>
         Raise(new ManuscriptAuditFailed(Id, score, attempt));
+
+    /// <summary>Emite o evento de promoção da variante vencedora (C3). Handler via Outbox copia o arquivo e apaga as demais.</summary>
+    public void PromoteVariant(string winnerTag) =>
+        Raise(new LpVariantPromoted(Id, winnerTag));
 }
 
 public static class ProductErrors
@@ -334,6 +338,7 @@ public sealed record ProductPublished(Guid ProductId, string Platform) : DomainE
 public sealed record ProductSynchronized(Guid ProductId) : DomainEvent;
 public sealed record ProductUnsynchronized(Guid ProductId) : DomainEvent;
 public sealed record ProductRetired(Guid ProductId, string Reason) : DomainEvent;
+public sealed record LpVariantPromoted(Guid ProductId, string WinnerTag) : DomainEvent;
 
 /// <summary>
 /// Emitido quando o manuscrito não atinge o limiar de conversão (audit.gateMinScore) e ainda

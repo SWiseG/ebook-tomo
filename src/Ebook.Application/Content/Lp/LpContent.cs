@@ -36,7 +36,10 @@ public sealed record LpCopyDto(
     IReadOnlyList<LpStatDto>? Stats = null,
     IReadOnlyList<LpTestimonialDto>? Testimonials = null,
     IReadOnlyList<string>? MediaLogos = null,
-    LpAuthorDto? Author = null);
+    LpAuthorDto? Author = null,
+    /// <summary>Mapa JSON para substituição dinâmica de texto por UTM source (C4 DTR).
+    /// Ex.: {"instagram":{"headline":"Texto","eyebrow":"Subtexto"}}. Null = DTR desligado.</summary>
+    string? DtrMapJson = null);
 
 public sealed record LpFaqDto(string? Q, string? A);
 

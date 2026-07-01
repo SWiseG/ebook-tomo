@@ -37,5 +37,7 @@ public interface ILpVariantRepository
     void Add(LpVariant variant);
     Task<IReadOnlyList<LpVariant>> GetByProductIdAsync(Guid productId, CancellationToken ct = default);
     Task<IReadOnlyList<LpVariant>> GetBySlugAsync(string slug, CancellationToken ct = default);
+    Task<LpVariant?> GetByTagAsync(Guid productId, string tag, CancellationToken ct = default);
     Task DeleteByProductIdAsync(Guid productId, CancellationToken ct = default);
+    Task DeleteOthersAsync(Guid productId, string keepTag, CancellationToken ct = default);
 }

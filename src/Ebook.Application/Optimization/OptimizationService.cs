@@ -40,6 +40,8 @@ public sealed class OptimizationService(
 
         var thresholds = await settings.GetOrDefaultAsync(SettingKeys.RoiThresholds, RoiThresholds.Default, ct);
         var from = now.Date.AddDays(-30);
+        var minVisits = await settings.GetOrDefaultAsync(SettingKeys.LpPromoteMinVisits, 100, ct);
+        var minDays = await settings.GetOrDefaultAsync(SettingKeys.LpPromoteMinDays, 7, ct);
 
         var run = OptimizationRun.Start(cycle, now);
         optimization.AddRun(run);
@@ -54,8 +56,15 @@ public sealed class OptimizationService(
                 funnel.Visits, funnel.CheckoutClicks, funnel.Sales, funnel.Revenue, funnel.ConversionRate);
             var verdict = RoiClassifier.Classify(perf, thresholds);
 
+            string? winnerTag = null;
+            if (verdict.Decision == OptimizationDecisionKind.Iterate)
+            {
+                var variantStats = await metrics.GetVariantStatsAsync(product.Id, minDays, ct);
+                winnerTag = LpPromotion.CalculateWinner(variantStats, minVisits, minDays);
+            }
+
             var rationale = JsonSerializer.Serialize(new { verdict.Rationale, perf }, JsonOptions);
-            var actions = BuildActions(verdict.Decision, product);
+            var actions = BuildActions(verdict.Decision, product, winnerTag);
             var decision = OptimizationDecision.Propose(run.Id, product.Id, verdict.Decision, rationale, actions);
             optimization.AddDecision(decision);
             decisions.Add(decision);
@@ -96,13 +105,14 @@ public sealed class OptimizationService(
         await unitOfWork.SaveChangesAsync(ct);
     }
 
-    private static string BuildActions(OptimizationDecisionKind kind, Product product) => kind switch
+    private static string BuildActions(OptimizationDecisionKind kind, Product product, string? winnerTag = null) => kind switch
     {
         OptimizationDecisionKind.Iterate => JsonSerializer.Serialize(new
         {
             suggestedPrice = Math.Round(product.Price * 0.85m, 2),
             refreshLandingPage = true,
-            refreshSocialCalendar = true
+            refreshSocialCalendar = true,
+            winnerVariantTag = winnerTag
         }, JsonOptions),
         OptimizationDecisionKind.Kill => JsonSerializer.Serialize(new { archive = true, replenish = true }, JsonOptions),
         OptimizationDecisionKind.Scale => JsonSerializer.Serialize(new { increaseBudget = true }, JsonOptions),

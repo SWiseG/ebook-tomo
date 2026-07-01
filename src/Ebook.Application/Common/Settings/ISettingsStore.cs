@@ -104,4 +104,16 @@ public static class SettingKeys
     /// Quando true, o endpoint /lp/{slug} escolhe a variante com maior taxa de conversão estimada.
     /// </summary>
     public const string LpSmartTraffic = "lp.smartTraffic";
+
+    /// <summary>Volume mínimo de visitas por variante para elegibilidade de promoção (C3). Default 100.</summary>
+    public const string LpPromoteMinVisits = "lp.promote.minVisits";
+
+    /// <summary>Janela mínima de dias ativos por variante para elegibilidade de promoção (C3). Default 7.</summary>
+    public const string LpPromoteMinDays = "lp.promote.minDays";
+
+    /// <summary>
+    /// Mapa JSON de substituição de texto por origem de tráfego (C4 DTR).
+    /// Formato: {"instagram":{"headline":"Texto","eyebrow":"Subtexto"}}. Vazio = DTR desligado.
+    /// </summary>
+    public const string LpDtrMap = "lp.dtrMap";
 }

@@ -140,9 +140,20 @@ public sealed class LpVariantRepository(EbookDbContext db) : ILpVariantRepositor
             .OrderBy(v => v.VariantTag)
             .ToListAsync(ct);
 
+    public Task<LpVariant?> GetByTagAsync(Guid productId, string tag, CancellationToken ct = default) =>
+        db.LpVariants.FirstOrDefaultAsync(v => v.ProductId == productId && v.VariantTag == tag, ct);
+
     public async Task DeleteByProductIdAsync(Guid productId, CancellationToken ct = default)
     {
         var rows = await db.LpVariants.Where(v => v.ProductId == productId).ToListAsync(ct);
+        db.LpVariants.RemoveRange(rows);
+    }
+
+    public async Task DeleteOthersAsync(Guid productId, string keepTag, CancellationToken ct = default)
+    {
+        var rows = await db.LpVariants
+            .Where(v => v.ProductId == productId && v.VariantTag != keepTag)
+            .ToListAsync(ct);
         db.LpVariants.RemoveRange(rows);
     }
 }

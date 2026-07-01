@@ -52,6 +52,7 @@ public sealed class OptimizationExecutor(
                 }
 
                 ApplySuggestedPrice(product, decision.ActionsJson);
+                PromoteWinnerIfFound(product, decision.ActionsJson);
                 product.CompleteIteration();
 
                 // docs/17 P3-11: nova onda de divulgação (calendário social) ao iterar. Chave por
@@ -113,6 +114,24 @@ public sealed class OptimizationExecutor(
         catch (JsonException)
         {
             // sem ação de preço
+        }
+    }
+
+    private static void PromoteWinnerIfFound(Product product, string actionsJson)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(actionsJson);
+            if (doc.RootElement.TryGetProperty("winnerVariantTag", out var el)
+                && el.ValueKind == JsonValueKind.String
+                && !string.IsNullOrWhiteSpace(el.GetString()))
+            {
+                product.PromoteVariant(el.GetString()!);
+            }
+        }
+        catch (JsonException)
+        {
+            // sem promoção de variante
         }
     }
 }

@@ -132,7 +132,7 @@ public sealed class MetricsReader(EbookDbContext db) : IMetricsReader
         var from = DateTime.UtcNow.Date.AddDays(-days);
         var raw = await db.AnalyticsEvents.AsNoTracking()
             .Where(e => e.ProductId == productId && e.VariantTag != null && e.OccurredAtUtc >= from)
-            .Select(e => new { e.VariantTag, e.Type })
+            .Select(e => new { e.VariantTag, e.Type, e.OccurredAtUtc })
             .ToListAsync(ct);
 
         return raw
@@ -140,7 +140,8 @@ public sealed class MetricsReader(EbookDbContext db) : IMetricsReader
             .Select(g => new VariantStats(
                 g.Key,
                 Visits: g.Count(x => x.Type == AnalyticsEventType.Visit),
-                Conversions: g.Count(x => x.Type == AnalyticsEventType.CheckoutClick)))
+                Conversions: g.Count(x => x.Type == AnalyticsEventType.CheckoutClick),
+                DaysActive: g.Select(x => x.OccurredAtUtc.Date).Distinct().Count()))
             .OrderBy(v => v.VariantTag)
             .ToList();
     }
